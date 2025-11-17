@@ -1,0 +1,181 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using Mirror;
+using UnityEngine;
+using UnityEngine.EventSystems;
+
+[RequireComponent(typeof(Rigidbody2D))]
+[RequireComponent(typeof(Collider2D))]
+public class DraggableItem : NetworkBehaviour, IGetPoolID
+{
+    // --- THIS IS THE CRITICAL CHANGE ---
+    // 1. Sync the ID (an int), not the whole BaseItem.
+    // 2. The hook is now named 'OnItemIdChanged' to avoid conflicts.
+    [SyncVar(hook = nameof(OnItemIdChanged))]
+    private int itemID =-1; // -1 means "no item"
+
+    // This is now a LOCAL variable. It is not synced.
+    // It's a cache for the item data we look up from the itemID.
+    public BaseItem itemData; 
+
+    private SpriteRenderer spriteRenderer;
+    private TeleportItem teleportItem;
+
+    private bool isBeingDragged = false;
+    private TargetJoint2D joint;
+    
+    public string GetPoolID()
+    {
+        return CONST.DRAGGABLE_ITEM;
+    }
+
+    private void Start()
+    {
+        teleportItem = TeleportItem.Instance;
+    }
+
+    private void Awake()
+    {
+        spriteRenderer = GetComponent<SpriteRenderer>();
+        GetComponent<Collider2D>().isTrigger = false;
+        
+        Rigidbody2D rb = GetComponent<Rigidbody2D>();
+        rb.gravityScale = 0;
+        rb.drag = 1.0f;
+        rb.angularDrag = 1.0f;
+        
+        
+        // Update visuals on Awake to handle -1 ID
+        UpdateVisuals(itemID); 
+    }
+    
+    private void OnItemIdChanged(int oldId, int newId)
+    {
+        UpdateVisuals(newId);
+    }
+
+    // --- SERVER-ONLY FUNCTION ---
+    // Your 'SpawnItemForPlayer' calls this on the SERVER.
+    public void SetItem(BaseItem item)
+    {
+        if (item == null)
+        {
+            this.itemID = -1;
+        }
+        else
+        {
+            // This is the only line that matters.
+            // By setting the SyncVar, you trigger the hook on all clients.
+            this.itemID = item.id; // Assuming BaseItem has an 'id' property
+        }
+    }
+    
+    // This is now a local-only helper function
+    public BaseItem GetItem()
+    {
+        return itemData;
+    }
+    
+    [ClientRpc]
+    public void RpcShoot(Vector2 direction, float force)
+    {
+        // This code will now run on ALL clients + the server
+        Rigidbody2D rb = GetComponent<Rigidbody2D>();
+        if (rb != null)
+        {
+            rb.AddForce(direction * force, ForceMode2D.Impulse);
+        }
+    }
+    
+    void Update()
+    {
+        joint = GetComponent<TargetJoint2D>();
+        isBeingDragged = (joint != null);
+    }
+
+    // --- VISUALS FUNCTION ---
+    // This runs on all clients to update the sprite.
+    public void UpdateVisuals(int currentId){
+    itemData = null; // Clear old data
+
+        if(spriteRenderer == null) return;
+
+        if (currentId != -1)
+        {
+            // --- IMPORTANT ---
+            // You need a way to get the BaseItem data from just its ID.
+            // This is usually an "ItemDatabase" or "ItemManager" ScriptableObject.
+            itemData = ItemManager.Instance.GetItemById(currentId);
+        }
+
+        if (itemData != null)
+        {
+            spriteRenderer.sprite = itemData.icon;
+            spriteRenderer.enabled = true;
+            // You should also update the collider here
+            // GetComponent<PolygonCollider2D>().points = _localItemData.collider2D.points;
+        }
+        else
+        {
+            spriteRenderer.enabled = false;
+        }
+    }
+    private void OnCollisionEnter2D(Collision2D collision2D)
+    {
+        GameObject other = collision2D.gameObject;
+        if (!isBeingDragged) return;
+
+        if (itemData == null) return;
+
+        MonoBehaviour target = other.GetComponent<Player>();
+        if (target == null) target = other.GetComponent<Enemy>();
+        if (target == null) target = other.GetComponent<DraggableItem>();
+        
+        if(target == null) return;
+
+        if (itemData is AttackItem attackItem && target is Enemy enemy && attackItem.element == enemy.element)
+        {
+            itemData.UseOn(target);
+            ObjectPoolManager.instance.Push(this);
+        }
+        else if (itemData is SupportItem && target is Player)
+        {
+            itemData.UseOn(target);
+            ObjectPoolManager.instance.Push(this);
+        }
+        else if((itemData is AttackItem || itemData is SupportItem) && target is DraggableItem item && item.GetItem() is Augment)
+        {
+            itemData.UseOn(target);
+            ObjectPoolManager.instance.Push(item);
+        }
+        else
+        {
+            //Augment and they cannot use on anything just put here :))
+            itemData.UseOn(target);
+        }
+    }
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {   
+        GameObject localPlayer = NetworkClient.localPlayer?.gameObject;
+        Debug.Log(localPlayer);
+        NetworkGamePlayerLobby player = localPlayer.GetComponent<NetworkGamePlayerLobby>();
+        if (collision.tag == "RightCollider")
+        {
+            player.CmdTeleportItem(this.gameObject, 1);
+            Debug.Log("Object fly to the right");
+        }
+        else if (collision.tag == "LeftCollider")
+        {
+            player.CmdTeleportItem(this.gameObject, -1);
+            Debug.Log("Object fly to the left");
+        }
+        else if (collision.tag == "PlaySide")
+        {
+            if (!isServer)
+                return;
+            player.CmdAssignAuthority(gameObject);
+        }
+    }
+}
