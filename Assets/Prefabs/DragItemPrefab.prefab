@@ -146,6 +146,8 @@ MonoBehaviour:
   syncDirection: 0
   syncMode: 0
   syncInterval: 0
+  currentAuthorityOwner: None
+  authorityPlayer: {fileID: 0}
 --- !u!212 &3955999498165869517
 SpriteRenderer:
   m_ObjectHideFlags: 0

@@ -22,5 +22,5 @@ MonoBehaviour:
   supportItemData: []
   augmentData: []
   spawnDelay: 2
-  itemsPerPlayer: 20
+  itemsPerPlayer: 10
   spawnOffset: {x: 0, y: 0, z: 0}

@@ -19,6 +19,19 @@ using UnityEngine;
                 position = value;
             }
         }
+        
+        [ClientRpc]
+        public void RpcSetMap(GameObject mapGameObject)
+        {
+            // Only call Ready() if client is not already ready
+            // OnClientSceneChanged already handles setting client ready
+            if (!NetworkClient.ready)
+            {
+                NetworkClient.Ready();
+            }
+            map = mapGameObject.GetComponent<MapManager>();
+            Debug.Log("Set map" + map.name);
+        }
 
         public int Shield
         {

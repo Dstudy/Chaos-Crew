@@ -23,28 +23,33 @@ public class NetworkGamePlayerLobby : NetworkBehaviour
 
     public Player localPlayer;
     
-    private void OnClientConnect()
-    {
-        Debug.Log("Enable map collider lai");
-        localPlayer.map.EnableCollider(true);
-    }
-    
     private void Start()
     {
         playerManager = PlayerManager.instance;
+    }
+
+    public void EnableMapCollider()
+    {
+        if (localPlayer == null)
+            return;
+        if (localPlayer.map == null)
+        {
+            Debug.Log("mapp null roi");
+            return;
+        }
+        localPlayer.map.EnableCollider(true);
     }
 
     public override void OnStartClient()
     {
         DontDestroyOnLoad(gameObject);
         Room.GamePlayers.Add(this);
-        NetworkManagerLobby.onClientConnected += OnClientConnect;
     }
-
     public override void OnStopClient()
     {
         Room.GamePlayers.Remove(this);
     }
+    
     
 
     [Command]
@@ -74,18 +79,13 @@ public class NetworkGamePlayerLobby : NetworkBehaviour
 
 
         TeleportItem.Instance.ServerTeleport(itemToTeleport, direction, playerScript.map);
+        
     }
 
     [Command]
-    public void CmdAssignAuthority(GameObject objectToOwn)
+    public void CmdAssignAuthority(GameObject objectToOwn, NetworkConnectionToClient conn = null)
     {
-        AssignAuthority(objectToOwn);
-    }
-
-
-    [Server]
-    public void AssignAuthority(GameObject objectToOwn)
-    {
+        Debug.Log("Thang " + conn.connectionId + " gui yeu cau");
         NetworkIdentity objectIdentity = objectToOwn.GetComponent<NetworkIdentity>();
 
         if (objectIdentity == null)
@@ -94,9 +94,10 @@ public class NetworkGamePlayerLobby : NetworkBehaviour
             return;
         }
 
+        // Check if authority is already assigned to this connection
         if (objectIdentity.connectionToClient == connectionToClient)
         {
-            Debug.Log("Cung la cai ong nay: " + connectionToClient.connectionId);
+            Debug.Log("Authority already assigned to this connection: " + connectionToClient.connectionId);
             return;
         }
 
@@ -105,9 +106,17 @@ public class NetworkGamePlayerLobby : NetworkBehaviour
         {
             objectIdentity.RemoveClientAuthority();
         }
-
+        if(objectIdentity.isOwned)
+            Debug.Log("Tai sao van dang duoc su dung?");
         objectIdentity.AssignClientAuthority(connectionToClient);
-
         Debug.Log($"Gave ownership of {objectToOwn.name} to {connectionToClient.connectionId}");
+        
+        Reply(objectToOwn, connectionToClient.connectionId);
+    }
+
+    [TargetRpc]
+    private void Reply(GameObject obj, int id)
+    { 
+        Debug.Log("Tao da dua cho m " + obj.name + " va id cua m la: " +id.ToString());
     }
 }

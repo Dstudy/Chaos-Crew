@@ -959,6 +959,7 @@ GameObject:
   - component: {fileID: 769829221}
   - component: {fileID: 769829223}
   - component: {fileID: 769829224}
+  - component: {fileID: 769829225}
   m_Layer: 0
   m_Name: NetworkManager
   m_TagString: Untagged
@@ -1012,7 +1013,6 @@ MonoBehaviour:
   playerSpawnMethod: 0
   spawnPrefabs:
   - {fileID: 6250724485592894450, guid: 6abee8754f07fe14b9ceb34d9da149ad, type: 3}
-  - {fileID: 2063207890379626466, guid: ef4c7e0065800324cb9f3b8dd7f30f0e, type: 3}
   - {fileID: 5996865846496594946, guid: 91545f364911fcb4f96d2fb0e706b917, type: 3}
   - {fileID: 5123964172922221443, guid: fe0cc6affca92d544a7a6997feaf6876, type: 3}
   - {fileID: 5452407026243002858, guid: e0564a41868d9374189f041367bf1683, type: 3}
@@ -1067,6 +1067,20 @@ MonoBehaviour:
   clientMaxReceivesPerTick: 1000
   clientSendQueueLimit: 10000
   clientReceiveQueueLimit: 10000
+--- !u!114 &769829225
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 769829218}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 835b34919eb5e384cb9c8dd9f5c46443, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  prefab: {fileID: 2063207890379626466, guid: ef4c7e0065800324cb9f3b8dd7f30f0e, type: 3}
+  currentCount: 0
 --- !u!1 &771762351
 GameObject:
   m_ObjectHideFlags: 0

@@ -32,8 +32,6 @@ public class NetworkManagerLobby : NetworkManager
 
     public override void OnClientConnect()
     {
-        Debug.Log("OnClientConnect");
-        
         base.OnClientConnect();
         
         onClientConnected?.Invoke();
@@ -94,10 +92,8 @@ public class NetworkManagerLobby : NetworkManager
 
     public override void OnServerAddPlayer(NetworkConnectionToClient conn)
     {
-        Debug.Log("ServerAddPlayer");
         if (SceneManager.GetActiveScene().name == menuScene)
         {
-            Debug.Log("Server deter leader");
             bool isLeader = RoomPlayers.Count == 0;
             
             NetworkRoomPlayerLobby roomPlayerInstance = Instantiate(lobbyPrefab);
@@ -106,7 +102,19 @@ public class NetworkManagerLobby : NetworkManager
             
             NetworkServer.AddPlayerForConnection(conn, roomPlayerInstance.gameObject);
         }
-        
+        else
+        {
+            // In game scene, PlayerSpawnSystem handles player spawning
+            // If a player already exists (from ReplacePlayerForConnection), ignore this call
+            if (conn.identity != null)
+            {
+                Debug.Log($"OnServerAddPlayer called in game scene for connection {conn.connectionId}, but player already exists. Ignoring.");
+                return;
+            }
+            
+            // If no player exists yet, PlayerSpawnSystem will handle it via OnServerReadied
+            Debug.LogWarning($"OnServerAddPlayer called in game scene for connection {conn.connectionId} but no identity exists. PlayerSpawnSystem should handle this.");
+        }
     }
     
     private bool IsReadyToStart()
@@ -161,5 +169,23 @@ public class NetworkManagerLobby : NetworkManager
     public override void OnStartHost()
     {
         Debug.Log("OnStartHost");
+    }
+
+    public override void OnClientSceneChanged()
+    {
+        // Don't auto-create player in game scenes - PlayerSpawnSystem handles it
+        if (SceneManager.GetActiveScene().name.StartsWith("Scene_Map"))
+        {
+            // Still need to set client ready
+            if (NetworkClient.connection.isAuthenticated && !NetworkClient.ready)
+            {
+                NetworkClient.Ready();
+            }
+            // Don't call base.OnClientSceneChanged() which would auto-add player
+            return;
+        }
+        
+        // For menu scene, use default behavior
+        base.OnClientSceneChanged();
     }
 }

@@ -1,9 +1,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Mirror;
 using UnityEngine;
 
-public abstract class BaseEntity : MonoBehaviour
+public abstract class BaseEntity : NetworkBehaviour
 {
     public string id;
     public int health;

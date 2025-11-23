@@ -2,12 +2,13 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Mirror;
+using Mirror.Examples;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
 [RequireComponent(typeof(Rigidbody2D))]
 [RequireComponent(typeof(Collider2D))]
-public class DraggableItem : NetworkBehaviour, IGetPoolID
+public class DraggableItem : NetworkBehaviour
 {
     // --- THIS IS THE CRITICAL CHANGE ---
     // 1. Sync the ID (an int), not the whole BaseItem.
@@ -24,6 +25,11 @@ public class DraggableItem : NetworkBehaviour, IGetPoolID
 
     private bool isBeingDragged = false;
     private TargetJoint2D joint;
+    
+    [Header("Authority Debug Info")]
+    [SerializeField] private string currentAuthorityOwner = "None";
+    [SerializeField] private Player authorityPlayer = null;
+    
     
     public string GetPoolID()
     {
@@ -72,7 +78,7 @@ public class DraggableItem : NetworkBehaviour, IGetPoolID
     }
     
     // This is now a local-only helper function
-    public BaseItem GetItem()
+    public BaseItem GetItem() 
     {
         return itemData;
     }
@@ -88,10 +94,72 @@ public class DraggableItem : NetworkBehaviour, IGetPoolID
         }
     }
     
-    void Update()
+    public override void OnStartAuthority()
+    {
+        base.OnStartAuthority();
+        UpdateAuthorityInfo();
+    }
+    
+    public override void OnStopAuthority()
+    {
+        base.OnStopAuthority();
+        UpdateAuthorityInfo();
+    }
+    
+    private void UpdateAuthorityInfo()
+    {
+        NetworkIdentity netIdentity = GetComponent<NetworkIdentity>();
+        if (netIdentity == null)
+        {
+            currentAuthorityOwner = "No NetworkIdentity";
+            authorityPlayer = null;
+            return;
+        }
+        
+        if (netIdentity.connectionToClient != null)
+        {
+            // Find the Player component from the connection
+            GameObject playerObj = netIdentity.connectionToClient.identity?.gameObject;
+            if (playerObj != null)
+            {
+                Player player = playerObj.GetComponent<Player>();
+                if (player != null)
+                {
+                    authorityPlayer = player;
+                    currentAuthorityOwner = $"Player {player.id} (Connection {netIdentity.connectionToClient.connectionId})";
+                }
+                else
+                {
+                    authorityPlayer = null;
+                    currentAuthorityOwner = $"Connection {netIdentity.connectionToClient.connectionId} (No Player component)";
+                }
+            }
+            else
+            {
+                authorityPlayer = null;
+                currentAuthorityOwner = $"Connection {netIdentity.connectionToClient.connectionId}";
+            }
+        }
+        else
+        {
+            currentAuthorityOwner = "No Authority (Server Only)";
+            authorityPlayer = null;
+        }
+    }
+    
+    // Call this periodically or when you want to refresh the display
+    private void Update()
     {
         joint = GetComponent<TargetJoint2D>();
         isBeingDragged = (joint != null);
+        
+        // Update authority info in editor/play mode for debugging
+        #if UNITY_EDITOR
+        if (Application.isPlaying)
+        {
+            UpdateAuthorityInfo();
+        }
+        #endif
     }
 
     // --- VISUALS FUNCTION ---
@@ -103,9 +171,6 @@ public class DraggableItem : NetworkBehaviour, IGetPoolID
 
         if (currentId != -1)
         {
-            // --- IMPORTANT ---
-            // You need a way to get the BaseItem data from just its ID.
-            // This is usually an "ItemDatabase" or "ItemManager" ScriptableObject.
             itemData = ItemManager.Instance.GetItemById(currentId);
         }
 
@@ -137,17 +202,20 @@ public class DraggableItem : NetworkBehaviour, IGetPoolID
         if (itemData is AttackItem attackItem && target is Enemy enemy && attackItem.element == enemy.element)
         {
             itemData.UseOn(target);
-            ObjectPoolManager.instance.Push(this);
+            NetworkServer.UnSpawn(gameObject);
+            PrefabPool.singleton.Return(gameObject);
         }
         else if (itemData is SupportItem && target is Player)
         {
             itemData.UseOn(target);
-            ObjectPoolManager.instance.Push(this);
+            NetworkServer.UnSpawn(gameObject);
+            PrefabPool.singleton.Return(gameObject);
         }
         else if((itemData is AttackItem || itemData is SupportItem) && target is DraggableItem item && item.GetItem() is Augment)
         {
             itemData.UseOn(target);
-            ObjectPoolManager.instance.Push(item);
+            NetworkServer.UnSpawn(gameObject);
+            PrefabPool.singleton.Return(gameObject);
         }
         else
         {
@@ -158,9 +226,15 @@ public class DraggableItem : NetworkBehaviour, IGetPoolID
 
     private void OnTriggerEnter2D(Collider2D collision)
     {   
-        GameObject localPlayer = NetworkClient.localPlayer?.gameObject;
-        Debug.Log(localPlayer);
-        NetworkGamePlayerLobby player = localPlayer.GetComponent<NetworkGamePlayerLobby>();
+        // Only process on clients (not server-only)
+        if (!isClient) return;
+        
+        GameObject localPlayerObj = NetworkClient.localPlayer?.gameObject;
+        if (localPlayerObj == null) return;
+        
+        NetworkGamePlayerLobby player = localPlayerObj.GetComponent<NetworkGamePlayerLobby>();
+        if (player == null) return;
+        
         if (collision.tag == "RightCollider")
         {
             player.CmdTeleportItem(this.gameObject, 1);
@@ -173,9 +247,17 @@ public class DraggableItem : NetworkBehaviour, IGetPoolID
         }
         else if (collision.tag == "PlaySide")
         {
-            if (!isServer)
+            if (isOwned)
+            {
+                Debug.Log("Already have authority over this object, skipping");
                 return;
+            }
+            
+            Debug.Log("This player receive object");
+            Debug.Log("Item " + gameObject.name + " var với " + collision.name);
+            
             player.CmdAssignAuthority(gameObject);
         }
     }
+    
 }

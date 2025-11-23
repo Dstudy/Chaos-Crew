@@ -167,13 +167,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c26c39f88a67418aad9bef2af47f52aa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
   id: 1
   health: 10
   maxHealth: 10
   position: 0
   shield: 0
   maxShield: 10
-  map: {fileID: 7382159846799801075, guid: cd982c022416d2844a749e31d14e0be0, type: 3}
+  map: {fileID: 0}
 --- !u!114 &2890596084178191765
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -189,6 +192,7 @@ MonoBehaviour:
   syncDirection: 0
   syncMode: 0
   syncInterval: 0
+  localPlayer: {fileID: 0}
 --- !u!1 &8787679947193865880
 GameObject:
   m_ObjectHideFlags: 0
