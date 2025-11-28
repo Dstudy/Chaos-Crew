@@ -29,6 +29,8 @@ public class TeleportItem : NetworkBehaviour
         // Make sure the item has a NetworkTransform component.
         itemToTeleport.transform.position = spawnPoint;
 
+        Vector2Int vector = new Vector2Int(1, 1);
+
         // If you want to shoot it (like in SpawnSystem), you must call an Rpc
         // from the item itself.
         Rigidbody2D rb = itemToTeleport.GetComponent<Rigidbody2D>();
@@ -38,7 +40,7 @@ public class TeleportItem : NetworkBehaviour
         if (item != null)
         {
             // Assuming you have an RpcShoot like we built before
-            item.Shoot(spawnPoint * direction, 0.1f);
+            item.Shoot(vector * direction, 10f);
         }
     }
 }
