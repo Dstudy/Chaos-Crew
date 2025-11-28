@@ -349,11 +349,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c811345f503ae6844a54d109acc2b34d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  attackItemList:
-  - {fileID: 11400000, guid: 3a9fafe329c6db04fb0ac7c785907e29, type: 2}
-  - {fileID: 11400000, guid: d6a62ed11b002e3478fef34f202fff2e, type: 2}
-  - {fileID: 11400000, guid: 37080394b4026e440bf488665af58c4d, type: 2}
+  AttackItemDatas:
   - {fileID: 11400000, guid: 495db5cb20c448344903db12bab3b373, type: 2}
+  - {fileID: 11400000, guid: b77313073d070ce4ab789fab92f58d20, type: 2}
+  - {fileID: 11400000, guid: 37080394b4026e440bf488665af58c4d, type: 2}
+  - {fileID: 11400000, guid: d6a62ed11b002e3478fef34f202fff2e, type: 2}
+  - {fileID: 11400000, guid: 3a9fafe329c6db04fb0ac7c785907e29, type: 2}
+  AugmentDatas:
+  - {fileID: 11400000, guid: 59cee4f0aa6be7a4282effb5edbb8677, type: 2}
+  - {fileID: 11400000, guid: df81dfad8bee04e4480cc09171069e63, type: 2}
+  SupportItemDatas:
+  - {fileID: 11400000, guid: fd1dad1f3d42e2d4a80bae777f4ab8de, type: 2}
+  - {fileID: 11400000, guid: 82f993fbef1430144895f01be1233673, type: 2}
+  HammerDatas:
+  - {fileID: 11400000, guid: 396c3fdc4fa7c2640820a22063b1e359, type: 2}
+  - {fileID: 11400000, guid: 1714241f2c7981943bef80478f7b521f, type: 2}
+  - {fileID: 11400000, guid: d6cf99f947d48ca4cbc5c55bea96217a, type: 2}
+  - {fileID: 11400000, guid: 2f31f2b6f91e02142b25a8d8c75db012, type: 2}
+  - {fileID: 11400000, guid: 7ef0329bc0161f347a47d53c8522ffd5, type: 2}
 --- !u!1001 &1055688626
 PrefabInstance:
   m_ObjectHideFlags: 0

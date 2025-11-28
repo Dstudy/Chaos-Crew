@@ -27,7 +27,7 @@ public class EnemyPattern : MonoBehaviour
     [SerializeField] private Image indicatorImage;
     // [SerializeField] private TextMeshProUGUI countdownText;
 
-    
+    private bool isStuned;
 
     private void Start()
     {
@@ -56,6 +56,18 @@ public class EnemyPattern : MonoBehaviour
             // 5. Cycle to next move
             moveIndex = (moveIndex + 1) % moves.Length; 
         }
+    }
+
+    public void ApplyStun()
+    {
+        if (isStuned)
+        {
+            Debug.Log("Stunned before");
+            return;
+        }
+        Debug.Log("Stun Enemy");
+        isStuned = true;
+        
     }
     
     private IEnumerator PerformTelegraph(EnemyMove move)

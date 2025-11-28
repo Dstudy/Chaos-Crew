@@ -817,7 +817,8 @@ MonoBehaviour:
   shield: 0
   maxShield: 10
   position: 0
-  element: 2
+  element: 5
+  isLocalEnemy: 0
 --- !u!114 &3794047043405984309
 MonoBehaviour:
   m_ObjectHideFlags: 0
