@@ -31,8 +31,7 @@ public class DragTarget : MonoBehaviour
             // Fetch the first collider.
             // NOTE: We could do this for multiple colliders.
             var collider = Physics2D.OverlapPoint (worldPos, m_DragLayers);
-            
-            Debug.Log(collider.name);
+          
             
             if (!collider)
                 return;

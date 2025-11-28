@@ -1,0 +1,102 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using Script.Enemy;
+using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
+
+[System.Serializable]
+public struct EnemyMove
+{
+    public string moveName;
+    public EnemyActionType actionType;
+    public float chargeTime;
+    public Color indicatorColor;
+    public int value;
+}
+
+public class EnemyPattern : MonoBehaviour
+{
+    [Header("Pattern Configuration")]
+    [SerializeField] private Enemy enemy;
+    [SerializeField] private EnemyMove[] moves; // List of moves to cycle through
+    [SerializeField] private float timeBetweenMoves = 2.0f;
+
+    [SerializeField] private GameObject worldSpaceCanvas;
+    [SerializeField] private Image indicatorImage;
+    // [SerializeField] private TextMeshProUGUI countdownText;
+
+    
+
+    private void Start()
+    {
+        // if(enemy.isLocalEnemy)
+        StartCoroutine(PatternRoutine());
+    }
+
+    private IEnumerator PatternRoutine()
+    {
+        int moveIndex = 0;
+
+        while (true) // Infinite loop for enemy behavior
+        {
+            // 1. Wait before starting next move
+            yield return new WaitForSeconds(timeBetweenMoves);
+
+            // 2. Get the current move
+            EnemyMove currentMove = moves[moveIndex];
+
+            // 3. TELEGRAPH PHASE (Countdown)
+            yield return StartCoroutine(PerformTelegraph(currentMove));
+
+            // 4. ACTION PHASE
+            PerformAction(currentMove);
+
+            // 5. Cycle to next move
+            moveIndex = (moveIndex + 1) % moves.Length; 
+        }
+    }
+    
+    private IEnumerator PerformTelegraph(EnemyMove move)
+    {
+        // worldSpaceCanvas.SetActive(true);
+        // indicatorImage.color = move.indicatorColor;
+        indicatorImage.fillAmount = 0;
+        
+        float timer = move.chargeTime;
+
+        while (timer > 0)
+        {
+            timer -= Time.deltaTime;
+            
+            // Update UI
+            // countdownText.text = Mathf.Ceil(timer).ToString(); // 3, 2, 1...
+            indicatorImage.fillAmount = (float)1 - (timer / move.chargeTime); // Fill circle
+
+            // Make UI face the camera (Billboard effect)
+            // if(Camera.main != null)
+            //     worldSpaceCanvas.transform.rotation = Camera.main.transform.rotation;
+
+            yield return null;
+        }
+
+        // worldSpaceCanvas.gameObject.SetActive(false);
+    }
+    
+    private void PerformAction(EnemyMove move)
+    {
+        Debug.Log(move.moveName + " " + move.value);
+        switch (move.actionType)
+        {
+            case EnemyActionType.Attack:
+                enemy.DoAttack(move.value, enemy.Pos);
+                break;
+            case EnemyActionType.Shield:
+                enemy.DoShield(move.value);
+                break;
+        }
+    }
+    
+    
+}

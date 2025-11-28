@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6473791635063132924}
   - component: {fileID: 9088678051652594097}
-  - component: {fileID: 6858876521269064816}
+  - component: {fileID: -5742136982794984575}
   m_Layer: 0
   m_Name: EarthSword
   m_TagString: Untagged
@@ -85,7 +85,7 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!60 &6858876521269064816
+--- !u!60 &-5742136982794984575
 PolygonCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -130,10 +130,7 @@ PolygonCollider2D:
   m_Points:
     m_Paths:
     - - {x: -1.08, y: 1.08}
-      - {x: -0.78356886, y: -0.11741358}
-      - {x: -0.054509282, y: -0.87169707}
+      - {x: -1.08, y: -1.08}
       - {x: 1.08, y: -1.08}
-      - {x: 1.08, y: -1.08}
-      - {x: 0.903744, y: -0.12542498}
-      - {x: -0.24192274, y: 0.967837}
+      - {x: 1.08, y: 1.08}
   m_UseDelaunayMesh: 0

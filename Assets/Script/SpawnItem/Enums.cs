@@ -16,6 +16,7 @@ public enum Element
     Water,
     Earth,
     Air,
+    Chaos,
 }
 
 public enum AugmentType
@@ -35,4 +36,10 @@ public enum SpawnType
     AllAttackItemsPerElement,
     AttackAndSupport,
     Augment,
+}
+
+public enum EnemyActionType
+{
+    Attack,
+    Shield
 }

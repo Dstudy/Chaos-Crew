@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 877691933348861361}
   - component: {fileID: 4288340122540716386}
-  - component: {fileID: 957850756495357365}
+  - component: {fileID: 3892523636704731047}
   m_Layer: 0
   m_Name: FireSword
   m_TagString: Untagged
@@ -85,7 +85,7 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!60 &957850756495357365
+--- !u!60 &3892523636704731047
 PolygonCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -130,10 +130,7 @@ PolygonCollider2D:
   m_Points:
     m_Paths:
     - - {x: -1.08, y: 1.08}
-      - {x: -0.78356886, y: -0.11741358}
-      - {x: -0.054509282, y: -0.87169707}
+      - {x: -1.08, y: -1.08}
       - {x: 1.08, y: -1.08}
-      - {x: 1.08, y: -1.08}
-      - {x: 0.903744, y: -0.12542498}
-      - {x: -0.24192274, y: 0.967837}
+      - {x: 1.08, y: 1.08}
   m_UseDelaunayMesh: 0

@@ -390,7 +390,7 @@ public class SpawnSystem : NetworkBehaviour
             return;
         }
 
-        Transform spawnPosition = GetSpawnPoint(player.map);
+        Transform spawnPosition = GetSpawnPoint(player.playerMap);
         
         // Get item from pool or create new one
         GameObject dragItem = PrefabPool.singleton.Get(spawnPosition.position, spawnPosition.rotation);
@@ -427,11 +427,11 @@ public class SpawnSystem : NetworkBehaviour
     }
     
 
-    private Transform GetSpawnPoint(MapManager map)
+    private Transform GetSpawnPoint(PlayerMap playerMap)
     {
         Random random = new Random();
-        int randomIndex = random.Next(map.spawnItemPoints.Count);
-        Transform spawnPoint = map.spawnItemPoints[randomIndex];
+        int randomIndex = random.Next(playerMap.spawnItemPoints.Count);
+        Transform spawnPoint = playerMap.spawnItemPoints[randomIndex];
         return spawnPoint;
     }
 

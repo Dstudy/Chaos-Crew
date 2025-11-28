@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Mirror;
+using Script.Enemy;
 using UnityEngine;
 
 public class ServerGameManager : NetworkBehaviour
@@ -143,7 +144,7 @@ public class ServerGameManager : NetworkBehaviour
     {
         if (entity == null) return;
 
-        if (entity.GetComponent<MapManager>() != null)
+        if (entity.GetComponent<PlayerMap>() != null)
             UnregisterMap(entity);
         else if (entity.GetComponent<Player>() != null)
             UnregisterPlayer(entity);

@@ -21,23 +21,13 @@ public class TeleportItem : NetworkBehaviour
         playerManager = PlayerManager.instance;
     }
     
-    
-    public void ServerTeleport(GameObject itemToTeleport, int direction, MapManager map)
+    [ClientRpc]
+    public void Teleport(GameObject itemToTeleport, int direction, Vector2 spawnPoint)
     {
-        // We are on the server. We don't need the 'Transform' from the client.
-        // We get the spawn point ourselves.
-        Transform spawnPoint;
-        
-        if(direction == 1)
-            spawnPoint = map.leftSpawnPoint;
-        else
-        {
-            spawnPoint = map.rightSpawnPoint;
-        }
         // Now, actually move the item.
         // You must set the position on the server for it to sync.
         // Make sure the item has a NetworkTransform component.
-        itemToTeleport.transform.position = spawnPoint.position;
+        itemToTeleport.transform.position = spawnPoint;
 
         // If you want to shoot it (like in SpawnSystem), you must call an Rpc
         // from the item itself.
@@ -48,7 +38,7 @@ public class TeleportItem : NetworkBehaviour
         if (item != null)
         {
             // Assuming you have an RpcShoot like we built before
-            // item.RpcShoot(spawnPoint.up * direction, 10f); // 10f is just an example force
+            item.Shoot(spawnPoint * direction, 0.1f);
         }
     }
 }

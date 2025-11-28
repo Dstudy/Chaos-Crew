@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Mirror;
 using Mirror.Examples;
+using Script.Enemy;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -85,6 +86,16 @@ public class DraggableItem : NetworkBehaviour
     
     [ClientRpc]
     public void RpcShoot(Vector2 direction, float force)
+    {
+        // This code will now run on ALL clients + the server
+        Rigidbody2D rb = GetComponent<Rigidbody2D>();
+        if (rb != null)
+        {
+            rb.AddForce(direction * force, ForceMode2D.Impulse);
+        }
+    }
+    
+    public void Shoot(Vector2 direction, float force)
     {
         // This code will now run on ALL clients + the server
         Rigidbody2D rb = GetComponent<Rigidbody2D>();
@@ -194,7 +205,7 @@ public class DraggableItem : NetworkBehaviour
         if (itemData == null) return;
 
         MonoBehaviour target = other.GetComponent<Player>();
-        if (target == null) target = other.GetComponent<Enemy>();
+        if (target == null) target = other.transform.parent.GetComponent<Enemy>();
         if (target == null) target = other.GetComponent<DraggableItem>();
         
         if(target == null) return;
@@ -227,36 +238,26 @@ public class DraggableItem : NetworkBehaviour
     private void OnTriggerEnter2D(Collider2D collision)
     {   
         // Only process on clients (not server-only)
-        if (!isClient) return;
+        // if (!isClient) return;
         
         GameObject localPlayerObj = NetworkClient.localPlayer?.gameObject;
         if (localPlayerObj == null) return;
-        
+        int playerId = int.Parse(localPlayerObj.GetComponent<Player>().id);
         NetworkGamePlayerLobby player = localPlayerObj.GetComponent<NetworkGamePlayerLobby>();
         if (player == null) return;
+        if (player.localPlayer == null) return;
         
         if (collision.tag == "RightCollider")
         {
-            player.CmdTeleportItem(this.gameObject, 1);
+            player.CmdTeleportItem(this.gameObject, 1, playerId);
+            Debug.Log("PLayer id " + playerId);
             Debug.Log("Object fly to the right");
         }
         else if (collision.tag == "LeftCollider")
         {
-            player.CmdTeleportItem(this.gameObject, -1);
+            player.CmdTeleportItem(this.gameObject, -1, playerId);
+            Debug.Log("PLayer id " + playerId);
             Debug.Log("Object fly to the left");
-        }
-        else if (collision.tag == "PlaySide")
-        {
-            if (isOwned)
-            {
-                Debug.Log("Already have authority over this object, skipping");
-                return;
-            }
-            
-            Debug.Log("This player receive object");
-            Debug.Log("Item " + gameObject.name + " var với " + collision.name);
-            
-            player.CmdAssignAuthority(gameObject);
         }
     }
     

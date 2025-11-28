@@ -53,6 +53,7 @@ MonoBehaviour:
   draggableItemPrefab: {fileID: 2063207890379626466, guid: ef4c7e0065800324cb9f3b8dd7f30f0e, type: 3}
   waveStartDelay: 2
   autoStartWaves: 1
+  shootForce: 5
 --- !u!114 &1560978802830915424
 MonoBehaviour:
   m_ObjectHideFlags: 0
