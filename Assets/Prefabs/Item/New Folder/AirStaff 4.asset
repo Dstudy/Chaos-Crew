@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cfedbc8eb4054044aa6be3b3b45f8382, type: 3}
+  m_Name: AirStaff 4
+  m_EditorClassIdentifier: 
+  id: 18
+  itemName: WaterStaff
+  damage: 1
+  initialElement: 2
+  maxCharges: 5
+  prefab: {fileID: 7829017506573580826, guid: 539ff7e16b4fd4b4b9fecc92eb04a494, type: 3}
+  fireSprite: {fileID: 21300000, guid: df4dee30c553f0146a6da962fd04f762, type: 3}
+  waterSprite: {fileID: 21300000, guid: c612e340505c60a478ea8c1627f33c01, type: 3}
+  earthSprite: {fileID: 21300000, guid: b1b06daa4fa9d3c4891979973836ac4d, type: 3}
+  airSprite: {fileID: 21300000, guid: 7046672a022580c4a838d92d8bf1ced1, type: 3}
+  chaosSprite: {fileID: 21300000, guid: 0adc20ccbed772f449f71b6ce6354813, type: 3}

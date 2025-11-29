@@ -3,6 +3,8 @@ public static class CONST
     #region ITEM
 
     public static string DRAGGABLE_ITEM = "draggable_item";
+    
+    public static string STAFF_CHANGE_ELEMENT = "staff_change_element";
 
     #endregion
 
@@ -18,6 +20,8 @@ public static class CONST
     public static string ENEMY_CAST_SHIELD = "enemy_cast_shield";
 
     #endregion
+
+
     
     public static string MAP_ENABLED = "map_enabled";
     

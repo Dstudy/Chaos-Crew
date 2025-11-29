@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using Script.Enemy;
 using UnityEngine;
 
-public class Hammer : AttackItem
+public class HammerItem : AttackItem
 {
-    public Hammer(int id, string name, int damage, Element element) : base(id, name, damage, element)
+    public HammerItem(int id, string name, int damage, Element element) : base(id, name, damage, element)
     {
         
     }

@@ -31,6 +31,12 @@ MonoBehaviour:
   - {fileID: 11400000, guid: d6cf99f947d48ca4cbc5c55bea96217a, type: 2}
   - {fileID: 11400000, guid: 2f31f2b6f91e02142b25a8d8c75db012, type: 2}
   - {fileID: 11400000, guid: 7ef0329bc0161f347a47d53c8522ffd5, type: 2}
+  staffItemData:
+  - {fileID: 11400000, guid: f4ac632d8906fc741848450fe4027433, type: 2}
+  - {fileID: 11400000, guid: 39a8148adec7a8d49abc016f3c38348f, type: 2}
+  - {fileID: 11400000, guid: dc074a6c3d058114eabccf897f79e1eb, type: 2}
+  - {fileID: 11400000, guid: 2120a5efaf3820d4baf83856731f6f97, type: 2}
+  - {fileID: 11400000, guid: 1152a31eb0768c349b65b65258a962c7, type: 2}
   spawnDelay: 4
   waveCount: 10
   itemsPerPlayer: 10

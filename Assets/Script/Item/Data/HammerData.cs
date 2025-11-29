@@ -9,10 +9,11 @@ public class HammerData : ScriptableObject
     public Element element;
     public GameObject prefab;
 
-    public Hammer CreateHammerItem()
+    public HammerItem CreateHammerItem()
     {
-        var item = new Hammer(id, itemName, damage, element);
+        var item = new HammerItem(id, itemName, damage, element);
         item.prefab = prefab;
         return item;
     }
+    
 }

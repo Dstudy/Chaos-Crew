@@ -11,6 +11,7 @@ public class ItemManager : MonoBehaviour
     public List<AugmentData> AugmentDatas;
     public List<SupportItemData> SupportItemDatas;
     public List<HammerData> HammerDatas;
+    public List<StaffItemData> StaffItemDatas;
     [SerializeField] private List<BaseItem> items = new List<BaseItem>();
     private Dictionary<int, BaseItem> itemLookup;
     private void Awake()
@@ -34,6 +35,11 @@ public class ItemManager : MonoBehaviour
         foreach (HammerData hammerData in HammerDatas)
         {
             items.Add(hammerData.CreateHammerItem());
+        }
+
+        foreach (StaffItemData staffItemData in StaffItemDatas)
+        {
+            items.Add(staffItemData.CreateStaffItem()); 
         }
         
         BuildItemLookup();

@@ -10,7 +10,7 @@ public class PlayerManager : NetworkBehaviour
 
     public static PlayerManager instance;
 
-    
+    public Player localPlayer;
     private void Awake()
     {
         instance = this;
@@ -20,6 +20,11 @@ public class PlayerManager : NetworkBehaviour
     public void AddPlayer(Player player)
     {
         players.Add(player.gameObject);
+    }
+
+    public void SetLocalPlayer(Player player)
+    {
+        localPlayer = player;
     }
 
     // 5. You MUST also have a way to remove players

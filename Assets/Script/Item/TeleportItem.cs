@@ -40,7 +40,7 @@ public class TeleportItem : NetworkBehaviour
         if (item != null)
         {
             // Assuming you have an RpcShoot like we built before
-            item.Shoot(vector * direction, 10f);
+            item.Shoot(vector * direction, 50f);
         }
     }
 }

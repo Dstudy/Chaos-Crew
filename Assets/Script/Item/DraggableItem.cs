@@ -101,7 +101,7 @@ public class DraggableItem : NetworkBehaviour
         Rigidbody2D rb = GetComponent<Rigidbody2D>();
         if (rb != null)
         {
-            rb.AddForce(direction * force, ForceMode2D.Impulse);
+            rb.AddForce(direction * force, ForceMode2D.Force);
         }
     }
     
@@ -212,7 +212,30 @@ public class DraggableItem : NetworkBehaviour
         
         if(target == null) return;
 
-        if (itemData is AttackItem attackItem && target is Enemy enemy && attackItem.element == enemy.element)
+        if (itemData is StaffItem staffItem && target is Enemy enemy1)
+        {
+            // Staff works like AttackItem - element must match
+            if (staffItem.element == enemy1.element && staffItem.HasCharges())
+            {
+                Element previousElement = staffItem.element;
+                staffItem.UseOn(target);
+                
+                // Update sprite if element changed
+                if (staffItem.element != previousElement)
+                {
+                    UpdateStaffSprite(staffItem);
+                }
+                
+                // Only destroy if charges are depleted
+                if (!staffItem.HasCharges())
+                {
+                    NetworkServer.UnSpawn(gameObject);
+                    PrefabPool.singleton.Return(gameObject);
+                }
+                // Otherwise, keep the item alive - it now has a new element and remaining charges
+            }
+        }
+        else if (itemData is AttackItem attackItem && target is Enemy enemy && attackItem.element == enemy.element)
         {
             itemData.UseOn(target);
             NetworkServer.UnSpawn(gameObject);
@@ -263,4 +286,23 @@ public class DraggableItem : NetworkBehaviour
         }
     }
     
+    private void UpdateStaffSprite(StaffItem staffItem)
+    {
+        if (staffItem == null || spriteRenderer == null) return;
+        
+        // Try to get sprite from staff's element sprite mapping
+        Sprite newSprite = staffItem.GetSpriteForElement(staffItem.element);
+        
+        if (newSprite != null)
+        {
+            spriteRenderer.sprite = newSprite;
+            Debug.Log($"Updated staff sprite to {staffItem.element} element.");
+        }
+        else
+        {
+            // Fallback: Try to get sprite from ItemManager by element
+            Debug.Log("No sprite huhu");
+            // UpdateSpriteByElement(staffItem.element);
+        }
+    }
 }

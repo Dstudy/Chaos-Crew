@@ -2,15 +2,17 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Mirror;
 using Script.Enemy;
 using UnityEngine;
 
-public class EnemyManager : MonoBehaviour
+public class EnemyManager : NetworkBehaviour
 {
     public List<GameObject> allEnemies;
     [SerializeField]private List<GameObject> TotalEnemies;
     [SerializeField] private List<Enemy> enemies = new List<Enemy>();
-    [SerializeField] private List<Element> elements = new List<Element>();
+
+    readonly SyncList<Element> elements = new SyncList<Element>();
     
     
     public static EnemyManager instance;
@@ -18,7 +20,7 @@ public class EnemyManager : MonoBehaviour
     private void Awake()
     {
         instance = this;
-        enemies.Clear();
+        // enemies.Clear();
         TotalEnemies = new List<GameObject>();
         TotalEnemies = allEnemies.ToList();  
     }
@@ -38,13 +40,17 @@ public class EnemyManager : MonoBehaviour
         return enemy;
     }
 
-    public List<Element> GetElements()
+    public void InitElements()
     {
         elements.Clear();
         foreach (var enemy in enemies)
         {
             elements.Add(enemy.GetComponent<Enemy>().element);
-        }    
-        return elements;
+        }   
+    }
+
+    public List<Element> GetElements()
+    {
+        return elements.ToList();
     }
 }

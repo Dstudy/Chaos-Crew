@@ -253,6 +253,24 @@ public class SpawnSystem : NetworkBehaviour
         Dictionary<Player, List<BaseItem>> playerItems = new Dictionary<Player, List<BaseItem>>();
         int totalItemsToSpawn = wave.waveCount;
         
+        List<Element> elements = null;
+        try
+        {
+            elements = EnemyManager.instance.GetElements();
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"Error getting elements from EnemyManager: {e.Message}");
+            yield break;
+        }
+        
+        if (elements == null || elements.Count == 0)
+        {
+            Debug.LogWarning("No elements found from EnemyManager!");
+            yield break;
+        }
+        
+        
         foreach (Player player in players)
         {
             List<BaseItem> itemsToSpawn = new List<BaseItem>();
@@ -263,7 +281,7 @@ public class SpawnSystem : NetworkBehaviour
                 {
                     case 0:
                     {
-                        AttackItemData attackData = wave.attackItemData[UnityEngine.Random.Range(0, wave.attackItemData.Count)];
+                        AttackItemData attackData = wave.GetAttackItem(elements[UnityEngine.Random.Range(0, elements.Count)]);
                         if (attackData != null)
                         {
                             itemsToSpawn.Add(attackData.CreateAttackItem());
@@ -282,16 +300,16 @@ public class SpawnSystem : NetworkBehaviour
                     }
                     case 2:
                     {
-                        AugmentData augmentData = wave.augmentData[UnityEngine.Random.Range(0, wave.augmentData.Count)];
-                        if (augmentData != null)
+                        StaffItemData staffItemData = wave.GetStaffItem(elements[UnityEngine.Random.Range(0, elements.Count)]);
+                        if (staffItemData != null)
                         {
-                            itemsToSpawn.Add(augmentData.CreateAugment());
+                            itemsToSpawn.Add(staffItemData.CreateStaffItem());
                         }
                         break;
                     }
                     case 3:
                     {
-                        HammerData hammerData = wave.hammerData[UnityEngine.Random.Range(0, wave.hammerData.Count)];
+                        HammerData hammerData = wave.GetHammerItem(elements[UnityEngine.Random.Range(0, elements.Count)]);
                         if (hammerData != null)
                         {
                             itemsToSpawn.Add(hammerData.CreateHammerItem());

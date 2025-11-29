@@ -43,7 +43,8 @@ public class NetworkRoomPlayerLobby : NetworkBehaviour
     
     public override void OnStartAuthority()
     {
-        lobbyUI.SetActive(true);
+        if(isLocalPlayer)
+            lobbyUI.SetActive(true);
     }
 
     public override void OnStartClient()

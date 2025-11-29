@@ -55,6 +55,7 @@ public class PlayerSpawnSystem : NetworkBehaviour
                     {
                         networkGamePlayer.localPlayer = player;
                         networkGamePlayer.EnableMapCollider(player.gameObject);
+                        PlayerManager.instance.SetLocalPlayer(player);
                         Debug.Log("LocalPlayer stored: " + NetworkClient.localPlayer.name);
                         yield break; // Exit the coroutine
                     }
@@ -134,6 +135,7 @@ public class PlayerSpawnSystem : NetworkBehaviour
         enemyStat.name = $"Enemy {nextIndex}";
         enemyStat.id = nextIndex.ToString();
         enemyStat.Pos = nextIndex;
+        enemyManager.InitElements();
         NetworkServer.Spawn(enemy, conn);
         
         playerStat.RPCSetEnemy(enemy);

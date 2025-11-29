@@ -51,8 +51,15 @@ public class EnemyPattern : MonoBehaviour
             yield return StartCoroutine(PerformTelegraph(currentMove));
 
             // 4. ACTION PHASE
-            PerformAction(currentMove);
-
+            if (isStuned)
+            {
+                isStuned = false;
+            }
+            else
+            {
+                PerformAction(currentMove);
+            }
+            
             // 5. Cycle to next move
             moveIndex = (moveIndex + 1) % moves.Length; 
         }
