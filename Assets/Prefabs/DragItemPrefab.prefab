@@ -9,7 +9,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2766693091439057220}
-  - component: {fileID: 6203428717625950186}
   - component: {fileID: 2690176137095201256}
   - component: {fileID: 2138180516361040935}
   - component: {fileID: 214744841788332785}
@@ -36,23 +35,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &6203428717625950186
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2063207890379626466}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9b91ecbcc199f4492b9a91e820070131, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  sceneId: 0
-  _assetId: 1868330908
-  serverOnly: 0
-  visibility: 0
-  hasSpawned: 0
 --- !u!60 &2690176137095201256
 PolygonCollider2D:
   m_ObjectHideFlags: 0
@@ -142,11 +124,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1bed98fe981e9dc41a995e2600c1ece2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  syncDirection: 0
-  syncMode: 0
-  syncInterval: 0
+  instanceId: -1
+  itemData:
+    rid: -2
   currentAuthorityOwner: None
   authorityPlayer: {fileID: 0}
+  currentCharges: 0
+  currentElement: 0
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
 --- !u!212 &3955999498165869517
 SpriteRenderer:
   m_ObjectHideFlags: 0

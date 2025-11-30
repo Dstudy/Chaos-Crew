@@ -16,7 +16,7 @@ public class PlayerScript : MonoBehaviour
         player = gameObject.GetComponent<Player>();
 
         player.onHealthChanged += (health, maxHealth) => UpdateHealthBar(health, maxHealth);
-        player.OnShieldChanged += (shield, maxShield) => UpdateShield(shield, maxShield);
+        player.onShieldChanged += (shield, maxShield) => UpdateShield(shield, maxShield);
     }
 
     private void UpdateHealthBar(int health, int maxHealth)

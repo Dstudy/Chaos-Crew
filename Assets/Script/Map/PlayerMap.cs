@@ -28,6 +28,8 @@ public class PlayerMap : MonoBehaviour
         playerPos = Camera.main.ScreenToWorldPoint(new Vector3(playerPos.x + Screen.width/2, 0, 1));
         player.transform.position = playerPos;
         
+        player.GetComponent<Player>().enemy.gameObject.transform.position = new Vector3(playerPos.x, -playerPos.y, playerPos.z);
+        
         ObserverManager.InvokeEvent(MAP_ENABLED, this, enable, player);
     }
 

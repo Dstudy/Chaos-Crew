@@ -22,6 +22,7 @@ public class StaffItem : AttackItem
     {
         if (target is Enemy enemy)
         {
+            Debug.Log(element + "  " + enemy.element);
             if (element == enemy.element)
             {
                 enemy.TakeDamage(damage, this.element);
@@ -53,12 +54,12 @@ public class StaffItem : AttackItem
     {
         List<Element> availableElements = new List<Element>();
         availableElements = EnemyManager.instance.GetElements();
-        
+        availableElements.Remove(element);
         if (availableElements.Count > 0)
         {
             Element oldElement = this.element;
-            this.element = availableElements[UnityEngine.Random.Range(0, availableElements.Count)];
-            Debug.Log($"Staff element changed from {oldElement} to {element}.");
+            this.element = availableElements[Random.Range(0, availableElements.Count)];
+            Debug.Log($"Staff element changed from {oldElement} to {this.element}.");
             
             // Notify that element changed (so sprite can be updated)
             ObserverManager.InvokeEvent(STAFF_CHANGE_ELEMENT, this, this.element);

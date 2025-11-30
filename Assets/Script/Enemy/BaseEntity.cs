@@ -8,9 +8,10 @@ public abstract class BaseEntity : NetworkBehaviour
 {
     [SyncVar]
     public string id;
-    [SyncVar]
+    [SyncVar (hook = nameof(OnHealthChanged))]
     public int health;
     public int maxHealth;
+    [SyncVar (hook = nameof(OnShieldChanged))]
     public int shield;
     public int maxShield;
     
@@ -18,8 +19,18 @@ public abstract class BaseEntity : NetworkBehaviour
     [SerializeField] public int position; 
     
     public event Action<int, int> onHealthChanged;
-    public event Action<int, int> OnShieldChanged;
+    public event Action<int, int> onShieldChanged;
 
+    private void OnHealthChanged(int _, int newHealth)
+    {
+        onHealthChanged?.Invoke(newHealth, maxHealth);
+    }
+
+    private void OnShieldChanged(int _, int newShield)
+    {
+        onShieldChanged?.Invoke(newShield, maxShield);
+    }
+    
     public virtual int Health
     {
         get{ return health; }
@@ -43,7 +54,7 @@ public abstract class BaseEntity : NetworkBehaviour
             if (newShield != shield)
             {
                 shield = newShield;
-                OnShieldChanged?.Invoke(shield, maxShield);
+                onShieldChanged?.Invoke(shield, maxShield);
             }
         }
     }

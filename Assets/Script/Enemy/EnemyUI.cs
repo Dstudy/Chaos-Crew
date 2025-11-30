@@ -17,7 +17,7 @@ public class EnemyUI : MonoBehaviour
         enemy = gameObject.GetComponent<Enemy>();
 
         enemy.onHealthChanged += (health, maxHealth) => UpdateHealthBar(health, maxHealth);
-        enemy.OnShieldChanged += (shield, maxShield) => UpdateShield(shield, maxShield);
+        enemy.onShieldChanged += (shield, maxShield) => UpdateShield(shield, maxShield);
     }
 
     private void UpdateHealthBar(int health, int maxHealth)

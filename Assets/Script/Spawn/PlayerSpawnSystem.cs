@@ -27,6 +27,7 @@ public class PlayerSpawnSystem : NetworkBehaviour
 
     public override void OnStartClient()
     {
+        Debug.Log("Start client and register localplayer");
         StartCoroutine(WaitForLocalPlayer());
     }
 
@@ -47,7 +48,7 @@ public class PlayerSpawnSystem : NetworkBehaviour
             if (NetworkClient.localPlayer != null)
             {
                 Player player = NetworkClient.localPlayer.GetComponent<Player>();
-                if (player != null && player.playerMap!=null)
+                if (player != null && player.playerMap!=null && player.enemy !=null)
                 {
                     // This is the new game player, not the old lobby player!
                     NetworkGamePlayerLobby networkGamePlayer = NetworkClient.localPlayer.GetComponent<NetworkGamePlayerLobby>();

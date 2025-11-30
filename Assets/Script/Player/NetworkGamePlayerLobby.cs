@@ -72,32 +72,32 @@ public class NetworkGamePlayerLobby : NetworkBehaviour
     }
     
     
-
-    [Command]
-    public void CmdTeleportItem(GameObject itemToTeleport, int direction, int index)
-    {
-        playerManager = PlayerManager.instance;
-        if (playerManager == null)
-            Debug.Log("PlayerManager is null");
-        if (itemToTeleport == null)
-            Debug.Log("ItemToTeleport is null");
-        if (playerManager.players == null)
-            Debug.Log("Players is null");
-        Debug.Log($"PlayerManager: " + index);
-        
-        int teleIndex = (index + direction + playerManager.players.Count) % playerManager.players.Count;
-
-        Debug.Log("Teleport item from player: " + index + " to player: " + teleIndex);
-
-        Player playerScript = playerManager.players[teleIndex].GetComponent<Player>();
-
-        if (TeleportItem.Instance == null)
-            Debug.Log("TeleportItemn is NULL");
-        
-        Transform telePosition = direction == -1 ? playerScript.playerMap.rightSpawnPoint : playerScript.playerMap.leftSpawnPoint;
-        
-        TeleportItem.Instance.Teleport(itemToTeleport, direction, telePosition.position);
-        
-    }
+    //
+    // [Command]
+    // public void CmdTeleportItem(GameObject itemToTeleport, int direction, int index)
+    // {
+    //     playerManager = PlayerManager.instance;
+    //     if (playerManager == null)
+    //         Debug.Log("PlayerManager is null");
+    //     if (itemToTeleport == null)
+    //         Debug.Log("ItemToTeleport is null");
+    //     if (playerManager.players == null)
+    //         Debug.Log("Players is null");
+    //     Debug.Log($"PlayerManager: " + index);
+    //     
+    //     int teleIndex = (index + direction + playerManager.players.Count) % playerManager.players.Count;
+    //
+    //     Debug.Log("Teleport item from player: " + index + " to player: " + teleIndex);
+    //
+    //     Player playerScript = playerManager.players[teleIndex].GetComponent<Player>();
+    //
+    //     if (TeleportItem.Instance == null)
+    //         Debug.Log("TeleportItemn is NULL");
+    //     
+    //     Transform telePosition = direction == -1 ? playerScript.playerMap.rightSpawnPoint : playerScript.playerMap.leftSpawnPoint;
+    //     
+    //     TeleportItem.Instance.Teleport(itemToTeleport, direction, telePosition.position);
+    //     
+    // }
     
 }

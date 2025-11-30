@@ -4,14 +4,52 @@ using System.Collections.Generic;
 using Mirror;
 using UnityEngine;
 using System.Linq;
-using Mirror.Examples;
 using Random = System.Random;
+
+// Server-side item instance tracking
+[Serializable]
+public class ServerItemInstance
+{
+    public int instanceId;
+    public int itemId; // BaseItem.id
+    public string ownerPlayerId; // Player.id
+    public BaseItem itemData; // Full item data for server reference
+    public Vector3 spawnPosition;
+    public int spawnPointIndex;
+    
+    // State data that might change
+    public int charges; // For items with charges (like StaffItem)
+    public Element currentElement; // For items that can change element
+    
+    public ServerItemInstance(int instanceId, int itemId, string ownerPlayerId, BaseItem itemData, Vector3 spawnPosition, int spawnPointIndex)
+    {
+        this.instanceId = instanceId;
+        this.itemId = itemId;
+        this.ownerPlayerId = ownerPlayerId;
+        this.itemData = itemData;
+        this.spawnPosition = spawnPosition;
+        this.spawnPointIndex = spawnPointIndex;
+        
+        // Initialize state from item data
+        if (itemData is StaffItem staffItem)
+        {
+            this.charges = staffItem.charges;
+            this.currentElement = staffItem.element;
+        }
+        else if (itemData is AttackItem attackItem)
+        {
+            this.currentElement = attackItem.element;
+        }
+    }
+}
 
 public class SpawnSystem : NetworkBehaviour
 {
+    public static SpawnSystem singleton;
+    
     [Header("Wave Configuration")]
     [SerializeField] private List<WaveSpawn> waves = new List<WaveSpawn>();
-    [SerializeField] private GameObject draggableItemPrefab;
+    [SerializeField] public GameObject draggableItemPrefab;
     
     [Header("Spawn Settings")]
     [SerializeField] private float waveStartDelay = 1f;
@@ -20,7 +58,7 @@ public class SpawnSystem : NetworkBehaviour
     private int currentWaveIndex = 0;
     private bool isSpawning = false;
 
-    [SerializeField] private float shootForce = 10f;
+    [SerializeField] private float shootForce = 5f;
     
     public static event Action<int> OnWaveStarted;
     public static event Action<int> OnWaveCompleted;
@@ -30,9 +68,25 @@ public class SpawnSystem : NetworkBehaviour
 
     private int readyPlayersCount;
     private bool wavesStarted;
+    
+    
+    // Server-side item tracking
+    private Dictionary<int, ServerItemInstance> allItemInstances = new Dictionary<int, ServerItemInstance>();
+    private Dictionary<string, List<int>> playerItemInstances = new Dictionary<string, List<int>>(); // playerId -> list of instanceIds
+    private int nextInstanceId = 1;
 
-    private int itemSpawnCounter = 0;
-
+    private void Awake()
+    {
+        if (singleton == null)
+        {
+            singleton = this;
+        }
+        else if (singleton != this)
+        {
+            Debug.LogWarning("Multiple SpawnSystem instances found!");
+        }
+    }
+    
     public override void OnStartServer()
     {
         Debug.Log("Spawn system started on server");
@@ -60,6 +114,56 @@ public class SpawnSystem : NetworkBehaviour
             // StartNextWave();
             wavesStarted = true;
         }
+    }
+    
+    [Server]
+    private NetworkConnectionToClient GetPlayerConnection(Player player)
+    {
+        if (player == null) return null;
+        NetworkIdentity playerIdentity = player.GetComponent<NetworkIdentity>();
+        return playerIdentity?.connectionToClient;
+    }
+    
+    [Server]
+    public void RegisterItemInstance(ServerItemInstance instance)
+    {
+        allItemInstances[instance.instanceId] = instance;
+        
+        if (!playerItemInstances.ContainsKey(instance.ownerPlayerId))
+        {
+            playerItemInstances[instance.ownerPlayerId] = new List<int>();
+        }
+        playerItemInstances[instance.ownerPlayerId].Add(instance.instanceId);
+    }
+    
+    [Server]
+    public void UnregisterItemInstance(int instanceId)
+    {
+        if (allItemInstances.TryGetValue(instanceId, out ServerItemInstance instance))
+        {
+            allItemInstances.Remove(instanceId);
+            if (playerItemInstances.ContainsKey(instance.ownerPlayerId))
+            {
+                playerItemInstances[instance.ownerPlayerId].Remove(instanceId);
+            }
+        }
+    }
+    
+    [Server]
+    public ServerItemInstance GetItemInstance(int instanceId)
+    {
+        allItemInstances.TryGetValue(instanceId, out ServerItemInstance instance);
+        return instance;
+    }
+    
+    [Server]
+    public List<int> GetPlayerItemInstances(string playerId)
+    {
+        if (playerItemInstances.TryGetValue(playerId, out List<int> instances))
+        {
+            return new List<int>(instances);
+        }
+        return new List<int>();
     }
     private IEnumerator StartWaveAfterDelay()
     {
@@ -191,12 +295,12 @@ public class SpawnSystem : NetworkBehaviour
             yield break;
         }
 
-        List<Element> elements = null;
+        List<Element> elements;
         try
         {
             elements = EnemyManager.instance.GetElements();
         }
-        catch (System.Exception e)
+        catch (Exception e)
         {
             Debug.LogError($"Error getting elements from EnemyManager: {e.Message}");
             yield break;
@@ -258,7 +362,7 @@ public class SpawnSystem : NetworkBehaviour
         {
             elements = EnemyManager.instance.GetElements();
         }
-        catch (System.Exception e)
+        catch (Exception e)
         {
             Debug.LogError($"Error getting elements from EnemyManager: {e.Message}");
             yield break;
@@ -488,43 +592,94 @@ public class SpawnSystem : NetworkBehaviour
         }
 
         Transform spawnPosition = GetSpawnPoint(player.playerMap);
+        int spawnPointIndex = player.playerMap.spawnItemPoints.IndexOf(spawnPosition);
+        if (spawnPointIndex < 0) spawnPointIndex = 0;
         
-        // Get item from pool or create new one
-        GameObject dragItem = PrefabPool.singleton.Get(spawnPosition.position, spawnPosition.rotation);
-        // GameObject dragItem = Instantiate(item.prefab, spawnPosition.position, spawnPosition.rotation);
-
-        DraggableItem draggableItem = dragItem.GetComponent<DraggableItem>();
-
-        if (draggableItem != null)
+        // Create server-side item instance
+        int instanceId = nextInstanceId++;
+        ServerItemInstance itemInstance = new ServerItemInstance(
+            instanceId,
+            item.id,
+            player.id,
+            item,
+            spawnPosition.position + offset,
+            spawnPointIndex
+        );
+        
+        // Register the instance
+        RegisterItemInstance(itemInstance);
+        
+        // Get player's connection and send TargetRpc to spawn locally
+        NetworkConnectionToClient conn = GetPlayerConnection(player);
+        if (conn != null)
         {
-            itemSpawnCounter++;
-            string itemName = $"{item.name} - Wave {currentWaveIndex + 1} - #{itemSpawnCounter}";
-            if (player != null)
+            // Get additional state data
+            int charges = 0;
+            Element element = Element.None;
+            if (item is StaffItem staffItem)
             {
-                itemName = $"{item.name} - Player {player.id} - Wave {currentWaveIndex + 1}";
+                charges = staffItem.charges;
+                element = staffItem.element;
             }
-            draggableItem.gameObject.name = itemName;
-            // dragItem.GetComponent<SpriteRenderer>().sprite = item.icon;
-            draggableItem.GetComponent<PolygonCollider2D>().points = item.collider2D.points;
-            draggableItem.transform.position = spawnPosition.position;
+            else if (item is AttackItem attackItem)
+            {
+                element = attackItem.element;
+            }
             
-            if (draggableItem.TryGetComponent(out NetworkIdentity netIdentity))
-            {
-                if (NetworkServer.active && !NetworkServer.spawned.ContainsKey(netIdentity.netId))
-                {
-                    
-                    NetworkServer.Spawn(draggableItem.gameObject);
-                    Debug.Log("Da spawn object " + draggableItem.gameObject.name);
-                    Vector2 shootDirection = spawnPosition.up;
-                    draggableItem.RpcShoot(shootDirection, shootForce);
-                    draggableItem.SetItem(item);
-                    
-                }
-            }
+            // Send RPC to client to spawn local visual
+                TargetSpawnItemLocal(conn, instanceId, item.id, spawnPosition.position + offset, spawnPointIndex, spawnPosition.up, charges, element);
         }
         else
         {
-            Debug.LogError("Failed to get or create DraggableItem from pool!");
+            Debug.LogError($"Could not get connection for player {player.id}");
+        }
+    }
+    
+    [TargetRpc]
+    private void TargetSpawnItemLocal(NetworkConnectionToClient conn, int instanceId, int itemId, Vector3 position, int spawnPointIndex, Vector2 shootDirection, int charges, Element element)
+    {
+        // This runs on the client that owns the item
+        if (draggableItemPrefab == null)
+        {
+            Debug.LogError("draggableItemPrefab is null on client!");
+            return;
+        }
+        
+        // Get item from local pool (client-side only)
+        if (LocalItemPool.singleton == null)
+        {
+            Debug.LogError("LocalItemPool.singleton is null! Make sure LocalItemPool is in the scene.");
+            return;
+        }
+        
+        LocalItemPool.singleton.SetPrefab(draggableItemPrefab);
+        GameObject dragItem = LocalItemPool.singleton.Get(position, Quaternion.identity);
+        DraggableItem draggableItem = dragItem.GetComponent<DraggableItem>();
+        
+        if (draggableItem != null)
+        {
+            // Get item data from ItemManager
+            BaseItem itemData = ItemManager.Instance.GetItemById(itemId);
+            if (itemData == null)
+            {
+                Debug.LogError($"Could not find item with id {itemId} in ItemManager!");
+                LocalItemPool.singleton.Return(dragItem);
+                return;
+            }
+            
+            // Set up the local item
+            draggableItem.SetItemLocal(instanceId, itemData, charges, element);
+            draggableItem.gameObject.name = $"{itemData.name} - Instance {instanceId}";
+            draggableItem.transform.position = position;
+            
+            // Apply shoot force
+            draggableItem.Shoot(shootDirection, shootForce);
+            
+            Debug.Log($"Client spawned local item instance {instanceId} at {position}");
+        }
+        else
+        {
+            Debug.LogError("Failed to get DraggableItem component from pool!");
         }
     }
     

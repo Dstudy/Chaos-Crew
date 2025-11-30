@@ -24,8 +24,15 @@ namespace Script.Enemy
             {
                 return;
             }
-            
-            this.Health -= damage;
+
+            int newDamage = damage;
+            if (Shield > 0)
+            {
+                newDamage -= Shield;
+                Shield -= damage;
+            }
+            if(newDamage<=0) newDamage = 0;
+            this.Health -= newDamage;
             Debug.Log("Take damage: " + damage);
 
             if (Health <= 0)

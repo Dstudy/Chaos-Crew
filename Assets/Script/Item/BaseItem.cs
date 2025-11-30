@@ -10,10 +10,16 @@ public abstract class BaseItem
     public string name;
     public ItemType type;
     public GameObject prefab;
+    private Sprite sprite;
 
     public Sprite icon
     {
-        get => prefab.GetComponent<SpriteRenderer>().sprite;
+        get => sprite != null ? sprite : prefab.GetComponent<SpriteRenderer>().sprite;
+    }
+
+    public virtual void setIcon(Sprite sprite)
+    {
+        this.sprite = sprite;  
     }
 
     public PolygonCollider2D collider2D

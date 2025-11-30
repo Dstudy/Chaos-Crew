@@ -24,6 +24,7 @@ public class SupportItem: BaseItem
     {
         if (target is Player player)
         {
+            Debug.Log(player.name);
             player.ApplyEffect(effect, value);
         }
         
