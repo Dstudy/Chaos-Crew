@@ -164,7 +164,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: a97c105638bdf8b4a8650670310a4cd3, type: 2}
+  - {fileID: 2100000, guid: b0a7e99a65ae91847b558f7959cd125d, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -772,6 +772,7 @@ GameObject:
   - component: {fileID: 3794047043405984309}
   - component: {fileID: -7582032055824810146}
   - component: {fileID: 688211444346053472}
+  - component: {fileID: 8698250027469264089}
   m_Layer: 0
   m_Name: WaterEnemy
   m_TagString: Untagged
@@ -877,6 +878,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   healthBar: {fileID: 9039880087175407445}
   shieldBar: {fileID: 5373170374984362541}
+  enemyEffect: {fileID: 8698250027469264089}
+--- !u!114 &8698250027469264089
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6250724485592894450}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fded0e169133a844680ce6c2c009d6ae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  material: {fileID: 2100000, guid: b0a7e99a65ae91847b558f7959cd125d, type: 2}
 --- !u!1 &6774652705850054822
 GameObject:
   m_ObjectHideFlags: 0

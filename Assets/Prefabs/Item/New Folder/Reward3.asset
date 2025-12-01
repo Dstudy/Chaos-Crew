@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5819a9202a4620040a95a8a5e0dd577a, type: 3}
+  m_Name: Reward3
+  m_EditorClassIdentifier: 
+  waveNumber: 3
+  spawnType: 4
+  attackItemData:
+  - {fileID: 11400000, guid: 3a9fafe329c6db04fb0ac7c785907e29, type: 2}
+  - {fileID: 11400000, guid: d6a62ed11b002e3478fef34f202fff2e, type: 2}
+  - {fileID: 11400000, guid: 37080394b4026e440bf488665af58c4d, type: 2}
+  - {fileID: 11400000, guid: 495db5cb20c448344903db12bab3b373, type: 2}
+  supportItemData:
+  - {fileID: 11400000, guid: 82f993fbef1430144895f01be1233673, type: 2}
+  - {fileID: 11400000, guid: fd1dad1f3d42e2d4a80bae777f4ab8de, type: 2}
+  augmentData:
+  - {fileID: 11400000, guid: 59cee4f0aa6be7a4282effb5edbb8677, type: 2}
+  - {fileID: 11400000, guid: df81dfad8bee04e4480cc09171069e63, type: 2}
+  hammerData:
+  - {fileID: 11400000, guid: 396c3fdc4fa7c2640820a22063b1e359, type: 2}
+  - {fileID: 11400000, guid: 1714241f2c7981943bef80478f7b521f, type: 2}
+  - {fileID: 11400000, guid: d6cf99f947d48ca4cbc5c55bea96217a, type: 2}
+  - {fileID: 11400000, guid: 2f31f2b6f91e02142b25a8d8c75db012, type: 2}
+  - {fileID: 11400000, guid: 7ef0329bc0161f347a47d53c8522ffd5, type: 2}
+  staffItemData:
+  - {fileID: 11400000, guid: f4ac632d8906fc741848450fe4027433, type: 2}
+  - {fileID: 11400000, guid: 39a8148adec7a8d49abc016f3c38348f, type: 2}
+  - {fileID: 11400000, guid: dc074a6c3d058114eabccf897f79e1eb, type: 2}
+  - {fileID: 11400000, guid: 2120a5efaf3820d4baf83856731f6f97, type: 2}
+  - {fileID: 11400000, guid: 1152a31eb0768c349b65b65258a962c7, type: 2}
+  spawnDelay: 2
+  waveCount: 13
+  itemsPerPlayer: 100
+  spawnOffset: {x: 0, y: 0, z: 0}

@@ -611,6 +611,7 @@ GameObject:
   - component: {fileID: 5414474712882556655}
   - component: {fileID: 3169683321790565726}
   - component: {fileID: 525201434457089695}
+  - component: {fileID: 7136562502241028674}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -654,7 +655,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: a97c105638bdf8b4a8650670310a4cd3, type: 2}
+  - {fileID: 2100000, guid: 4c390d8780ff103409b6104a31086533, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -721,3 +722,18 @@ CircleCollider2D:
   m_Offset: {x: 0, y: 0}
   serializedVersion: 2
   m_Radius: 0.64
+--- !u!114 &7136562502241028674
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8787679947193865880}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fded0e169133a844680ce6c2c009d6ae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  material: {fileID: 2100000, guid: 4c390d8780ff103409b6104a31086533, type: 2}
+  matColor: {r: 0, g: 0, b: 0, a: 0}
+  tintFadeSpeed: 0

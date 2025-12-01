@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Script.Enemy;
 using UnityEngine;
 using UnityEngine.UI;
+using static CONST;
 
 public class EnemyUI : MonoBehaviour
 {
@@ -12,12 +13,31 @@ public class EnemyUI : MonoBehaviour
     [SerializeField] private Image healthBar;
     [SerializeField] private Image shieldBar;
     
+    [SerializeField] private EntityEffect enemyEffect;
+    
     private void Awake()
     {
         enemy = gameObject.GetComponent<Enemy>();
 
         enemy.onHealthChanged += (health, maxHealth) => UpdateHealthBar(health, maxHealth);
         enemy.onShieldChanged += (shield, maxShield) => UpdateShield(shield, maxShield);
+        
+        ObserverManager.Register(ENEMY_CAST_SHIELD, (Action<Enemy>)GainShield);
+        ObserverManager.Register(ENEMY_GET_HIT, (Action<Enemy>)GetHit);
+    }
+    
+    
+
+    private void GainShield(Enemy target)
+    {
+        if(target == enemy && enemy.isLocalEnemy)
+            enemyEffect.SetColor(new Color(0,0.2f,0.8f,1f));
+    }
+
+    private void GetHit(Enemy target)
+    {
+        if(target == enemy && enemy.isLocalEnemy)
+            enemyEffect.SetColor((new Color(1, 0, 0, 1f)));
     }
 
     private void UpdateHealthBar(int health, int maxHealth)

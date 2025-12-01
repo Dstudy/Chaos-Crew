@@ -37,6 +37,7 @@ public enum SpawnType
     AttackAndSupport,
     Augment,
     RandomAll,
+    Reward,
 }
 
 public enum EnemyActionType

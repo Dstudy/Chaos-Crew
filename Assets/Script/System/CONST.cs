@@ -16,6 +16,8 @@ public static class CONST
 
     #region ENEMY
 
+    public static string ENEMY_GET_HIT = "enemy_get_hit";
+    public static string ENEMY_DEFEATED = "enemy_defeated";
     public static string ENEMY_CAST_NORMAL_ATTACK = "enemy_cast_normal_attack";
     public static string ENEMY_CAST_SHIELD = "enemy_cast_shield";
 

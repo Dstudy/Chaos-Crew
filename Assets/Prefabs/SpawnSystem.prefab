@@ -51,9 +51,11 @@ MonoBehaviour:
   waves:
   - {fileID: 11400000, guid: e0ba5e0b7d9925d408a03e8d4bb15077, type: 2}
   draggableItemPrefab: {fileID: 2063207890379626466, guid: ef4c7e0065800324cb9f3b8dd7f30f0e, type: 3}
+  rewardWaves: []
   waveStartDelay: 2
   autoStartWaves: 1
   shootForce: 5
+  meow: {fileID: 5686149472934743390, guid: c61b41085ce14644dbc2fdcae96c45e9, type: 3}
 --- !u!114 &1560978802830915424
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -69,5 +71,5 @@ MonoBehaviour:
   sceneId: 0
   _assetId: 9300870
   serverOnly: 0
-  visibility: 0
+  visibility: 2
   hasSpawned: 0
