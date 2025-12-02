@@ -21,6 +21,14 @@ public class EnemyManager : NetworkBehaviour
     {
         instance = this;
         TotalEnemies = new List<GameObject>(allEnemies);
+        InitEnemy();
+    }
+
+    public void InitEnemy()
+    {
+        //chay 
+        // for (int i = 0; i < 4; i++)
+        //     Element[i] ;
     }
 
     public GameObject GetEnemy()

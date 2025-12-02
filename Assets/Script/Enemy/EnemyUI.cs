@@ -12,6 +12,9 @@ public class EnemyUI : MonoBehaviour
 
     [SerializeField] private Image healthBar;
     [SerializeField] private Image shieldBar;
+
+    [SerializeField] private GameObject hitFace;
+    [SerializeField] private GameObject normalFace;
     
     [SerializeField] private EntityEffect enemyEffect;
     
@@ -38,6 +41,13 @@ public class EnemyUI : MonoBehaviour
     {
         if(target == enemy && enemy.isLocalEnemy)
             enemyEffect.SetColor((new Color(1, 0, 0, 1f)));
+        hitFace.SetActive(true);
+        normalFace.SetActive(false);
+    }
+
+    IEnumerator HitAnimation()
+    {
+        yield return new WaitForSeconds(0.5f);
     }
 
     private void UpdateHealthBar(int health, int maxHealth)

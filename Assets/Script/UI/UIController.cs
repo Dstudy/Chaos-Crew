@@ -5,6 +5,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using Mirror;
+using Script.UI;
 using static CONST;
 
 public class UIController : MonoBehaviour
@@ -13,7 +14,7 @@ public class UIController : MonoBehaviour
     public GameObject gameOverUI;
     public GameObject winUI;
     public Button exitUI;
-
+    
     private bool gameEnded;
     private bool exitHooked;
     private bool warnedMissingExit;

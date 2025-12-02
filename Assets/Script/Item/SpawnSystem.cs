@@ -5,6 +5,7 @@ using Mirror;
 using UnityEngine;
 using System.Linq;
 using Script.Enemy;
+using Script.UI;
 using Random = System.Random;
 using static CONST;
 

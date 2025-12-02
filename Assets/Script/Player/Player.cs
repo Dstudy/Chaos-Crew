@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Mirror;
 using Script.Enemy;
+using Script.UI;
 using UnityEngine;
 using UnityEngine.Serialization;
 using static CONST;

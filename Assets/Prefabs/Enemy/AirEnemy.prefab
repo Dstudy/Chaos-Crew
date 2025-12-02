@@ -269,7 +269,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: 8c9bf21a83db4134ea85bf5191cbbfb5, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 1ec3804a5c3738840b158ca468967c7b, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -855,7 +855,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1992898500635432209
 RectTransform:
   m_ObjectHideFlags: 0
@@ -933,7 +933,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &2588636490483724564
 Transform:
   m_ObjectHideFlags: 0
@@ -1001,6 +1001,8 @@ MonoBehaviour:
   timeBetweenMoves: 2
   worldSpaceCanvas: {fileID: 5223888165521198843}
   indicatorImage: {fileID: 1643046067212526076}
+  attackIcon: {fileID: 0}
+  defenseIcon: {fileID: 0}
 --- !u!114 &-7582032055824810146
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1032,6 +1034,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   healthBar: {fileID: 9039880087175407445}
   shieldBar: {fileID: 5373170374984362541}
+  hitFace: {fileID: 4060916389427647725}
+  normalFace: {fileID: 1687264784164653270}
   enemyEffect: {fileID: -2130456268221829286}
 --- !u!114 &-2130456268221829286
 MonoBehaviour:
