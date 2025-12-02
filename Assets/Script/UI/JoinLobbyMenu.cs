@@ -20,7 +20,7 @@ public class JoinLobbyMenu : MonoBehaviour
         NetworkManagerLobby.onClientConnected += HandleClientConnected;
         NetworkManagerLobby.onClientDisconnected += HandleClientDisconnected;
         
-        ipAddressInputField.text = "localhost";
+        ipAddressInputField.text = IPAddressManager.instance.GetLocalIPv4Address();
     }
 
     private void OnDisable()
