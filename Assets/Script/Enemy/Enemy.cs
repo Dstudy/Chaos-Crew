@@ -1,4 +1,5 @@
 using System;
+using Mirror;
 using UnityEngine;
 using static CONST;
 namespace Script.Enemy
@@ -25,7 +26,13 @@ namespace Script.Enemy
             {
                 return;
             }
-
+            
+            Player facingPlayer = GetFacingPlayer();
+            if (facingPlayer != null && facingPlayer.connectionToClient != null)
+            {
+                TargetInvokeEnemyHit(facingPlayer.connectionToClient);
+            }
+            
             int newDamage = damage;
             if (Shield > 0)
             {
@@ -40,9 +47,65 @@ namespace Script.Enemy
             {
                 isDead = true;
                 Debug.Log($"{name} has been defeated!");
-                ObserverManager.InvokeEvent(ENEMY_DEFEATED, this);
-                EnemyManager.instance?.NotifyEnemyDefeated();
-                Destroy(this.gameObject, 1f);
+                
+                if (isServer)
+                {
+                    // Call server-side spawn logic directly
+                    if (SpawnSystem.singleton != null)
+                    {
+                        SpawnSystem.singleton.OnEnemyDefeatedServer(this);
+                    }
+        
+                    // Invoke event on client that faces this enemy (for client-side observers)
+                   
+                    if (facingPlayer != null && facingPlayer.connectionToClient != null)
+                    {
+                        TargetInvokeEnemyDefeated(facingPlayer.connectionToClient);
+                    }
+        
+                    // DisableEnemy();
+                }
+            }
+        }
+    
+        [Server]
+        private Player GetFacingPlayer()
+        {
+            if (PlayerManager.instance == null || PlayerManager.instance.players == null)
+                return null;
+    
+            foreach (GameObject playerObj in PlayerManager.instance.players)
+            {
+                Player player = playerObj.GetComponent<Player>();
+                if (player != null && player.enemy == this)
+                {
+                    return player;
+                }
+            }
+            return null;
+        }
+
+        [TargetRpc]
+        private void TargetInvokeEnemyDefeated(NetworkConnectionToClient conn)
+        {
+            // This runs only on the client that faces this enemy
+            Instantiate(SpawnSystem.singleton.meow, transform.position, transform.rotation);
+            ObserverManager.InvokeEvent(ENEMY_DEFEATED, this);
+            DisableEnemy();
+            
+        }
+
+        [TargetRpc]
+        private void TargetInvokeEnemyHit(NetworkConnectionToClient conn)
+        {
+            ObserverManager.InvokeEvent(ENEMY_GET_HIT, this);
+        }
+
+        private void DisableEnemy()
+        {
+            foreach (Transform child in transform)
+            {
+                child.gameObject.SetActive(false);   
             }
         }
 
@@ -53,6 +116,7 @@ namespace Script.Enemy
 
         public void DoShield(int shield)
         {
+            ObserverManager.InvokeEvent(ENEMY_CAST_SHIELD, this);
             Debug.Log("Shield + " +  shield);
             Shield += shield;
         }

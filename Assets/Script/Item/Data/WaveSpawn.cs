@@ -5,7 +5,7 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "New Wave Spawn", menuName = "Items/Wave Spawn")]
 public class WaveSpawn : ScriptableObject
 {
-    public int waveNumber;
+    public int waveNumber { get; private set; }
     public SpawnType spawnType;
     
     [Header("Item Data")]

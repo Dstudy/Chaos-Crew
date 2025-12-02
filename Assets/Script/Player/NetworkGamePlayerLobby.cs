@@ -49,6 +49,14 @@ public class NetworkGamePlayerLobby : NetworkBehaviour
             return;
         }
         localPlayer.playerMap.EnableCollider(true, localPlayer.gameObject);
+        if (localPlayer.enemy == null)
+        {
+            Debug.Log("Enemy null roi");
+            return;
+        }
+        localPlayer.enemy.isLocalEnemy = true;
+        localPlayer.enemy.gameObject.GetComponent<EnemyPattern>().StartEnemyPattern();
+        Debug.Log("Set local enemy");
     }
 
     private void HandleMapEnabled(PlayerMap playerMap, bool enabled, GameObject owner)

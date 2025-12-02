@@ -1067,13 +1067,29 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 143704243894752370, guid: 6497258a978bb4344aed94d2cdb4ba02, type: 3}
+      propertyPath: rewardWaves.Array.size
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 143704243894752370, guid: 6497258a978bb4344aed94d2cdb4ba02, type: 3}
+      propertyPath: rewardWaves.Array.data[0]
+      value: 
+      objectReference: {fileID: 11400000, guid: 0ba8c7cd4e2b96d48ae5476eebff5fb6, type: 2}
+    - target: {fileID: 143704243894752370, guid: 6497258a978bb4344aed94d2cdb4ba02, type: 3}
+      propertyPath: rewardWaves.Array.data[1]
+      value: 
+      objectReference: {fileID: 11400000, guid: 3e0f03ea33b5ef74dbe70b62e3120502, type: 2}
+    - target: {fileID: 143704243894752370, guid: 6497258a978bb4344aed94d2cdb4ba02, type: 3}
+      propertyPath: rewardWaves.Array.data[2]
+      value: 
+      objectReference: {fileID: 11400000, guid: 17e9705d715da8a4b8b44eeeb201f50e, type: 2}
+    - target: {fileID: 143704243894752370, guid: 6497258a978bb4344aed94d2cdb4ba02, type: 3}
+      propertyPath: rewardWaves.Array.data[3]
+      value: 
+      objectReference: {fileID: 11400000, guid: 17e9705d715da8a4b8b44eeeb201f50e, type: 2}
     - target: {fileID: 1560978802830915424, guid: 6497258a978bb4344aed94d2cdb4ba02, type: 3}
       propertyPath: sceneId
       value: 1028782335
-      objectReference: {fileID: 0}
-    - target: {fileID: 1560978802830915424, guid: 6497258a978bb4344aed94d2cdb4ba02, type: 3}
-      propertyPath: visibility
-      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 3086298658129100376, guid: 6497258a978bb4344aed94d2cdb4ba02, type: 3}
       propertyPath: m_LocalPosition.x
@@ -1583,8 +1599,8 @@ MonoBehaviour:
   m_DragLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_Damping: 1
-  m_Frequency: 5
+  m_Damping: 20
+  m_Frequency: 1.5
   m_DrawDragLine: 1
   m_Color: {r: 0, g: 1, b: 1, a: 1}
 --- !u!4 &2146602043

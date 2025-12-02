@@ -29,9 +29,14 @@ public class EnemyPattern : MonoBehaviour
 
     private bool isStuned;
 
-    private void Start()
+    // private void Start()
+    // {
+    //     // if(enemy.isLocalEnemy)
+    //         StartCoroutine(PatternRoutine());
+    // }
+
+    public void StartEnemyPattern()
     {
-        // if(enemy.isLocalEnemy)
         StartCoroutine(PatternRoutine());
     }
 
@@ -116,6 +121,4 @@ public class EnemyPattern : MonoBehaviour
                 break;
         }
     }
-    
-    
 }
