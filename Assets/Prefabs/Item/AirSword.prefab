@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 593274422539639879}
   - component: {fileID: 8627675630411906177}
-  - component: {fileID: -3788655240956409918}
+  - component: {fileID: 3769276412304043132}
   m_Layer: 0
   m_Name: AirSword
   m_TagString: Untagged
@@ -85,7 +85,7 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!60 &-3788655240956409918
+--- !u!60 &3769276412304043132
 PolygonCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -121,7 +121,7 @@ PolygonCollider2D:
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 0.46666667, y: 1.1866666}
+    oldSize: {x: 0.7, y: 1.78}
     newSize: {x: 10.8, y: 10.8}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
@@ -129,16 +129,18 @@ PolygonCollider2D:
   m_AutoTiling: 0
   m_Points:
     m_Paths:
-    - - {x: 0.16666667, y: 0.48666668}
-      - {x: 0.046666667, y: 0.59333336}
-      - {x: -0.060000002, y: 0.59333336}
-      - {x: -0.18, y: 0.47333336}
-      - {x: -0.16666667, y: 0.12666667}
-      - {x: -0.23333333, y: -0.11333334}
-      - {x: -0.23333333, y: -0.46}
-      - {x: -0.18, y: -0.59333336}
-      - {x: 0.15333334, y: -0.59333336}
-      - {x: 0.23333333, y: -0.42000002}
-      - {x: 0.23333333, y: -0.22}
-      - {x: 0.16666667, y: -0.19333334}
+    - - {x: 0.25, y: 0.72999996}
+      - {x: 0.07, y: 0.89}
+      - {x: -0.089999996, y: 0.89}
+      - {x: -0.26999998, y: 0.71}
+      - {x: -0.24189806, y: -0.29207546}
+      - {x: -0.3540512, y: -0.34014434}
+      - {x: -0.35405073, y: -0.59682566}
+      - {x: -0.21328497, y: -0.60237515}
+      - {x: -0.23063993, y: -0.90208614}
+      - {x: 0.22999999, y: -0.89}
+      - {x: 0.21631488, y: -0.6340511}
+      - {x: 0.3665905, y: -0.5929074}
+      - {x: 0.35, y: -0.32999998}
+      - {x: 0.25, y: -0.29}
   m_UseDelaunayMesh: 0

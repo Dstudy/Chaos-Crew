@@ -55,6 +55,8 @@ public class NetworkGamePlayerLobby : NetworkBehaviour
             return;
         }
         localPlayer.enemy.isLocalEnemy = true;
+        localPlayer.enemy.gameObject.GetComponent<EnemyPattern>().StartEnemyPattern();
+        Debug.Log("Set local enemy");
     }
 
     private void HandleMapEnabled(PlayerMap playerMap, bool enabled, GameObject owner)

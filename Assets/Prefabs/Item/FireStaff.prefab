@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 593274422539639879}
   - component: {fileID: 8627675630411906177}
-  - component: {fileID: -8463009010983074231}
+  - component: {fileID: -4876497278289073467}
   m_Layer: 0
   m_Name: FireStaff
   m_TagString: Untagged
@@ -85,7 +85,7 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!60 &-8463009010983074231
+--- !u!60 &-4876497278289073467
 PolygonCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -121,7 +121,7 @@ PolygonCollider2D:
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 0.49333334, y: 1.2133334}
+    oldSize: {x: 0.74, y: 1.82}
     newSize: {x: 10.8, y: 10.8}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
@@ -129,19 +129,19 @@ PolygonCollider2D:
   m_AutoTiling: 0
   m_Points:
     m_Paths:
-    - - {x: 0.23333333, y: 0.1}
-      - {x: 0.24666667, y: 0.12666667}
-      - {x: 0.24666667, y: 0.3}
-      - {x: 0.20666668, y: 0.39333335}
-      - {x: 0.02, y: 0.6066667}
-      - {x: -0.07333334, y: 0.6066667}
-      - {x: -0.14, y: 0.5133333}
-      - {x: -0.24666667, y: 0.32666668}
-      - {x: -0.24666667, y: 0.046666667}
-      - {x: -0.14, y: -0.046666667}
-      - {x: -0.14, y: -0.6066667}
-      - {x: 0.1, y: -0.6066667}
-      - {x: 0.12666667, y: -0.48666668}
-      - {x: 0.14, y: -0.31333333}
-      - {x: 0.15333334, y: -0.006666667}
+    - - {x: 0.35, y: 0.14999999}
+      - {x: 0.37, y: 0.19}
+      - {x: 0.37, y: 0.45}
+      - {x: 0.31, y: 0.59}
+      - {x: 0.03, y: 0.90999997}
+      - {x: -0.11, y: 0.90999997}
+      - {x: -0.21, y: 0.77}
+      - {x: -0.37, y: 0.48999998}
+      - {x: -0.37, y: 0.07}
+      - {x: -0.21, y: -0.07}
+      - {x: -0.21, y: -0.90999997}
+      - {x: 0.14999999, y: -0.90999997}
+      - {x: 0.19, y: -0.72999996}
+      - {x: 0.21, y: -0.47}
+      - {x: 0.22999999, y: -0.01}
   m_UseDelaunayMesh: 0

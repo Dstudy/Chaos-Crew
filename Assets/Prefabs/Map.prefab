@@ -2547,7 +2547,7 @@ Transform:
   m_GameObject: {fileID: 1594746939044546587}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -2.4, y: 0, z: 18.449078}
+  m_LocalPosition: {x: -2, y: 0, z: 18.449078}
   m_LocalScale: {x: 1, y: 54.9, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -3101,6 +3101,37 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!1 &2033444815675289063
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 336701054604057914}
+  m_Layer: 0
+  m_Name: SpawnPoint (3)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &336701054604057914
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2033444815675289063}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 7, y: -6.21, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3171056322351608672}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2081263311491956639
 GameObject:
   m_ObjectHideFlags: 0
@@ -9237,7 +9268,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &2019605758365560365
 Transform:
   m_ObjectHideFlags: 0
@@ -10421,7 +10452,7 @@ Transform:
   - {fileID: 8737483762454505418}
   - {fileID: 3372656636701702591}
   - {fileID: 874448261284493415}
-  - {fileID: 3611813114121987855}
+  - {fileID: 336701054604057914}
   m_Father: {fileID: 793299999870308874}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &5758641621674132435
@@ -11164,16 +11195,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b372f2170ef82b14f849f63efa8a5259, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
   mapPos: 0
   topLeft: {fileID: 3641957194566563344}
   bottomRight: {fileID: 7973026349412082035}
+  mapBackground: {fileID: 5208723280631238136}
   leftSpawnPoint: {fileID: 2263601106411205793}
   rightSpawnPoint: {fileID: 6836370178355808969}
   spawnItemPoints:
   - {fileID: 8737483762454505418}
   - {fileID: 3372656636701702591}
   - {fileID: 874448261284493415}
-  - {fileID: 3611813114121987855}
+  - {fileID: 336701054604057914}
   playerPos: {x: 0, y: 0, z: 0}
 --- !u!1 &6287462426002016329
 GameObject:
@@ -14364,7 +14399,7 @@ Transform:
   m_GameObject: {fileID: 8144630897672375119}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 2.4, y: 0.05850029, z: 18.449078}
+  m_LocalPosition: {x: 2, y: 0.05850029, z: 18.449078}
   m_LocalScale: {x: 1, y: 53.66, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -15391,37 +15426,6 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!1 &8915549368850659252
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 3611813114121987855}
-  m_Layer: 0
-  m_Name: SpawnPoint (3)
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &3611813114121987855
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8915549368850659252}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 7.4800005, y: -6.21, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 3171056322351608672}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &8944122143086853243
 GameObject:
   m_ObjectHideFlags: 0

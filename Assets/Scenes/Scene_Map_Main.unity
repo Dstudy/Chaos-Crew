@@ -596,8 +596,8 @@ MonoBehaviour:
   m_DragLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_Damping: 1
-  m_Frequency: 5
+  m_Damping: 20
+  m_Frequency: 1.5
   m_DrawDragLine: 1
   m_Color: {r: 0, g: 1, b: 1, a: 1}
 --- !u!4 &2146602043

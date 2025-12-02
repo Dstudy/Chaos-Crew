@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7935596217487601605}
   - component: {fileID: 4252915544837012333}
-  - component: {fileID: -300283941227534261}
+  - component: {fileID: -650995717617889039}
   m_Layer: 0
   m_Name: ChaosSword
   m_TagString: Untagged
@@ -85,7 +85,7 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!60 &-300283941227534261
+--- !u!60 &-650995717617889039
 PolygonCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -121,7 +121,7 @@ PolygonCollider2D:
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 0.46666667, y: 1.1866666}
+    oldSize: {x: 0.7, y: 1.78}
     newSize: {x: 10.8, y: 10.8}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
@@ -129,16 +129,18 @@ PolygonCollider2D:
   m_AutoTiling: 0
   m_Points:
     m_Paths:
-    - - {x: 0.16666667, y: 0.48666668}
-      - {x: 0.046666667, y: 0.59333336}
-      - {x: -0.060000002, y: 0.59333336}
-      - {x: -0.18, y: 0.47333336}
-      - {x: -0.16666667, y: 0.12666667}
-      - {x: -0.23333333, y: -0.11333334}
-      - {x: -0.23333333, y: -0.46}
-      - {x: -0.18, y: -0.59333336}
-      - {x: 0.15333334, y: -0.59333336}
-      - {x: 0.23333333, y: -0.42000002}
-      - {x: 0.23333333, y: -0.22}
-      - {x: 0.16666667, y: -0.19333334}
+    - - {x: 0.23431444, y: -0.29740363}
+      - {x: 0.22293419, y: 0.7096163}
+      - {x: 0.05116979, y: 0.8900002}
+      - {x: -0.0739305, y: 0.89822644}
+      - {x: -0.24607861, y: 0.7037019}
+      - {x: -0.2441226, y: -0.2837203}
+      - {x: -0.3813711, y: -0.356682}
+      - {x: -0.3680346, y: -0.6351098}
+      - {x: -0.16804576, y: -0.6209239}
+      - {x: -0.24500334, y: -0.87970614}
+      - {x: 0.21431443, y: -0.8782358}
+      - {x: 0.18138036, y: -0.6221572}
+      - {x: 0.3813711, y: -0.573126}
+      - {x: 0.36764145, y: -0.33705667}
   m_UseDelaunayMesh: 0

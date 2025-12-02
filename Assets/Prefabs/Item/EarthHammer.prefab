@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 593274422539639879}
   - component: {fileID: 8627675630411906177}
-  - component: {fileID: 4778972899772533463}
+  - component: {fileID: -7631651938536129430}
   m_Layer: 0
   m_Name: EarthHammer
   m_TagString: Untagged
@@ -85,7 +85,7 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!60 &4778972899772533463
+--- !u!60 &-7631651938536129430
 PolygonCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -121,7 +121,7 @@ PolygonCollider2D:
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 0.6933333, y: 1.1866666}
+    oldSize: {x: 1.04, y: 1.78}
     newSize: {x: 10.8, y: 10.8}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
@@ -129,14 +129,14 @@ PolygonCollider2D:
   m_AutoTiling: 0
   m_Points:
     m_Paths:
-    - - {x: 0.34666666, y: 0.59333336}
-      - {x: -0.34666666, y: 0.59333336}
-      - {x: -0.3603724, y: 0.12815614}
-      - {x: -0.17370573, y: 0.10315099}
-      - {x: -0.16, y: -0.58000004}
-      - {x: -0.13333334, y: -0.59333336}
-      - {x: 0.18666667, y: -0.59333336}
-      - {x: 0.16, y: -0.31333333}
-      - {x: 0.14778386, y: 0.13113508}
-      - {x: 0.34666666, y: 0.086666666}
+    - - {x: 0.52, y: 0.89}
+      - {x: -0.52, y: 0.89}
+      - {x: -0.5161648, y: 0.19820778}
+      - {x: -0.21315406, y: 0.18032175}
+      - {x: -0.24, y: -0.87}
+      - {x: -0.19999999, y: -0.89}
+      - {x: 0.22630814, y: -0.8784945}
+      - {x: 0.24, y: -0.47}
+      - {x: 0.20218626, y: 0.20311798}
+      - {x: 0.52, y: 0.19903219}
   m_UseDelaunayMesh: 0

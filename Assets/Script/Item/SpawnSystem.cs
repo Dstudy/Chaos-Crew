@@ -61,6 +61,7 @@ public class SpawnSystem : NetworkBehaviour
     [SerializeField] private bool autoStartWaves = true;
     
     private int currentWaveIndex = 0;
+    private int rewardWaveIndex = 0;
     private bool isSpawning = false;
 
     [SerializeField] private float shootForce = 5f;
@@ -211,9 +212,18 @@ public class SpawnSystem : NetworkBehaviour
                 rewardPlayer = player.GetComponent<Player>();
             }
         }
-        
 
-        StartCoroutine(SpawnWave(rewardWaves[0], rewardPlayer));
+
+        StartCoroutine(SpawnRewards(rewardWaves, rewardPlayer));
+
+    }
+
+    IEnumerator SpawnRewards(List<WaveSpawn> rewardWaves, Player player)
+    {
+        foreach (var rewardWave in rewardWaves)
+        {
+            yield return StartCoroutine(SpawnWave(rewardWave, player));
+        }
     }
     
 
@@ -285,13 +295,6 @@ public class SpawnSystem : NetworkBehaviour
         isSpawning = false;
         OnWaveCompleted?.Invoke(wave.waveNumber);
         currentWaveIndex++;
-        if (wave.spawnType == SpawnType.Reward)
-        {
-            if (wave.waveNumber < rewardWaves.Count)
-            {
-                StartCoroutine(SpawnWave(rewardWaves[(wave.waveNumber++)], player));
-            }
-        }
         
     }
 
