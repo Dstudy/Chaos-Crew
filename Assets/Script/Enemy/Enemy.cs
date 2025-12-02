@@ -9,6 +9,7 @@ namespace Script.Enemy
         public Element element;
         
         public bool isLocalEnemy = false;
+        private bool isDead;
         // private void Awake()
         // {
         //     ObserverManager.Register(SPAWN_PLAYER, (Action)HandlePlayerSpawn);
@@ -42,8 +43,9 @@ namespace Script.Enemy
             this.Health -= newDamage;
             Debug.Log("Take damage: " + damage);
 
-            if (Health <= 0)
+            if (Health <= 0 && !isDead)
             {
+                isDead = true;
                 Debug.Log($"{name} has been defeated!");
                 
                 if (isServer)

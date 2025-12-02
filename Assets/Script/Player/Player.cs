@@ -10,6 +10,7 @@ using static CONST;
     {
         public PlayerMap playerMap;
         public Enemy enemy;
+        private bool isDead;
 
         private void OnEnable()
         {
@@ -23,10 +24,27 @@ using static CONST;
 
         private void HandleEnemyDamage(int damage, int pos)
         {
+            if (isDead)
+            {
+                return;
+            }
+            
             if(Pos == pos)
             {
                 Debug.Log("Get hit " + damage);
                 Health -= damage;
+                if(Health <= 0 && !isDead)
+                {
+                    isDead = true;
+                    Health = 0;
+                    Debug.Log("Player dead");
+                    ObserverManager.InvokeEvent(PLAYER_DIED, this);
+                    ObserverManager.InvokeEvent(GAME_LOST, this);
+                    if (isServer && PlayerSpawnSystem.instance != null && PlayerSpawnSystem.instance.isActiveAndEnabled)
+                    {
+                        PlayerSpawnSystem.instance.ServerBroadcastGameLost(this);
+                    }
+                }
             }   
         }
         
@@ -251,11 +269,11 @@ using static CONST;
         Debug.Log($"Teleported item {itemInstanceId} from player {oldOwnerId} to player {targetPlayer.id}");
     }
     
-    [Command]
-    public void CmdUseItem(int itemInstanceId, string targetType, int targetId)
-    {
-        // Server validates and processes item use
-        if (SpawnSystem.singleton == null)
+        [Command]
+        public void CmdUseItem(int itemInstanceId, string targetType, int targetId)
+        {
+            // Server validates and processes item use
+            if (SpawnSystem.singleton == null)
         {
             Debug.LogError("SpawnSystem.singleton is null!");
             return;
@@ -401,7 +419,21 @@ using static CONST;
             }
         }
     }
-    
+
+    [Command]
+    public void CmdRequestShutdown()
+    {
+        var lobby = NetworkManager.singleton as NetworkManagerLobby;
+        lobby?.ShutdownAndReturnToMenu();
+    }
+
+    [Command]
+    public void CmdReturnToMenu()
+    {
+        var lobby = NetworkManager.singleton as NetworkManagerLobby;
+        lobby?.ReturnToMenuForAll();
+    }
+
     [TargetRpc]
     public void TargetUpdateItemState(NetworkConnectionToClient conn, int instanceId, int charges, Element element)
     {
@@ -425,5 +457,5 @@ using static CONST;
             }
         }
     }
-        
-    }
+
+}

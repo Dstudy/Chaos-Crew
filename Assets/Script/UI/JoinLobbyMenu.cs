@@ -1,7 +1,6 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using TMPro;
+using Mirror;
 using UnityEngine;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
@@ -17,6 +16,7 @@ public class JoinLobbyMenu : MonoBehaviour
 
     private void OnEnable()
     {
+        EnsureNetworkManager();
         NetworkManagerLobby.onClientConnected += HandleClientConnected;
         NetworkManagerLobby.onClientDisconnected += HandleClientDisconnected;
         
@@ -45,13 +45,33 @@ public class JoinLobbyMenu : MonoBehaviour
 
     public void JoinLobby()
     {
+        var manager = EnsureNetworkManager();
+        if (manager == null)
+        {
+            Debug.LogWarning("JoinLobbyMenu: NetworkManagerLobby missing; cannot join.");
+            return;
+        }
+
         string ipAddress = ipAddressInputField.text;
         
-        networkManager.networkAddress = ipAddress;
-        networkManager.StartClient();
+        manager.networkAddress = ipAddress;
+        manager.StartClient();
         
         Debug.Log("Joining lobby");
         
         joinButton.interactable = false;
+    }
+
+    private NetworkManagerLobby EnsureNetworkManager()
+    {
+        if (networkManager != null && networkManager.gameObject != null) return networkManager;
+
+        networkManager = NetworkManager.singleton as NetworkManagerLobby;
+        if (networkManager == null)
+        {
+            networkManager = FindObjectOfType<NetworkManagerLobby>();
+        }
+
+        return networkManager;
     }
 }
