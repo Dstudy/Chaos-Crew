@@ -1,5 +1,6 @@
 using Mirror;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -13,6 +14,8 @@ public class NetworkManagerLobby : NetworkManager
     public static Action onClientDisconnected;
     public static Action<NetworkConnectionToClient> OnServerReadied;
     public static Action OnServerStopped;
+    private bool isShuttingDown;
+    private readonly HashSet<int> pendingReadyConnections = new HashSet<int>();
     
     // [Header("Maps")]
     // [SerializeField] private int numberOfRounds = 1;
@@ -29,6 +32,7 @@ public class NetworkManagerLobby : NetworkManager
     
     public List<NetworkRoomPlayerLobby> RoomPlayers { get; } = new List<NetworkRoomPlayerLobby>();
     public List<NetworkGamePlayerLobby> GamePlayers { get; } = new List<NetworkGamePlayerLobby>();
+    public string MenuSceneName => menuScene;
 
     public override void OnClientConnect()
     {
@@ -80,6 +84,18 @@ public class NetworkManagerLobby : NetworkManager
 
         RoomPlayers.Clear();
         GamePlayers.Clear();
+        pendingReadyConnections.Clear();
+    }
+    public override void OnStopClient()
+    {
+        base.OnStopClient();
+        ReturnToMenuScene();
+    }
+
+    public override void OnStopHost()
+    {
+        base.OnStopHost();
+        ReturnToMenuScene();
     }
     
     public void NotifyPlayersOfReadyState()
@@ -163,6 +179,25 @@ public class NetworkManagerLobby : NetworkManager
     {
         base.OnServerReady(conn);
 
+        // Only spawn game players when in a game scene
+        var activeScene = SceneManager.GetActiveScene().name;
+        if (!string.IsNullOrEmpty(activeScene) && activeScene.StartsWith("Scene_Map"))
+        {
+            if (pendingReadyConnections.Add(conn.connectionId))
+            {
+                StartCoroutine(InvokeReadyNextFrame(conn));
+            }
+        }
+        else
+        {
+            Debug.Log($"OnServerReady ignored in scene {activeScene}");
+        }
+    }
+
+    private IEnumerator InvokeReadyNextFrame(NetworkConnectionToClient conn)
+    {
+        yield return null; // defer to avoid modifying collections during Mirror broadcast
+        pendingReadyConnections.Remove(conn.connectionId);
         OnServerReadied?.Invoke(conn);
     }
 
@@ -187,5 +222,57 @@ public class NetworkManagerLobby : NetworkManager
         
         // For menu scene, use default behavior
         base.OnClientSceneChanged();
+    }
+
+    public void ShutdownAndReturnToMenu()
+    {
+        if (isShuttingDown) return;
+        isShuttingDown = true;
+
+        if (NetworkServer.active && NetworkClient.isConnected)
+        {
+            StopHost();
+        }
+        else if (NetworkServer.active)
+        {
+            StopServer();
+        }
+        else if (NetworkClient.isConnected)
+        {
+            StopClient();
+        }
+        else
+        {
+            ReturnToMenuScene();
+        }
+    }
+
+    public void ReturnToMenuForAll()
+    {
+        if (string.IsNullOrWhiteSpace(menuScene)) return;
+
+        // Change scene for all connected clients but keep server running
+        if (NetworkServer.active)
+        {
+            ServerChangeScene(menuScene);
+        }
+        else if (!NetworkClient.active)
+        {
+            // fallback for offline usage
+            ReturnToMenuScene();
+        }
+    }
+
+    private void ReturnToMenuScene()
+    {
+        if (string.IsNullOrWhiteSpace(menuScene))
+        {
+            return;
+        }
+
+        if (SceneManager.GetActiveScene().name != menuScene)
+        {
+            SceneManager.LoadScene(menuScene);
+        }
     }
 }
