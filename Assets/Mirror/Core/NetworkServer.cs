@@ -256,7 +256,6 @@ namespace Mirror
             localConnection = null;
 
             connections.Clear();
-            connectionsCopy.Clear();
             handlers.Clear();
 
             // destroy all spawned objects, _then_ set inactive.
@@ -1979,24 +1978,10 @@ namespace Mirror
             return false;
         }
 
-        // NetworkLateUpdate called after any Update/FixedUpdate/LateUpdate
-        // (we add this to the UnityEngine in NetworkLoop)
-        // internal for tests
-        internal static readonly List<NetworkConnectionToClient> connectionsCopy =
-            new List<NetworkConnectionToClient>();
-
         static void Broadcast()
         {
-            // copy all connections into a helper collection so that
-            // OnTransportDisconnected can be called while iterating.
-            // -> OnTransportDisconnected removes from the collection
-            // -> which would throw 'can't modify while iterating' errors
-            // => see also: https://github.com/vis2k/Mirror/issues/2739
-            // (copy nonalloc)
-            // TODO remove this when we move to 'lite' transports with only
-            //      socket send/recv later.
-            connectionsCopy.Clear();
-            connections.Values.CopyTo(connectionsCopy);
+            // take a snapshot so disconnect/shutdown can't modify the enumerated list
+            List<NetworkConnectionToClient> connectionsCopy = new List<NetworkConnectionToClient>(connections.Values);
 
             // go through all connections
             foreach (NetworkConnectionToClient connection in connectionsCopy)

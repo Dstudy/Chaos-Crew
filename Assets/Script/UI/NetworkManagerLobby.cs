@@ -204,7 +204,7 @@ namespace Script.UI
 
         public override void OnStartHost()
         {
-            Debug.Log("OnStartHost");
+            isShuttingDown = false;Debug.Log("OnStartHost");
         }
 
         public override void OnClientSceneChanged()
@@ -266,7 +266,8 @@ namespace Script.UI
 
         private void ReturnToMenuScene()
         {
-            if (string.IsNullOrWhiteSpace(menuScene))
+            // allow future shutdowns after returning to menu
+        isShuttingDown = false;if (string.IsNullOrWhiteSpace(menuScene))
             {
                 return;
             }
