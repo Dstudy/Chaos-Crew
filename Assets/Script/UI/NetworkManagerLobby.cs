@@ -203,6 +203,7 @@ public class NetworkManagerLobby : NetworkManager
 
     public override void OnStartHost()
     {
+        isShuttingDown = false;
         Debug.Log("OnStartHost");
     }
 
@@ -265,6 +266,9 @@ public class NetworkManagerLobby : NetworkManager
 
     private void ReturnToMenuScene()
     {
+        // allow future shutdowns after returning to menu
+        isShuttingDown = false;
+
         if (string.IsNullOrWhiteSpace(menuScene))
         {
             return;

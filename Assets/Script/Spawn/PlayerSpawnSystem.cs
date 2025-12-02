@@ -101,6 +101,7 @@ public class PlayerSpawnSystem : NetworkBehaviour
             pendingSpawns.Remove(conn.connectionId);
             return;
         }
+        
         // If this spawn system is gone (scene unloaded), bail early
         if (this == null || !isActiveAndEnabled)
         {
