@@ -1,5 +1,12 @@
 public static class CONST
 {
+    #region SCENE
+
+    public static string SCENE_MAIN = "MainMenu";
+    public static string SCENE_GAMEPLAY = "Scene_Map_Main";
+
+    #endregion
+    
     #region ITEM
 
     public static string DRAGGABLE_ITEM = "draggable_item";
@@ -11,7 +18,9 @@ public static class CONST
     #region PLAYER
 
     public static string PLAYER_USE_ATTACK_ITEM = "player_use_attack_item";
-
+    public static string PLAYER_HEAL = "player_heal";
+    public static string PLAYER_SHIELD = "player_shield";
+    
     #endregion
 
     #region ENEMY

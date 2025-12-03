@@ -25,6 +25,8 @@ public class EnemyPattern : MonoBehaviour
 
     [SerializeField] private GameObject worldSpaceCanvas;
     [SerializeField] private Image indicatorImage;
+    [SerializeField] private Image attackIcon;
+    [SerializeField] private Image defenseIcon;
     // [SerializeField] private TextMeshProUGUI countdownText;
 
     private bool isStuned;
@@ -87,7 +89,16 @@ public class EnemyPattern : MonoBehaviour
         // worldSpaceCanvas.SetActive(true);
         // indicatorImage.color = move.indicatorColor;
         indicatorImage.fillAmount = 0;
-        
+        if (move.actionType == EnemyActionType.Attack)
+        {
+            attackIcon.enabled = true;
+            defenseIcon.enabled = false;
+        }
+        else
+        {
+            attackIcon.enabled = false;
+            defenseIcon.enabled = true;
+        }
         float timer = move.chargeTime;
 
         while (timer > 0)

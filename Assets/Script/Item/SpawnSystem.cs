@@ -5,6 +5,7 @@ using Mirror;
 using UnityEngine;
 using System.Linq;
 using Script.Enemy;
+using Script.UI;
 using Random = System.Random;
 using static CONST;
 
@@ -290,8 +291,8 @@ public class SpawnSystem : NetworkBehaviour
             case SpawnType.AttackAndSupport:
                 yield return StartCoroutine(SpawnAttackAndSupport(wave, players));
                 break;
-            case SpawnType.Augment:
-                yield return StartCoroutine(SpawnAugment(wave, players));
+            case SpawnType.OnlyOne:
+                yield return StartCoroutine(SpawnOnlyOne(wave, players));
                 break;
             case SpawnType.RandomAll:
                 yield return StartCoroutine(SpawnRandomAll(wave, players));
@@ -306,6 +307,8 @@ public class SpawnSystem : NetworkBehaviour
         currentWaveIndex++;
         
     }
+    
+    
 
     [Server]
     private List<Player> GetAllPlayers()
@@ -348,7 +351,94 @@ public class SpawnSystem : NetworkBehaviour
         return players;
     }
 
-    
+    [Server]
+    private IEnumerator SpawnOnlyOne(WaveSpawn wave, List<Player> players)
+    {
+        Dictionary<Player, List<BaseItem>> playerItems = new Dictionary<Player, List<BaseItem>>();
+        int totalItemsToSpawn = wave.waveCount;
+        
+        List<Element> elements = null;
+        try
+        {
+            elements = EnemyManager.instance.GetElements();
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Error getting elements from EnemyManager: {e.Message}");
+            yield break;
+        }
+        
+        if (elements == null || elements.Count == 0)
+        {
+            Debug.LogWarning("No elements found from EnemyManager!");
+            yield break;
+        }
+
+        int index = (int)wave.itemType;
+        
+        foreach (Player player in players)
+        {
+            List<BaseItem> itemsToSpawn = new List<BaseItem>();
+            for (int itemIndex = 0; itemIndex < totalItemsToSpawn; itemIndex++)
+            {
+                switch (index)
+                {
+                    case 0:
+                    {
+                        AttackItemData attackData = wave.GetAttackItem(elements[UnityEngine.Random.Range(0, elements.Count)]);
+                        if (attackData != null)
+                        {
+                            itemsToSpawn.Add(attackData.CreateAttackItem());
+                        }
+
+                        break;
+                    }
+                    case 1:
+                    {
+                        SupportItemData supportData = wave.supportItemData[UnityEngine.Random.Range(0, wave.supportItemData.Count)];
+                        if (supportData != null)
+                        {
+                            itemsToSpawn.Add(supportData.CreateSupportItem());
+                        }
+                        break;
+                    }
+                    case 2:
+                    {
+                        StaffItemData staffItemData = wave.GetStaffItem(elements[UnityEngine.Random.Range(0, elements.Count)]);
+                        if (staffItemData != null)
+                        {
+                            itemsToSpawn.Add(staffItemData.CreateStaffItem());
+                        }
+                        break;
+                    }
+                    case 3:
+                    {
+                        HammerData hammerData = wave.GetHammerItem(elements[UnityEngine.Random.Range(0, elements.Count)]);
+                        if (hammerData != null)
+                        {
+                            itemsToSpawn.Add(hammerData.CreateHammerItem());
+                        }
+                        break;
+                    }
+                }
+            }
+            
+            playerItems[player] = itemsToSpawn;
+        }
+        
+        
+        for (int itemIndex = 0; itemIndex < totalItemsToSpawn; itemIndex++)
+        {
+            foreach (Player player in players)
+            {
+                if (playerItems[player].Count > itemIndex)
+                {
+                    SpawnItemForPlayer(player, playerItems[player][itemIndex], wave.spawnOffset);
+                }
+            }
+            yield return new WaitForSeconds(wave.spawnDelay);
+        }
+    }
 
     [Server]
     private IEnumerator SpawnAllAttackItemsPerElement(WaveSpawn wave, List<Player> players)
@@ -683,51 +773,7 @@ public class SpawnSystem : NetworkBehaviour
         }
     }
 
-    [Server]
-    private IEnumerator SpawnAugment(WaveSpawn wave, List<Player> players)
-    {
-        if (wave.augmentData == null || wave.augmentData.Count == 0)
-        {
-            Debug.LogWarning("No augment data in wave!");
-            yield break;
-        }
-
-        // Prepare augment items for each player (different augments per player)
-        Dictionary<Player, List<BaseItem>> playerItems = new Dictionary<Player, List<BaseItem>>();
-        
-        foreach (Player player in players)
-        {
-            List<BaseItem> itemsToSpawn = new List<BaseItem>();
-            
-            for (int i = 0; i < wave.itemsPerPlayer; i++)
-            {
-                AugmentData augmentData = wave.augmentData[UnityEngine.Random.Range(0, wave.augmentData.Count)];
-                if (augmentData != null)
-                {
-                    itemsToSpawn.Add(augmentData.CreateAugment());
-                }
-            }
-            
-            playerItems[player] = itemsToSpawn;
-        }
-
-        // Spawn all augments for all players simultaneously
-        for (int itemIndex = 0; itemIndex < wave.itemsPerPlayer; itemIndex++)
-        {
-            // Spawn this augment index for ALL players at the same time
-            foreach (Player player in players)
-            {
-                if (playerItems.ContainsKey(player) && itemIndex < playerItems[player].Count)
-                {
-                    BaseItem item = playerItems[player][itemIndex];
-                    SpawnItemForPlayer(player, item, wave.spawnOffset);
-                }
-            }
-            
-            // Wait after spawning this augment for all players
-            yield return new WaitForSeconds(wave.spawnDelay);
-        }
-    }
+   
 
     private void SpawnRewardForPlayer(Player player, BaseItem item)
     {

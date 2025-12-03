@@ -10,15 +10,6 @@ namespace Script.Enemy
         
         public bool isLocalEnemy = false;
         private bool isDead;
-        // private void Awake()
-        // {
-        //     ObserverManager.Register(SPAWN_PLAYER, (Action)HandlePlayerSpawn);
-        // }
-        //
-        // private void HandlePlayerSpawn()
-        // {
-        //     if()
-        // }
 
     public void TakeDamage(int damage, Element element)
         {
@@ -120,6 +111,15 @@ namespace Script.Enemy
             Debug.Log("Shield + " +  shield);
             Shield += shield;
         }
+
+        public override void OnEntityCreated(string _, string id)
+        {
+            int _id = Int32.Parse(id);
+            Element assignedElement = EnemyManager.instance.elementList[_id];
+            element = assignedElement;
+            gameObject.GetComponent<EnemyUI>().EnemyHead.sprite = EnemyManager.instance.GetSpriteForElement(assignedElement);
+        }
+        
         
     }
 }

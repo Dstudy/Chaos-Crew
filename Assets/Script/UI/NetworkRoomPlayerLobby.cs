@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Mirror;
+using Script.UI;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;

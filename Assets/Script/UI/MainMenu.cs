@@ -1,14 +1,15 @@
 using Mirror;
+using Script.UI;
 using UnityEngine;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 public class MainMenu : MonoBehaviour
 {
-    [FormerlySerializedAs("networkGamePlayer")] [SerializeField] private NetworkManagerLobby networkManager = null;
+    [FormerlySerializedAs("networkGamePlayer")] [SerializeField]
+    private NetworkManagerLobby networkManager = null;
 
-    [Header("UI")]
-    [SerializeField] private GameObject landingPagePanel = null;
+    [Header("UI")] [SerializeField] private GameObject landingPagePanel = null;
     [SerializeField] private GameObject settingsPanel = null;
     [SerializeField] private GameObject enterIpBackground = null;
     [SerializeField] private GameObject enterIpPanel = null;
@@ -38,8 +39,9 @@ public class MainMenu : MonoBehaviour
 
         ShowHostLobbyUI();
     }
+    
 
-    private void OnEnable()
+private void OnEnable()
     {
         EnsureNetworkManager();
         audioManager = AudioManager.EnsureExists();
@@ -106,7 +108,7 @@ public class MainMenu : MonoBehaviour
     {
         if (landingPagePanel != null) landingPagePanel.SetActive(true);
         if (enterIpBackground != null) enterIpBackground.SetActive(false);
-        if (enterIpPanel != null) enterIpPanel.SetActive(false);
+        // if (enterIpPanel != null) enterIpPanel.SetActive(false);
         if (settingsPanel != null) settingsPanel.SetActive(false);
     }
 

@@ -6,46 +6,72 @@ using Script.Enemy;
 using UnityEngine;
 using static CONST;
 
+
 public class EnemyManager : NetworkBehaviour
 {
+    [SerializeField] public Sprite fireEnemySprite;
+    [SerializeField] public Sprite waterEnemySprite;
+    [SerializeField] public Sprite earthEnemySprite;
+    [SerializeField] public Sprite ChaosEnemySprite;
+    [SerializeField] public Sprite AirEnemySprite;
+    [SerializeField] private GameObject enemyPrefab;
     public List<GameObject> allEnemies;
-    [SerializeField] private List<GameObject> TotalEnemies;
     [SerializeField] private List<Enemy> enemies = new List<Enemy>();
     [SerializeField] private int aliveEnemies;
+    public Element[] elementList = {Element.Fire, Element.Water, Element.Earth, Element.Air, Element.Chaos};
 
     private readonly SyncList<Element> elements = new SyncList<Element>();
 
     public static EnemyManager instance;
 
+    private int enemyCreationCounter;
+
     private void Awake()
     {
         instance = this;
-        TotalEnemies = new List<GameObject>(allEnemies);
+        // elements.Clear();
+    }
+    
+    
+    public Sprite GetSpriteForElement(Element element)
+    {
+        switch (element)
+        {
+            case Element.Fire:
+                return fireEnemySprite;
+            case Element.Water:
+                return waterEnemySprite;
+            case Element.Earth:
+                return earthEnemySprite;
+            case Element.Air:
+                return AirEnemySprite;
+            case Element.Chaos:
+                return ChaosEnemySprite;
+            default:
+                return null;
+        }
     }
 
     public GameObject GetEnemy()
     {
-        Debug.Log("TotalEnemies: " + TotalEnemies.Count);
-        if (TotalEnemies.Count == 0)
-        {
-            Debug.LogError("Tried to get an enemy, but the TotalEnemies list is empty!");
-            return null;
-        }
-
-        GameObject enemy = TotalEnemies[TotalEnemies.Count - 1];
-        TotalEnemies.RemoveAt(TotalEnemies.Count - 1);
-        enemies.Add(enemy.GetComponent<Enemy>());
+        GameObject enemy = enemyPrefab;
+        Element elementForEnemy = elementList[enemyCreationCounter];
+        enemy.GetComponent<Enemy>().element = elementForEnemy;
+        enemy.GetComponent<EnemyUI>().EnemyHead.sprite = GetSpriteForElement(elementForEnemy);
+        enemyCreationCounter++;
         NotifyEnemySpawned();
         return enemy;
+    }
+
+    public void AddEnemy(Enemy enemy)
+    {
+        enemies.Add(enemy);
+        elements.Add(enemy.element);
     }
 
     public void InitElements()
     {
         elements.Clear();
-        foreach (var enemy in enemies)
-        {
-            elements.Add(enemy.element);
-        }
     }
 
     public List<Element> GetElements()

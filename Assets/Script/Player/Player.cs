@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Mirror;
 using Script.Enemy;
+using Script.UI;
 using UnityEngine;
 using UnityEngine.Serialization;
 using static CONST;
@@ -32,7 +33,8 @@ using static CONST;
             if(Pos == pos)
             {
                 Debug.Log("Get hit " + damage);
-                Health -= damage;
+                HandleEnemyDamageCmd(damage);
+                
                 if(Health <= 0 && !isDead)
                 {
                     isDead = true;
@@ -47,11 +49,28 @@ using static CONST;
                 }
             }   
         }
-        
+
+        [Command]
+        private void HandleEnemyDamageCmd(int damage)
+        {
+            Health -= damage;
+        }
+
+        [TargetRpc]
+        private void TargetInvokePlayerHeal(NetworkConnectionToClient conn)
+        {
+            ObserverManager.InvokeEvent(PLAYER_HEAL);
+        }
+
+        private void TargetInvokePlayerShield(NetworkConnectionToClient conn)
+        {
+            ObserverManager.InvokeEvent(PLAYER_SHIELD);
+        }
 
         [ClientRpc]
         public void RpcSetMap(GameObject mapGameObject)
         {
+            gameObject.name = "Player " + position;
             if (!NetworkClient.ready)
             {
                 NetworkClient.Ready();
@@ -78,10 +97,12 @@ using static CONST;
         {
             case SupportEffect.Shield:
                 Shield += value;
+                TargetInvokePlayerShield(this.connectionToClient);
                 Debug.Log($"Gained {value} Shield. Current Shield: {Shield}");
                 break;
             case SupportEffect.Heal:
                 Health += value;
+                TargetInvokePlayerHeal(this.connectionToClient);
                 Debug.Log($"Gained {value} Health. Current Health: {Health}");
                 break;
         }

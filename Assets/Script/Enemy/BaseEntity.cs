@@ -3,10 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using Mirror;
 using UnityEngine;
-
+using static CONST;
 public abstract class BaseEntity : NetworkBehaviour
 {
-    [SyncVar]
+    [SyncVar (hook = nameof(OnEntityCreated))]
     public string id;
     [SyncVar (hook = nameof(OnHealthChanged))]
     public int health;
@@ -21,14 +21,21 @@ public abstract class BaseEntity : NetworkBehaviour
     public event Action<int, int> onHealthChanged;
     public event Action<int, int> onShieldChanged;
 
-    private void OnHealthChanged(int _, int newHealth)
+    private void OnHealthChanged(int oldHealth, int newHealth)
     {
-        onHealthChanged?.Invoke(newHealth, maxHealth);
+        Debug.Log($"{gameObject.name} is [OnHealthChanged] {(isServer ? "SERVER" : "CLIENT")}  {oldHealth} -> {newHealth}");
+        // if(newHealth > oldHealth)
+        //     ObserverManager.InvokeEvent(PLAYER_HEAL);
+        onHealthChanged?.Invoke(newHealth, oldHealth);
     }
 
-    private void OnShieldChanged(int _, int newShield)
+    private void OnShieldChanged(int oldShield, int newShield)
     {
-        onShieldChanged?.Invoke(newShield, maxShield);
+        onShieldChanged?.Invoke(newShield, oldShield);
+    }
+
+    public virtual void OnEntityCreated(string _, string id)
+    {
     }
     
     public virtual int Health
@@ -40,7 +47,7 @@ public abstract class BaseEntity : NetworkBehaviour
             if (health != newHealth)
             {
                 health = newHealth;
-                onHealthChanged?.Invoke(health, maxHealth);
+                // onHealthChanged?.Invoke(health, maxHealth);
             }
         }
     }
@@ -54,7 +61,7 @@ public abstract class BaseEntity : NetworkBehaviour
             if (newShield != shield)
             {
                 shield = newShield;
-                onShieldChanged?.Invoke(shield, maxShield);
+                // onShieldChanged?.Invoke(shield, maxShield);
             }
         }
     }

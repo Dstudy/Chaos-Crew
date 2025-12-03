@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Mirror;
 using System.Linq;
 using Script.Enemy;
+using Script.UI;
 using UnityEngine;
 using static CONST;
 
@@ -184,7 +185,7 @@ public class PlayerSpawnSystem : NetworkBehaviour
         enemyStat.name = $"Enemy {nextIndex}";
         enemyStat.id = nextIndex.ToString();
         enemyStat.Pos = nextIndex;
-        enemyManager.InitElements();
+        enemyManager.AddEnemy(enemyStat);
         NetworkServer.Spawn(enemy, conn);
         
         playerStat.RPCSetEnemy(enemy);

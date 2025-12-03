@@ -1,282 +1,282 @@
-using Mirror;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
+using Mirror;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class NetworkManagerLobby : NetworkManager
+namespace Script.UI
 {
-    [SerializeField] private int minPlayers = 2;
-    [SerializeField]private string menuScene = string.Empty;
-    public static Action onClientConnected;
-    public static Action onClientDisconnected;
-    public static Action<NetworkConnectionToClient> OnServerReadied;
-    public static Action OnServerStopped;
-    private bool isShuttingDown;
-    private readonly HashSet<int> pendingReadyConnections = new HashSet<int>();
-    
-    // [Header("Maps")]
-    // [SerializeField] private int numberOfRounds = 1;
-    // [SerializeField] private MapSet mapSet = null;
-    
-    [Header("Room")]
-    [SerializeField] private NetworkRoomPlayerLobby lobbyPrefab = null;
-    
-    [Header("Game")]
-    [SerializeField] private NetworkGamePlayerLobby gamePlayerPrefab = null;
-    [SerializeField] private GameObject playerSpawnSystem = null;
-    
-    [SerializeField] private string gameScene = string.Empty;
-    
-    public List<NetworkRoomPlayerLobby> RoomPlayers { get; } = new List<NetworkRoomPlayerLobby>();
-    public List<NetworkGamePlayerLobby> GamePlayers { get; } = new List<NetworkGamePlayerLobby>();
-    public string MenuSceneName => menuScene;
-
-    public override void OnClientConnect()
+    public class NetworkManagerLobby : NetworkManager
     {
-        base.OnClientConnect();
+        [SerializeField] private int minPlayers = 2;
+        [SerializeField]private string menuScene = string.Empty;
+        public static Action onClientConnected;
+        public static Action onClientDisconnected;
+        public static Action<NetworkConnectionToClient> OnServerReadied;
+        public static Action OnServerStopped;
+        private bool isShuttingDown;
+        private readonly HashSet<int> pendingReadyConnections = new HashSet<int>();
+    
+        // [Header("Maps")]
+        // [SerializeField] private int numberOfRounds = 1;
+        // [SerializeField] private MapSet mapSet = null;
+    
+        [Header("Room")]
+        [SerializeField] private NetworkRoomPlayerLobby lobbyPrefab = null;
+    
+        [Header("Game")]
+        [SerializeField] private NetworkGamePlayerLobby gamePlayerPrefab = null;
+        [SerializeField] private GameObject playerSpawnSystem = null;
+    
+        [SerializeField] private string gameScene = string.Empty;
+    
+        public List<NetworkRoomPlayerLobby> RoomPlayers { get; } = new List<NetworkRoomPlayerLobby>();
+        public List<NetworkGamePlayerLobby> GamePlayers { get; } = new List<NetworkGamePlayerLobby>();
+        public string MenuSceneName => menuScene;
+
+        public override void OnClientConnect()
+        {
+            base.OnClientConnect();
         
-        onClientConnected?.Invoke();
-    }
+            onClientConnected?.Invoke();
+        }
 
-    public override void OnClientDisconnect()
-    {
-        base.OnClientDisconnect();
+        public override void OnClientDisconnect()
+        {
+            base.OnClientDisconnect();
         
-        onClientDisconnected?.Invoke();
-    }
-
-    public override void OnServerConnect(NetworkConnectionToClient conn)
-    {
-        if (numPlayers >= maxConnections)
-        {
-            conn.Disconnect();
-            return;
+            onClientDisconnected?.Invoke();
         }
 
-        if (SceneManager.GetActiveScene().name != menuScene)
+        public override void OnServerConnect(NetworkConnectionToClient conn)
         {
-            Debug.Log(SceneManager.GetActiveScene().name + " is not " + menuScene);
-            conn.Disconnect();
-            return;
-        }
-    }
-    
-    public override void OnServerDisconnect(NetworkConnectionToClient conn)
-    {
-        if (conn.identity != null)
-        {
-            var player = conn.identity.GetComponent<NetworkRoomPlayerLobby>();
-
-            RoomPlayers.Remove(player);
-
-            NotifyPlayersOfReadyState();
-        }
-
-        base.OnServerDisconnect(conn);
-    }
-    
-    public override void OnStopServer()
-    {
-        OnServerStopped?.Invoke();
-
-        RoomPlayers.Clear();
-        GamePlayers.Clear();
-        pendingReadyConnections.Clear();
-    }
-    public override void OnStopClient()
-    {
-        base.OnStopClient();
-        ReturnToMenuScene();
-    }
-
-    public override void OnStopHost()
-    {
-        base.OnStopHost();
-        ReturnToMenuScene();
-    }
-    
-    public void NotifyPlayersOfReadyState()
-    {
-        foreach (var player in RoomPlayers)
-        {
-            player.HandleReadyToStart(IsReadyToStart());
-        }
-    }
-
-    public override void OnServerAddPlayer(NetworkConnectionToClient conn)
-    {
-        if (SceneManager.GetActiveScene().name == menuScene)
-        {
-            bool isLeader = RoomPlayers.Count == 0;
-            
-            NetworkRoomPlayerLobby roomPlayerInstance = Instantiate(lobbyPrefab);
-
-            roomPlayerInstance.IsLeader = isLeader;
-            
-            NetworkServer.AddPlayerForConnection(conn, roomPlayerInstance.gameObject);
-        }
-        else
-        {
-            // In game scene, PlayerSpawnSystem handles player spawning
-            // If a player already exists (from ReplacePlayerForConnection), ignore this call
-            if (conn.identity != null)
+            if (numPlayers >= maxConnections)
             {
-                Debug.Log($"OnServerAddPlayer called in game scene for connection {conn.connectionId}, but player already exists. Ignoring.");
+                conn.Disconnect();
                 return;
             }
+
+            if (SceneManager.GetActiveScene().name != menuScene)
+            {
+                Debug.Log(SceneManager.GetActiveScene().name + " is not " + menuScene);
+                conn.Disconnect();
+                return;
+            }
+        }
+    
+        public override void OnServerDisconnect(NetworkConnectionToClient conn)
+        {
+            if (conn.identity != null)
+            {
+                var player = conn.identity.GetComponent<NetworkRoomPlayerLobby>();
+
+                RoomPlayers.Remove(player);
+
+                NotifyPlayersOfReadyState();
+            }
+
+            base.OnServerDisconnect(conn);
+        }
+    
+        public override void OnStopServer()
+        {
+            OnServerStopped?.Invoke();
+
+            RoomPlayers.Clear();
+            GamePlayers.Clear();
+            pendingReadyConnections.Clear();
+        }
+        public override void OnStopClient()
+        {
+            base.OnStopClient();
+            ReturnToMenuScene();
+        }
+
+        public override void OnStopHost()
+        {
+            base.OnStopHost();
+            ReturnToMenuScene();
+        }
+    
+        public void NotifyPlayersOfReadyState()
+        {
+            foreach (var player in RoomPlayers)
+            {
+                player.HandleReadyToStart(IsReadyToStart());
+            }
+        }
+
+        public override void OnServerAddPlayer(NetworkConnectionToClient conn)
+        {
+            if (SceneManager.GetActiveScene().name == menuScene)
+            {
+                bool isLeader = RoomPlayers.Count == 0;
             
-            // If no player exists yet, PlayerSpawnSystem will handle it via OnServerReadied
-            Debug.LogWarning($"OnServerAddPlayer called in game scene for connection {conn.connectionId} but no identity exists. PlayerSpawnSystem should handle this.");
-        }
-    }
-    
-    private bool IsReadyToStart()
-    {
-        if (numPlayers < minPlayers) { return false; }
+                NetworkRoomPlayerLobby roomPlayerInstance = Instantiate(lobbyPrefab);
 
-        return true;
-    }
-    
-    public void StartGame()
-    {
-        if (SceneManager.GetActiveScene().name == menuScene)
-        {
-            if (!IsReadyToStart()) { return; }
-            ServerChangeScene(gameScene);
-        }
-    }
-    
-    public override void ServerChangeScene(string newSceneName)
-    {
-        string newSceneText = System.IO.Path.GetFileNameWithoutExtension(newSceneName);
-        // From menu to game
-        if (SceneManager.GetActiveScene().name == menuScene && newSceneText.StartsWith("Scene_Map"))
-        {
-            for (int i = RoomPlayers.Count - 1; i >= 0; i--)
+                roomPlayerInstance.IsLeader = isLeader;
+            
+                NetworkServer.AddPlayerForConnection(conn, roomPlayerInstance.gameObject);
+            }
+            else
             {
-                var conn = RoomPlayers[i].connectionToClient;
-                NetworkServer.Destroy(conn.identity.gameObject);
+                // In game scene, PlayerSpawnSystem handles player spawning
+                // If a player already exists (from ReplacePlayerForConnection), ignore this call
+                if (conn.identity != null)
+                {
+                    Debug.Log($"OnServerAddPlayer called in game scene for connection {conn.connectionId}, but player already exists. Ignoring.");
+                    return;
+                }
+            
+                // If no player exists yet, PlayerSpawnSystem will handle it via OnServerReadied
+                Debug.LogWarning($"OnServerAddPlayer called in game scene for connection {conn.connectionId} but no identity exists. PlayerSpawnSystem should handle this.");
+            }
+        }
+    
+        private bool IsReadyToStart()
+        {
+            if (numPlayers < minPlayers) { return false; }
+
+            return true;
+        }
+    
+        public void StartGame()
+        {
+            if (SceneManager.GetActiveScene().name == menuScene)
+            {
+                if (!IsReadyToStart()) { return; }
+                ServerChangeScene(gameScene);
+            }
+        }
+    
+        public override void ServerChangeScene(string newSceneName)
+        {
+            string newSceneText = System.IO.Path.GetFileNameWithoutExtension(newSceneName);
+            // From menu to game
+            if (SceneManager.GetActiveScene().name == menuScene && newSceneText.StartsWith("Scene_Map"))
+            {
+                for (int i = RoomPlayers.Count - 1; i >= 0; i--)
+                {
+                    var conn = RoomPlayers[i].connectionToClient;
+                    NetworkServer.Destroy(conn.identity.gameObject);
+                }
+            }
+
+            base.ServerChangeScene(newSceneName);
+        }
+
+        public override void OnServerSceneChanged(string sceneName)
+        {
+            if (sceneName.StartsWith("Scene_Map"))
+            {
+                Debug.Log($"OnServerSceneChanged: {sceneName}");
+                GameObject playerSpawnSystemInstance = Instantiate(playerSpawnSystem);
+                NetworkServer.Spawn(playerSpawnSystemInstance);
+            }
+        }
+    
+        public override void OnServerReady(NetworkConnectionToClient conn)
+        {
+            base.OnServerReady(conn);
+
+            // Only spawn game players when in a game scene
+            var activeScene = SceneManager.GetActiveScene().name;
+            if (!string.IsNullOrEmpty(activeScene) && activeScene.StartsWith("Scene_Map"))
+            {
+                if (pendingReadyConnections.Add(conn.connectionId))
+                {
+                    StartCoroutine(InvokeReadyNextFrame(conn));
+                }
+            }
+            else
+            {
+                Debug.Log($"OnServerReady ignored in scene {activeScene}");
             }
         }
 
-        base.ServerChangeScene(newSceneName);
-    }
-
-    public override void OnServerSceneChanged(string sceneName)
-    {
-        if (sceneName.StartsWith("Scene_Map"))
+        private IEnumerator InvokeReadyNextFrame(NetworkConnectionToClient conn)
         {
-            Debug.Log($"OnServerSceneChanged: {sceneName}");
-            GameObject playerSpawnSystemInstance = Instantiate(playerSpawnSystem);
-            NetworkServer.Spawn(playerSpawnSystemInstance);
+            yield return null; // defer to avoid modifying collections during Mirror broadcast
+            pendingReadyConnections.Remove(conn.connectionId);
+            OnServerReadied?.Invoke(conn);
         }
-    }
-    
-    public override void OnServerReady(NetworkConnectionToClient conn)
-    {
-        base.OnServerReady(conn);
 
-        // Only spawn game players when in a game scene
-        var activeScene = SceneManager.GetActiveScene().name;
-        if (!string.IsNullOrEmpty(activeScene) && activeScene.StartsWith("Scene_Map"))
+        public override void OnStartHost()
         {
-            if (pendingReadyConnections.Add(conn.connectionId))
+            isShuttingDown = false;
+            Debug.Log("OnStartHost");
+        }
+
+        public override void OnClientSceneChanged()
+        {
+            // Don't auto-create player in game scenes - PlayerSpawnSystem handles it
+            if (SceneManager.GetActiveScene().name.StartsWith("Scene_Map"))
             {
-                StartCoroutine(InvokeReadyNextFrame(conn));
+                // Still need to set client ready
+                if (NetworkClient.connection.isAuthenticated && !NetworkClient.ready)
+                {
+                    NetworkClient.Ready();
+                }
+                // Don't call base.OnClientSceneChanged() which would auto-add player
+                return;
             }
-        }
-        else
-        {
-            Debug.Log($"OnServerReady ignored in scene {activeScene}");
-        }
-    }
-
-    private IEnumerator InvokeReadyNextFrame(NetworkConnectionToClient conn)
-    {
-        yield return null; // defer to avoid modifying collections during Mirror broadcast
-        pendingReadyConnections.Remove(conn.connectionId);
-        OnServerReadied?.Invoke(conn);
-    }
-
-    public override void OnStartHost()
-    {
-        isShuttingDown = false;
-        Debug.Log("OnStartHost");
-    }
-
-    public override void OnClientSceneChanged()
-    {
-        // Don't auto-create player in game scenes - PlayerSpawnSystem handles it
-        if (SceneManager.GetActiveScene().name.StartsWith("Scene_Map"))
-        {
-            // Still need to set client ready
-            if (NetworkClient.connection.isAuthenticated && !NetworkClient.ready)
-            {
-                NetworkClient.Ready();
-            }
-            // Don't call base.OnClientSceneChanged() which would auto-add player
-            return;
-        }
         
-        // For menu scene, use default behavior
-        base.OnClientSceneChanged();
-    }
-
-    public void ShutdownAndReturnToMenu()
-    {
-        if (isShuttingDown) return;
-        isShuttingDown = true;
-
-        if (NetworkServer.active && NetworkClient.isConnected)
-        {
-            StopHost();
-        }
-        else if (NetworkServer.active)
-        {
-            StopServer();
-        }
-        else if (NetworkClient.isConnected)
-        {
-            StopClient();
-        }
-        else
-        {
-            ReturnToMenuScene();
-        }
-    }
-
-    public void ReturnToMenuForAll()
-    {
-        if (string.IsNullOrWhiteSpace(menuScene)) return;
-
-        // Change scene for all connected clients but keep server running
-        if (NetworkServer.active)
-        {
-            ServerChangeScene(menuScene);
-        }
-        else if (!NetworkClient.active)
-        {
-            // fallback for offline usage
-            ReturnToMenuScene();
-        }
-    }
-
-    private void ReturnToMenuScene()
-    {
-        // allow future shutdowns after returning to menu
-        isShuttingDown = false;
-
-        if (string.IsNullOrWhiteSpace(menuScene))
-        {
-            return;
+            // For menu scene, use default behavior
+            base.OnClientSceneChanged();
         }
 
-        if (SceneManager.GetActiveScene().name != menuScene)
+        public void ShutdownAndReturnToMenu()
         {
-            SceneManager.LoadScene(menuScene);
+            if (isShuttingDown) return;
+            isShuttingDown = true;
+
+            if (NetworkServer.active && NetworkClient.isConnected)
+            {
+                StopHost();
+            }
+            else if (NetworkServer.active)
+            {
+                StopServer();
+            }
+            else if (NetworkClient.isConnected)
+            {
+                StopClient();
+            }
+            else
+            {
+                ReturnToMenuScene();
+            }
+        }
+
+        public void ReturnToMenuForAll()
+        {
+            if (string.IsNullOrWhiteSpace(menuScene)) return;
+
+            // Change scene for all connected clients but keep server running
+            if (NetworkServer.active)
+            {
+                ServerChangeScene(menuScene);
+            }
+            else if (!NetworkClient.active)
+            {
+                // fallback for offline usage
+                ReturnToMenuScene();
+            }
+        }
+
+        private void ReturnToMenuScene()
+        {
+            // allow future shutdowns after returning to menu
+        isShuttingDown = false;if (string.IsNullOrWhiteSpace(menuScene))
+            {
+                return;
+            }
+
+            if (SceneManager.GetActiveScene().name != menuScene)
+            {
+                SceneManager.LoadScene(menuScene);
+            }
         }
     }
 }

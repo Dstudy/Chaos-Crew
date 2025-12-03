@@ -21,6 +21,8 @@ public class WaveSpawn : ScriptableObject
     public int itemsPerPlayer = 100;
     public Vector3 spawnOffset = Vector3.zero;
 
+   public Item itemType;
+
     public AttackItemData GetAttackItem(Element element)
     {
         foreach (var item in attackItemData)
