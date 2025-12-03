@@ -35,13 +35,21 @@ public enum SpawnType
 {
     AllAttackItemsPerElement,
     AttackAndSupport,
-    Augment,
     RandomAll,
     Reward,
+    OnlyOne,
 }
 
 public enum EnemyActionType
 {
     Attack,
     Shield
+}
+
+public enum Item
+{
+    Attack, 
+    Support,
+    Staff,
+    Hammer,
 }

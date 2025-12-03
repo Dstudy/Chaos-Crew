@@ -48,15 +48,16 @@ MonoBehaviour:
   syncDirection: 0
   syncMode: 0
   syncInterval: 0
-  allEnemies:
-  - {fileID: 6250724485592894450, guid: 6abee8754f07fe14b9ceb34d9da149ad, type: 3}
-  - {fileID: 6250724485592894450, guid: 75f4a28619a28ed4a8821e95682c162a, type: 3}
-  - {fileID: 6250724485592894450, guid: 5d540451f4e9bea47a87acc307e11349, type: 3}
-  - {fileID: 6250724485592894450, guid: 1c68ff1bbd6bf304895aa2d11e8a61f2, type: 3}
-  - {fileID: 6250724485592894450, guid: 862ddaf95fe54954887300d9a2090347, type: 3}
+  fireEnemySprite: {fileID: 21300000, guid: c8719678665456e4c8abc40f7d0bac46, type: 3}
+  waterEnemySprite: {fileID: 21300000, guid: a3945a6be6fff6748b9fe3da9e9edf82, type: 3}
+  earthEnemySprite: {fileID: 21300000, guid: 8ad51422402440b43b1b42da52e6d33a, type: 3}
+  ChaosEnemySprite: {fileID: 21300000, guid: 5dbcfed855305464b8671bf420a68ee7, type: 3}
+  AirEnemySprite: {fileID: 21300000, guid: 1ec3804a5c3738840b158ca468967c7b, type: 3}
+  enemyPrefab: {fileID: 6250724485592894450, guid: 4d39f8efc55928f48acfd17d5e9185e6, type: 3}
+  allEnemies: []
   TotalEnemies: []
   enemies: []
-  elements: 
+  aliveEnemies: 0
 --- !u!114 &2391006270443113752
 MonoBehaviour:
   m_ObjectHideFlags: 0

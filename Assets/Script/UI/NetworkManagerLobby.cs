@@ -204,7 +204,8 @@ namespace Script.UI
 
         public override void OnStartHost()
         {
-            isShuttingDown = false;Debug.Log("OnStartHost");
+            isShuttingDown = false;
+            Debug.Log("OnStartHost");
         }
 
         public override void OnClientSceneChanged()

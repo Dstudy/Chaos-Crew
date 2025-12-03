@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: AirEnemy
+  m_Name: EnemyMat
   m_Shader: {fileID: -6465566751694194690, guid: 573d8fc921811ee48ae17b7cc7f99191, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
@@ -39,7 +39,7 @@ Material:
     m_Floats: []
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
-    - _Tint: {r: 0, g: 0, b: 0, a: 0}
+    - _Tint: {r: 0, g: 0.2, b: 0.8, a: 0}
   m_BuildTextureStacks: []
 --- !u!114 &5665969368803657741
 MonoBehaviour:

@@ -185,7 +185,7 @@ public class PlayerSpawnSystem : NetworkBehaviour
         enemyStat.name = $"Enemy {nextIndex}";
         enemyStat.id = nextIndex.ToString();
         enemyStat.Pos = nextIndex;
-        enemyManager.InitElements();
+        enemyManager.AddEnemy(enemyStat);
         NetworkServer.Spawn(enemy, conn);
         
         playerStat.RPCSetEnemy(enemy);

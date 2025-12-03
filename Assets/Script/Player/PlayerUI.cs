@@ -1,31 +1,76 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
+using static CONST;
 
-public class PlayerScript : MonoBehaviour
+public class PlayerUI : MonoBehaviour
 {
     private Player player;
 
     [SerializeField] private Image healthBar;
     [SerializeField] private Image shieldBar;
     
+    [SerializeField] private ParticleSystem hitParticleEffect;
+    [SerializeField] private ParticleSystem healParticleEffect;
+    [SerializeField] private GameObject shield;
+    
     private void Awake()
     {
         player = gameObject.GetComponent<Player>();
 
-        player.onHealthChanged += (health, maxHealth) => UpdateHealthBar(health, maxHealth);
-        player.onShieldChanged += (shield, maxShield) => UpdateShield(shield, maxShield);
+        player.onHealthChanged += (health, oldHealth) => UpdateHealthBar(health);
+        player.onShieldChanged += (shield, maxShield) => UpdateShield(shield);
     }
 
-    private void UpdateHealthBar(int health, int maxHealth)
+    private void OnEnable()
     {
-        healthBar.fillAmount = ((float)health / maxHealth)/2f;
+        ObserverManager.Register(PLAYER_HEAL, (Action)OnPLayerHeal);
+        ObserverManager.Register(PLAYER_SHIELD, (Action)OnPlayerShield);
     }
 
-    private void UpdateShield(int shield, int maxShield)
+    private void OnPLayerHeal()
     {
-        shieldBar.fillAmount = ((float)shield/maxShield)/2f;
+        StartCoroutine(HealAnimation());
+    }
+
+    private void OnPlayerShield()
+    {
+        StartCoroutine(ShieldAnimation());
+    }
+
+    IEnumerator HitAnimation()
+    {
+        hitParticleEffect.Play();
+        yield return new WaitForSeconds(0.1f);
+    }
+
+    IEnumerator HealAnimation()
+    {
+        healParticleEffect.Play();
+        yield return new WaitForSeconds(0.1f);
+    }
+
+    IEnumerator ShieldAnimation()
+    {
+        shield.SetActive(true);
+        shield.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
+        shield.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, 0);
+        shield.transform.DOScale(5.38f, 1f);
+        shield.GetComponent<SpriteRenderer>().DOFade(0.6f, 1f);
+        yield return new WaitForSeconds(1f);
+        shield.SetActive(false);
+    }
+
+    private void UpdateHealthBar(int health)
+    {
+        healthBar.fillAmount = ((float)health / player.maxHealth)/2f;
+    }
+
+    private void UpdateShield(int shield)
+    {
+        shieldBar.fillAmount = ((float)shield/player.maxShield)/2f;
     }
 }
