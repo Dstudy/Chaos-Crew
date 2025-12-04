@@ -2,9 +2,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Script.Enemy;
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using static CONST;
 
 [System.Serializable]
 public struct EnemyMove
@@ -27,6 +27,8 @@ public class EnemyPattern : MonoBehaviour
     [SerializeField] private Image indicatorImage;
     [SerializeField] private Image attackIcon;
     [SerializeField] private Image defenseIcon;
+
+    [SerializeField] private GameObject stunIcon;
     // [SerializeField] private TextMeshProUGUI countdownText;
 
     private bool isStuned;
@@ -61,6 +63,9 @@ public class EnemyPattern : MonoBehaviour
             if (isStuned)
             {
                 isStuned = false;
+                stunIcon.SetActive(false);
+                Debug.Log(gameObject.name + " da het bi stun");
+                ObserverManager.InvokeEvent(ENEMY_OUT_STUN);
             }
             else
             {
@@ -71,6 +76,8 @@ public class EnemyPattern : MonoBehaviour
             moveIndex = (moveIndex + 1) % moves.Length; 
         }
     }
+    
+    
 
     public void ApplyStun()
     {
@@ -79,9 +86,12 @@ public class EnemyPattern : MonoBehaviour
             Debug.Log("Stunned before");
             return;
         }
-        Debug.Log("Stun Enemy");
+        Debug.Log("Stun Enemy " + gameObject.name);
         isStuned = true;
         
+        attackIcon.enabled = false;
+        defenseIcon.enabled = false;
+        stunIcon.SetActive(true);
     }
     
     private IEnumerator PerformTelegraph(EnemyMove move)

@@ -4,6 +4,7 @@ public static class CONST
 
     public static string SCENE_MAIN = "MainMenu";
     public static string SCENE_GAMEPLAY = "Scene_Map_Main";
+    public static string SCENE_TEST = "TestScene";
 
     #endregion
     
@@ -26,6 +27,8 @@ public static class CONST
     #region ENEMY
 
     public static string ENEMY_GET_HIT = "enemy_get_hit";
+    public static string ENEMY_GET_STUNNED = "enemy_get_stunned";
+    public static string ENEMY_OUT_STUN = "enemy_out_stun";
     public static string ENEMY_DEFEATED = "enemy_defeated";
     public static string ENEMY_CAST_NORMAL_ATTACK = "enemy_cast_normal_attack";
     public static string ENEMY_CAST_SHIELD = "enemy_cast_shield";

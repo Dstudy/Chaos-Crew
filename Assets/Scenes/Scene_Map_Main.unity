@@ -991,7 +991,7 @@ MonoBehaviour:
   m_fontColor32:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+  m_fontColor: {r: 0, g: 0, b: 0, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -1069,19 +1069,19 @@ PrefabInstance:
     - target: {fileID: 143704243894752370, guid: 6497258a978bb4344aed94d2cdb4ba02, type: 3}
       propertyPath: waves.Array.data[0]
       value: 
-      objectReference: {fileID: 11400000, guid: 9f2862c847678a941bebbad077d7c020, type: 2}
+      objectReference: {fileID: 11400000, guid: e0ba5e0b7d9925d408a03e8d4bb15077, type: 2}
     - target: {fileID: 143704243894752370, guid: 6497258a978bb4344aed94d2cdb4ba02, type: 3}
       propertyPath: rewardWaves.Array.size
-      value: 3
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 143704243894752370, guid: 6497258a978bb4344aed94d2cdb4ba02, type: 3}
       propertyPath: rewardWaves.Array.data[0]
       value: 
-      objectReference: {fileID: 11400000, guid: 0ba8c7cd4e2b96d48ae5476eebff5fb6, type: 2}
+      objectReference: {fileID: 11400000, guid: 3e0f03ea33b5ef74dbe70b62e3120502, type: 2}
     - target: {fileID: 143704243894752370, guid: 6497258a978bb4344aed94d2cdb4ba02, type: 3}
       propertyPath: rewardWaves.Array.data[1]
       value: 
-      objectReference: {fileID: 11400000, guid: 3e0f03ea33b5ef74dbe70b62e3120502, type: 2}
+      objectReference: {fileID: 11400000, guid: 17e9705d715da8a4b8b44eeeb201f50e, type: 2}
     - target: {fileID: 143704243894752370, guid: 6497258a978bb4344aed94d2cdb4ba02, type: 3}
       propertyPath: rewardWaves.Array.data[2]
       value: 
@@ -1210,7 +1210,7 @@ MonoBehaviour:
   m_fontColor32:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+  m_fontColor: {r: 0, g: 0, b: 0, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:

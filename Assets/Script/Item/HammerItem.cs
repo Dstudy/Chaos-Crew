@@ -1,7 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
+using Mirror;
 using Script.Enemy;
 using UnityEngine;
+using static CONST;
 
 public class HammerItem : AttackItem
 {
@@ -25,7 +27,13 @@ public class HammerItem : AttackItem
             EnemyPattern enemyPattern = enemy.GetComponent<EnemyPattern>();
             if (enemyPattern != null)
             {
-                enemyPattern.ApplyStun();
+                // enemyPattern.ApplyStun();
+                Debug.Log(enemy.name);
+                Player facingPlayer = enemy.GetFacingPlayer();
+                if (facingPlayer != null && facingPlayer.connectionToClient != null)
+                {
+                    enemy.TargetStunEnemy(facingPlayer.connectionToClient);
+                }
             }
             else
             {
@@ -44,6 +52,7 @@ public class HammerItem : AttackItem
             Debug.Log($"Can't use {name} on {target.name}.");
         }
     }
+    
 
     private void Combine(Augment augment)
     {

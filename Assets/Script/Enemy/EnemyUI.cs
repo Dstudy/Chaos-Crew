@@ -17,13 +17,17 @@ public class EnemyUI : MonoBehaviour
     [SerializeField] public SpriteRenderer EnemyHead;
     [SerializeField] private SpriteRenderer EnemyFace;
     [SerializeField] private Sprite hitFace;
+    [SerializeField] private Sprite stunFace;
     [SerializeField] private Sprite normalFace;
     [SerializeField] private Sprite happyFace;
     [SerializeField] private Sprite shieldFace;
     [SerializeField] private Sprite diedFace;
+
+    private Sprite normalSpriteState;
     
     [SerializeField] private ParticleSystem hitParticleEffect;
     [SerializeField] private GameObject shield;
+    [SerializeField] private GameObject starGroup;
     
     [SerializeField] private EntityEffect enemyEffect;
     
@@ -33,12 +37,39 @@ public class EnemyUI : MonoBehaviour
 
         enemy.onHealthChanged += (health, oldHealth) => UpdateHealthBar(health, oldHealth);
         enemy.onShieldChanged += (shield, oldShield) => UpdateShield(shield, oldShield);
-        
+
+        normalSpriteState = normalFace;
+    }
+
+    private void OnEnable()
+    {
         ObserverManager.Register(ENEMY_CAST_SHIELD, (Action<Enemy>)GainShield);
         ObserverManager.Register(ENEMY_GET_HIT, (Action<Enemy>)GetHit);
+        ObserverManager.Register(ENEMY_GET_STUNNED, (Action)GetStunned);
+        ObserverManager.Register(ENEMY_OUT_STUN, (Action)OutStunned);
     }
-    
-    
+
+    private void OnDisable()
+    {
+        ObserverManager.Unregister(ENEMY_CAST_SHIELD, (Action<Enemy>)GainShield);
+        ObserverManager.Unregister(ENEMY_GET_HIT, (Action<Enemy>)GetHit);
+        ObserverManager.Unregister(ENEMY_GET_STUNNED, (Action)GetStunned);
+        ObserverManager.Unregister(ENEMY_OUT_STUN, (Action)OutStunned);
+    }
+
+    private void GetStunned()
+    {
+        starGroup.SetActive(true);
+        normalSpriteState = stunFace;
+        EnemyFace.sprite = normalSpriteState;
+    }
+
+    private void OutStunned()
+    {
+        starGroup.SetActive(false);
+        normalSpriteState = normalFace;
+        EnemyFace.sprite = normalSpriteState;
+    }
 
     private void GainShield(Enemy target)
     {
@@ -53,13 +84,14 @@ public class EnemyUI : MonoBehaviour
             enemyEffect.SetColor((new Color(1, 0, 0, 1f)));
         StartCoroutine(HitAnimation());
     }
+    
 
     IEnumerator HitAnimation()
     {
         hitParticleEffect.Play();
         EnemyFace.sprite = hitFace;
-        yield return new WaitForSeconds(0.1f);
-        EnemyFace.sprite = normalFace;
+        yield return new WaitForSeconds(0.5f);
+        EnemyFace.sprite = normalSpriteState;
     }
 
     IEnumerator ShieldAnimation()
@@ -67,10 +99,15 @@ public class EnemyUI : MonoBehaviour
         shield.SetActive(true);
         shield.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
         shield.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, 0);
-        shield.transform.DOScale(2.8f, 0.5f);
+        shield.transform.DOScale(5.3f, 0.5f);
         shield.GetComponent<SpriteRenderer>().DOFade(0.6f, 0.5f);
+
+        EnemyFace.sprite = shieldFace;
+        
         yield return new WaitForSeconds(0.5f);
         shield.SetActive(false);
+
+        EnemyFace.sprite = normalSpriteState;
     }
 
     

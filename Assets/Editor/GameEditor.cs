@@ -43,4 +43,10 @@ public static class GameEditor
     {
         OpenScene(SCENE_GAMEPLAY);
     }
+    
+    [MenuItem("Tools/OpenTestScene #3")]
+    public static void OpenTestScene()
+    {
+        OpenScene(SCENE_TEST);
+    }
 }
