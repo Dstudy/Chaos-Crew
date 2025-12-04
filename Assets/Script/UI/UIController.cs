@@ -10,7 +10,6 @@ using static CONST;
 
 public class UIController : MonoBehaviour
 {
-    public static UIController instance;
     public GameObject gameOverUI;
     public GameObject winUI;
     public Button exitUI;
@@ -21,20 +20,16 @@ public class UIController : MonoBehaviour
 
     private void Awake()
     {
-        if (instance != null && instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-
-        instance = this;
-        DontDestroyOnLoad(gameObject);
-
+        EnsureUIReferences();
+        ResetUIState();
         WireExitButton();
     }
 
     private void OnEnable()
     {
+        SceneManager.sceneLoaded += OnSceneLoaded;
+        EnsureUIReferences();
+        ResetUIState();
         ObserverManager.Register(PLAYER_DIED, (Action<Player>)HandlePlayerDied);
         ObserverManager.Register(ALL_ENEMIES_DEFEATED, (Action)HandleGameWon);
         ObserverManager.Register(GAME_WON, (Action)HandleGameWon);
@@ -44,6 +39,7 @@ public class UIController : MonoBehaviour
 
     private void OnDisable()
     {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
         ObserverManager.Unregister(PLAYER_DIED, (Action<Player>)HandlePlayerDied);
         ObserverManager.Unregister(ALL_ENEMIES_DEFEATED, (Action)HandleGameWon);
         ObserverManager.Unregister(GAME_WON, (Action)HandleGameWon);
@@ -53,18 +49,33 @@ public class UIController : MonoBehaviour
 
     public void ShowGameOverUI()
     {
-        gameOverUI?.SetActive(true);
-        Debug.Log("Game Over UI shown");
+        EnsureUIReferences();
+        if (gameOverUI == null)
+        {
+            Debug.LogWarning("UIController: gameOverUI is not assigned, cannot show Game Over.");
+            return;
+        }
+
+        gameOverUI.SetActive(true);
+        Debug.Log("UIController: Game Over UI shown");
     }
 
     public void ShowWinUI()
     {
-        winUI?.SetActive(true);
-        Debug.Log("Win UI shown");
+        EnsureUIReferences();
+        if (winUI == null)
+        {
+            Debug.LogWarning("UIController: winUI is not assigned, cannot show Win UI.");
+            return;
+        }
+
+        winUI.SetActive(true);
+        Debug.Log("UIController: Win UI shown");
     }
 
     private void HandlePlayerDied(Player deadPlayer)
     {
+        Debug.Log($"UIController: HandlePlayerDied received for {deadPlayer?.name ?? "unknown"}; gameEnded={gameEnded}");
         if (gameEnded) return;
         gameEnded = true;
         ShowGameOverUI();
@@ -72,9 +83,57 @@ public class UIController : MonoBehaviour
 
     private void HandleGameWon()
     {
+        Debug.Log($"UIController: HandleGameWon received; gameEnded={gameEnded}");
         if (gameEnded) return;
         gameEnded = true;
         ShowWinUI();
+    }
+
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        EnsureUIReferences();
+        ResetUIState();
+        WireExitButton();
+    }
+
+    private void ResetUIState()
+    {
+        gameEnded = false;
+        if (gameOverUI != null && gameOverUI.activeSelf)
+        {
+            gameOverUI.SetActive(false);
+        }
+        if (winUI != null && winUI.activeSelf)
+        {
+            winUI.SetActive(false);
+        }
+    }
+
+    private void EnsureUIReferences()
+    {
+        TryAutoAssignPanel(ref gameOverUI, "GameOverUI", "gameover");
+        TryAutoAssignPanel(ref winUI, "WinUI", "win");
+    }
+
+    private void TryAutoAssignPanel(ref GameObject target, string tagName, string nameHint)
+    {
+        if (target != null) return;
+
+        var candidates = Resources.FindObjectsOfTypeAll<GameObject>();
+        var match = candidates.FirstOrDefault(go =>
+            go != null &&
+            (go.CompareTag(tagName) ||
+             go.name.IndexOf(nameHint, StringComparison.OrdinalIgnoreCase) >= 0));
+
+        if (match != null)
+        {
+            target = match;
+            Debug.Log($"UIController: auto-assigned {nameHint} panel: {match.name}");
+        }
+        else
+        {
+            Debug.LogWarning($"UIController: Could not auto-assign {nameHint} panel (tag {tagName}).");
+        }
     }
 
     private void WireExitButton()

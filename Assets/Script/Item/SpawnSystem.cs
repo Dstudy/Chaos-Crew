@@ -94,7 +94,7 @@ public class SpawnSystem : NetworkBehaviour
     {
         if (isServer)
         {
-            ObserverManager.Register(ENEMY_DEFEATED, (Action<Enemy>) OnEnemyDefeacted);
+            ObserverManager.Unregister(ENEMY_DEFEATED, (Action<Enemy>) OnEnemyDefeacted);
         }
     }
 
@@ -199,6 +199,15 @@ public class SpawnSystem : NetworkBehaviour
     public void OnEnemyDefeatedServer(Enemy enemy)
     {
         // This method is called directly from Enemy on the server
+        if (EnemyManager.instance != null)
+        {
+            EnemyManager.instance.NotifyEnemyDefeated();
+        }
+        else
+        {
+            Debug.LogWarning("EnemyManager instance is null; cannot track remaining enemies.");
+        }
+
         OnEnemyDefeacted(enemy);
     }
 
