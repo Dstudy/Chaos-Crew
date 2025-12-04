@@ -151,7 +151,7 @@ public class PlayerSpawnSystem : NetworkBehaviour
             Instantiate(playerPrefab, spawnPoint, Quaternion.identity);
         
         Player playerStat = playerInstance.GetComponent<Player>();
-        playerStat.gameObject.name = $"Player {nextIndex}";
+        // playerStat.gameObject.name = $"Player {nextIndex}";
         playerStat.id = nextIndex.ToString();
         playerStat.Pos = nextIndex;
         

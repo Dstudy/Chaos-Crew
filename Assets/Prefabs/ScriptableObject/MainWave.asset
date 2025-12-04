@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5819a9202a4620040a95a8a5e0dd577a, type: 3}
-  m_Name: Wave1
+  m_Name: MainWave
   m_EditorClassIdentifier: 
   spawnType: 2
   attackItemData:
@@ -40,4 +40,4 @@ MonoBehaviour:
   waveCount: 10
   itemsPerPlayer: 10
   spawnOffset: {x: 0, y: 0, z: 0}
-  itemType: 0
+  itemType: 3

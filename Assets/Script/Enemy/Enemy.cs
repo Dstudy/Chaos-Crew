@@ -60,7 +60,7 @@ namespace Script.Enemy
         }
     
         [Server]
-        private Player GetFacingPlayer()
+        public Player GetFacingPlayer()
         {
             if (PlayerManager.instance == null || PlayerManager.instance.players == null)
                 return null;
@@ -90,6 +90,18 @@ namespace Script.Enemy
         private void TargetInvokeEnemyHit(NetworkConnectionToClient conn)
         {
             ObserverManager.InvokeEvent(ENEMY_GET_HIT, this);
+        }
+        
+        [TargetRpc]
+        public void TargetStunEnemy(NetworkConnectionToClient conn)
+        {
+            EnemyPattern enemyPattern = GetComponent<EnemyPattern>();
+            if (enemyPattern != null)
+            {
+                enemyPattern.ApplyStun();              // play stun animation / state
+            }
+
+            ObserverManager.InvokeEvent(ENEMY_GET_STUNNED);
         }
 
         private void DisableEnemy()

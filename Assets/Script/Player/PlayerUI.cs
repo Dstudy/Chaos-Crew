@@ -31,6 +31,12 @@ public class PlayerUI : MonoBehaviour
         ObserverManager.Register(PLAYER_SHIELD, (Action)OnPlayerShield);
     }
 
+    private void OnDisable()
+    {
+        ObserverManager.Unregister(PLAYER_HEAL, (Action)OnPLayerHeal);
+        ObserverManager.Unregister(PLAYER_SHIELD, (Action)OnPlayerShield);
+    }
+
     private void OnPLayerHeal()
     {
         StartCoroutine(HealAnimation());
@@ -58,9 +64,9 @@ public class PlayerUI : MonoBehaviour
         shield.SetActive(true);
         shield.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
         shield.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, 0);
-        shield.transform.DOScale(5.38f, 1f);
-        shield.GetComponent<SpriteRenderer>().DOFade(0.6f, 1f);
-        yield return new WaitForSeconds(1f);
+        shield.transform.DOScale(4f, 0.5f);
+        shield.GetComponent<SpriteRenderer>().DOFade(0.6f, 0.5f);
+        yield return new WaitForSeconds(0.5f);
         shield.SetActive(false);
     }
 

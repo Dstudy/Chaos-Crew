@@ -19,11 +19,11 @@ public class ShaderControl : MonoBehaviour
 
     IEnumerator StartAnim()
     {
-        yield return new WaitForSeconds(32.3f);
+        yield return new WaitForSeconds(3f);
         c.a = 0.1f;
         spriteRenderer.color = c;
         material.SetFloat("_Speed", speed);
-        yield return new WaitForSeconds(26.9f);
+        yield return new WaitForSeconds(27f);
         c.a = 0f;
         spriteRenderer.color = c;
     }

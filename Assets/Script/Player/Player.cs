@@ -62,6 +62,7 @@ using static CONST;
             ObserverManager.InvokeEvent(PLAYER_HEAL);
         }
 
+        [TargetRpc]
         private void TargetInvokePlayerShield(NetworkConnectionToClient conn)
         {
             ObserverManager.InvokeEvent(PLAYER_SHIELD);
@@ -82,6 +83,7 @@ using static CONST;
         [ClientRpc]
         public void RPCSetEnemy(GameObject enemyGameObject)
         {
+            enemyGameObject.name = "Enemy " + position;
             enemy = enemyGameObject.GetComponent<Enemy>();
         }
 
