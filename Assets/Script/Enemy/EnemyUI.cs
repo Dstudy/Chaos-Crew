@@ -30,6 +30,8 @@ public class EnemyUI : MonoBehaviour
     [SerializeField] private GameObject starGroup;
     
     [SerializeField] private EntityEffect enemyEffect;
+
+    [SerializeField] private GameObject hitAnimation;
     
     private void Awake()
     {
@@ -44,7 +46,7 @@ public class EnemyUI : MonoBehaviour
     private void OnEnable()
     {
         ObserverManager.Register(ENEMY_CAST_SHIELD, (Action<Enemy>)GainShield);
-        ObserverManager.Register(ENEMY_GET_HIT, (Action<Enemy>)GetHit);
+        ObserverManager.Register(ENEMY_GET_HIT, (Action<Enemy, BaseItem>)GetHit);
         ObserverManager.Register(ENEMY_GET_STUNNED, (Action)GetStunned);
         ObserverManager.Register(ENEMY_OUT_STUN, (Action)OutStunned);
     }
@@ -52,7 +54,7 @@ public class EnemyUI : MonoBehaviour
     private void OnDisable()
     {
         ObserverManager.Unregister(ENEMY_CAST_SHIELD, (Action<Enemy>)GainShield);
-        ObserverManager.Unregister(ENEMY_GET_HIT, (Action<Enemy>)GetHit);
+        ObserverManager.Unregister(ENEMY_GET_HIT, (Action<Enemy, BaseItem>)GetHit);
         ObserverManager.Unregister(ENEMY_GET_STUNNED, (Action)GetStunned);
         ObserverManager.Unregister(ENEMY_OUT_STUN, (Action)OutStunned);
     }
@@ -78,20 +80,25 @@ public class EnemyUI : MonoBehaviour
         StartCoroutine(ShieldAnimation());
     }
 
-    private void GetHit(Enemy target)
+    private void GetHit(Enemy target, BaseItem item)
     {
-        if(target == enemy && enemy.isLocalEnemy)
-            enemyEffect.SetColor((new Color(1, 0, 0, 1f)));
-        StartCoroutine(HitAnimation());
+        StartCoroutine(HitAnimation(target, item));
     }
     
 
-    IEnumerator HitAnimation()
+    IEnumerator HitAnimation(Enemy target, BaseItem item)
     {
+        hitAnimation.GetComponent<Slash>().SetColor(target.element, item);
+        hitAnimation.SetActive(true);
+        hitAnimation.GetComponent<Animator>().SetTrigger("Slash");
+        yield return new WaitForSeconds(0.2f);
+        if(target == enemy && enemy.isLocalEnemy)
+            enemyEffect.SetColor((new Color(1, 0, 0, 1f)));
         hitParticleEffect.Play();
         EnemyFace.sprite = hitFace;
         yield return new WaitForSeconds(0.5f);
         EnemyFace.sprite = normalSpriteState;
+        hitAnimation.SetActive(false);
     }
 
     IEnumerator ShieldAnimation()

@@ -17,6 +17,8 @@ public class PlayerUI : MonoBehaviour
     [SerializeField] private ParticleSystem healParticleEffect;
     [SerializeField] private GameObject shield;
     
+    [SerializeField] private EntityEffect playerEffect;
+    
     private void Awake()
     {
         player = gameObject.GetComponent<Player>();
@@ -29,12 +31,21 @@ public class PlayerUI : MonoBehaviour
     {
         ObserverManager.Register(PLAYER_HEAL, (Action)OnPLayerHeal);
         ObserverManager.Register(PLAYER_SHIELD, (Action)OnPlayerShield);
+        ObserverManager.Register(PLAYER_GET_HIT, (Action<Player>)OnPlayerGetHit);
     }
 
     private void OnDisable()
     {
         ObserverManager.Unregister(PLAYER_HEAL, (Action)OnPLayerHeal);
         ObserverManager.Unregister(PLAYER_SHIELD, (Action)OnPlayerShield);
+        ObserverManager.Unregister(PLAYER_GET_HIT, (Action<Player>)OnPlayerGetHit);
+    }
+
+    private void OnPlayerGetHit(Player target)
+    {
+        if(target == player && player.isLocalPlayer)
+            playerEffect.SetColor((new Color(1, 0, 0, 1f)));
+        StartCoroutine(HitAnimation());
     }
 
     private void OnPLayerHeal()

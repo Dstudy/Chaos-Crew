@@ -19,6 +19,7 @@ public static class CONST
     #region PLAYER
 
     public static string PLAYER_USE_ATTACK_ITEM = "player_use_attack_item";
+    public static string PLAYER_GET_HIT = "player_get_hit";
     public static string PLAYER_HEAL = "player_heal";
     public static string PLAYER_SHIELD = "player_shield";
     

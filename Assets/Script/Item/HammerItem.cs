@@ -7,7 +7,7 @@ using static CONST;
 
 public class HammerItem : AttackItem
 {
-    public HammerItem(int id, string name, int damage, Element element) : base(id, name, damage, element)
+    public HammerItem(int id, string name, int damage, Element element) : base(id, name, damage, element, Item.Hammer)
     {
         
     }
@@ -22,7 +22,7 @@ public class HammerItem : AttackItem
                 return;
             }
             
-            enemy.TakeDamage(this.damage, this.element);
+            enemy.TakeDamage(this.damage, this.element, this);
 
             EnemyPattern enemyPattern = enemy.GetComponent<EnemyPattern>();
             if (enemyPattern != null)

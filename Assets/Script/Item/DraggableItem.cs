@@ -51,7 +51,7 @@ public class DraggableItem : MonoBehaviour
             itemData.name = staffItem.name;
             staffItem.element = element;
             staffItem.charges = charges;
-            itemData.setIcon(staffItem.elementSprites[element]);
+            itemData.setIcon(ItemManager.Instance.GetStaffSprite(element));
         }
         
         // Update visuals
@@ -183,7 +183,7 @@ public class DraggableItem : MonoBehaviour
         if (staffItem == null || spriteRenderer == null) return;
         
         // Try to get sprite from staff's element sprite mapping
-        Sprite newSprite = staffItem.GetSpriteForElement(staffItem.element);
+        Sprite newSprite = ItemManager.Instance.GetStaffSprite(staffItem.element);
         
         if (newSprite != null)
         {

@@ -9,6 +9,7 @@ public abstract class BaseItem
     public int id;
     public string name;
     public ItemType type;
+    public Item itemType;
     public GameObject prefab;
     private Sprite sprite;
 
@@ -27,11 +28,12 @@ public abstract class BaseItem
         get => prefab.GetComponent<PolygonCollider2D>();
     }
 
-    public BaseItem(int id, string name, ItemType type)
+    public BaseItem(int id, string name, ItemType type, Item itemType)
     {
         this.id = id;
         this.name = name;
         this.type = type;
+        this.itemType = itemType;
     }
 
     public abstract string GetStats();

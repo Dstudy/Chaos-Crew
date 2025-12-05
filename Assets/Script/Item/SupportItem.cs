@@ -9,7 +9,7 @@ public class SupportItem: BaseItem
     private Image image;
     private Transform parentAfterDrag;
     
-    public SupportItem(int id, string name, int value, SupportEffect effect) : base(id, name, ItemType.Support)
+    public SupportItem(int id, string name, int value, SupportEffect effect) : base(id, name, ItemType.Support, Item.Support)
     {
         this.value = value;
         this.effect = effect;

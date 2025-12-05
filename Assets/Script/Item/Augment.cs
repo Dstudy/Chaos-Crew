@@ -5,7 +5,7 @@ public class Augment: BaseItem
     public AugmentType augmentType;
     public int bonusValue;
     
-    public Augment(int id, string name, AugmentType augmentType, int bonusValue) : base(id, name, ItemType.Augment)
+    public Augment(int id, string name, AugmentType augmentType, int bonusValue) : base(id, name, ItemType.Augment, Item.Support)
     {
         this.augmentType = augmentType;
         this.bonusValue = bonusValue;

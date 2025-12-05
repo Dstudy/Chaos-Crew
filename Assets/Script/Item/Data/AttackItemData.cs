@@ -11,7 +11,7 @@ public class AttackItemData : ScriptableObject
 
     public AttackItem CreateAttackItem()
     {
-        var item = new AttackItem(id, itemName, damage, element);
+        var item = new AttackItem(id, itemName, damage, element, Item.Attack);
         item.prefab = prefab;
         return item;
     }
