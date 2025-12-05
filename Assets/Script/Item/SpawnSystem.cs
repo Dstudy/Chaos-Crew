@@ -293,6 +293,7 @@ public class SpawnSystem : NetworkBehaviour
     [Server]
     public void StartRoundWaves()
     {
+        Debug.Log("Start Round Spawn");
         if (isSpawning)
         {
             Debug.LogWarning("SpawnSystem: Cannot start round waves while spawning is in progress.");
@@ -313,6 +314,11 @@ public class SpawnSystem : NetworkBehaviour
         Debug.Log($"Starting wave {wave.waveNumber} with spawn type: {wave.spawnType}");
 
         List<Player> players = GetAllPlayers();
+
+        foreach (var foundPlayer in players)
+        {
+            Debug.Log(foundPlayer.name);
+        }
         
         if (players.Count == 0)
         {
@@ -372,7 +378,7 @@ public class SpawnSystem : NetworkBehaviour
                             player = gamePlayer.GetComponentInParent<Player>();
                         }
                     }
-                    
+                
                     if (player != null)
                     {
                         players.Add(player);
@@ -380,7 +386,8 @@ public class SpawnSystem : NetworkBehaviour
                 }
             }
         }
-        
+    
+        Debug.Log($"GetAllPlayers found {players.Count} players from PlayerManager");
         // Fallback: Find all Player objects in scene
         if (players.Count == 0)
         {
@@ -503,6 +510,7 @@ public class SpawnSystem : NetworkBehaviour
             yield break;
         }
         
+        Debug.Log("So player la: " + players.Count);
         
         foreach (Player player in players)
         {
@@ -937,52 +945,72 @@ public class SpawnSystem : NetworkBehaviour
     }
     
     [TargetRpc]
-    private void TargetSpawnItemLocal(NetworkConnectionToClient conn, int instanceId, int itemId, Vector3 position, int spawnPointIndex, Vector2 shootDirection, int charges, Element element)
+private void TargetSpawnItemLocal(NetworkConnectionToClient conn, int instanceId, int itemId, Vector3 position, int spawnPointIndex, Vector2 shootDirection, int charges, Element element)
+{
+    // This runs on the client that owns the item
+    if (draggableItemPrefab == null)
     {
-        // This runs on the client that owns the item
-        if (draggableItemPrefab == null)
-        {
-            Debug.LogError("draggableItemPrefab is null on client!");
-            return;
-        }
-        
-        // Get item from local pool (client-side only)
-        if (LocalItemPool.singleton == null)
-        {
-            Debug.LogError("LocalItemPool.singleton is null! Make sure LocalItemPool is in the scene.");
-            return;
-        }
-        
-        LocalItemPool.singleton.SetPrefab(draggableItemPrefab);
-        GameObject dragItem = LocalItemPool.singleton.Get(position, Quaternion.identity);
-        DraggableItem draggableItem = dragItem.GetComponent<DraggableItem>();
-        
-        if (draggableItem != null)
-        {
-            // Get item data from ItemManager
-            BaseItem itemData = ItemManager.Instance.GetItemById(itemId);
-            if (itemData == null)
-            {
-                Debug.LogError($"Could not find item with id {itemId} in ItemManager!");
-                LocalItemPool.singleton.Return(dragItem);
-                return;
-            }
-            
-            // Set up the local item
-            draggableItem.SetItemLocal(instanceId, itemData, charges, element);
-            draggableItem.gameObject.name = $"{itemData.name} - Instance {instanceId}";
-            draggableItem.transform.position = position;
-            
-            // Apply shoot force
-            draggableItem.Shoot(shootDirection, shootForce);
-            
-            Debug.Log($"Client spawned local item instance {instanceId} at {position}");
-        }
-        else
-        {
-            Debug.LogError("Failed to get DraggableItem component from pool!");
-        }
+        Debug.LogError("draggableItemPrefab is null on client!");
+        return;
     }
+    
+    // Get item from local pool (client-side only)
+    if (LocalItemPool.singleton == null)
+    {
+        Debug.LogError("LocalItemPool.singleton is null! Make sure LocalItemPool is in the scene.");
+        return;
+    }
+    
+    LocalItemPool.singleton.SetPrefab(draggableItemPrefab);
+    GameObject dragItem = LocalItemPool.singleton.Get(position, Quaternion.identity);
+    DraggableItem draggableItem = dragItem.GetComponent<DraggableItem>();
+    
+    if (draggableItem != null)
+    {
+        // Get item data from ItemManager
+        BaseItem itemData = ItemManager.Instance.GetItemById(itemId);
+        if (itemData == null)
+        {
+            Debug.LogError($"Could not find item with id {itemId} in ItemManager!");
+            LocalItemPool.singleton.Return(dragItem);
+            return;
+        }
+        
+        // Set up the local item
+        draggableItem.SetItemLocal(instanceId, itemData, charges, element);
+        draggableItem.gameObject.name = $"{itemData.name} - Instance {instanceId}";
+        draggableItem.transform.position = position;
+        
+        // Reset Rigidbody2D state before applying force
+        Rigidbody2D rb = dragItem.GetComponent<Rigidbody2D>();
+        if (rb != null)
+        {
+            rb.velocity = Vector2.zero;
+            rb.angularVelocity = 0f;
+            rb.WakeUp(); // Ensure the rigidbody is awake
+        }
+        
+        // Apply shoot force - use a coroutine to ensure Rigidbody2D is ready
+        StartCoroutine(ApplyShootForceDelayed(draggableItem, shootDirection, shootForce));
+        
+        Debug.Log($"Client spawned local item instance {instanceId} at {position} with shoot direction: " + shootDirection +" and shootforce: "+ shootForce);
+    }
+    else
+    {
+        Debug.LogError("Failed to get DraggableItem component from pool!");
+    }
+}
+
+private IEnumerator ApplyShootForceDelayed(DraggableItem draggableItem, Vector2 shootDirection, float force)
+{
+    // Wait one frame to ensure Rigidbody2D is fully initialized
+    yield return null;
+    
+    if (draggableItem != null)
+    {
+        draggableItem.Shoot(shootDirection, force);
+    }
+}
     
 
     private Transform GetSpawnPoint(PlayerMap playerMap)

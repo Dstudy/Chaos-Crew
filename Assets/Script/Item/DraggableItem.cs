@@ -76,6 +76,7 @@ public class DraggableItem : MonoBehaviour
     
     public void Shoot(Vector2 direction, float force)
     {
+        Debug.Log(direction + " + " + force);
         // Local-only shooting
         Rigidbody2D rb = GetComponent<Rigidbody2D>();
         if (rb != null)

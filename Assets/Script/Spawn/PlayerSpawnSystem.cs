@@ -114,22 +114,22 @@ public class PlayerSpawnSystem : NetworkBehaviour
 
     private IEnumerator SpawnPlayerDeferred(NetworkConnectionToClient conn)
     {
-        // Wait until end of frame to avoid modifying Mirror collections during broadcast
-        yield return new WaitForEndOfFrame();
-
-        if (gameEnded)
-        {
-            pendingSpawns.Remove(conn.connectionId);
-            yield break;
-        }
-
-        if (this == null || !isActiveAndEnabled)
-        {
-            pendingSpawns.Remove(conn.connectionId);
-            yield break;
-        }
-
-        pendingSpawns.Remove(conn.connectionId);
+        // // Wait until end of frame to avoid modifying Mirror collections during broadcast
+        // yield return new WaitForEndOfFrame();
+        //
+        // if (gameEnded)
+        // {
+        //     pendingSpawns.Remove(conn.connectionId);
+        //     yield break;
+        // }
+        //
+        // if (this == null || !isActiveAndEnabled)
+        // {
+        //     pendingSpawns.Remove(conn.connectionId);
+        //     yield break;
+        // }
+        //
+        // pendingSpawns.Remove(conn.connectionId);
 
         // Prevent duplicate spawning
         if (conn.identity != null && conn.identity.GetComponent<Player>() != null)
