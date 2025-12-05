@@ -11,7 +11,7 @@ namespace Script.Enemy
         public bool isLocalEnemy = false;
         private bool isDead;
 
-    public void TakeDamage(int damage, Element element)
+    public void TakeDamage(int damage, Element element, BaseItem item)
         {
             if (this.element != element)
             {
@@ -21,7 +21,8 @@ namespace Script.Enemy
             Player facingPlayer = GetFacingPlayer();
             if (facingPlayer != null && facingPlayer.connectionToClient != null)
             {
-                TargetInvokeEnemyHit(facingPlayer.connectionToClient);
+                int itemID = item.id;
+                TargetInvokeEnemyHit(facingPlayer.connectionToClient, itemID);
             }
             
             int newDamage = damage;
@@ -87,9 +88,10 @@ namespace Script.Enemy
         }
 
         [TargetRpc]
-        private void TargetInvokeEnemyHit(NetworkConnectionToClient conn)
+        private void TargetInvokeEnemyHit(NetworkConnectionToClient conn, int itemID)
         {
-            ObserverManager.InvokeEvent(ENEMY_GET_HIT, this);
+            BaseItem item = ItemManager.Instance.GetItemById(itemID);
+            ObserverManager.InvokeEvent(ENEMY_GET_HIT, this, item);
         }
         
         [TargetRpc]

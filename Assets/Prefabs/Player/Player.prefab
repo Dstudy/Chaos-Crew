@@ -313,6 +313,7 @@ MonoBehaviour:
   hitParticleEffect: {fileID: 7842249639501769101}
   healParticleEffect: {fileID: 3275435597505176502}
   shield: {fileID: 9017115018679303159}
+  playerEffect: {fileID: 7136562502241028674}
 --- !u!1 &3434214016357923968
 GameObject:
   m_ObjectHideFlags: 0

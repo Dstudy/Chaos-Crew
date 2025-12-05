@@ -43,6 +43,7 @@ using static CONST;
             if(Pos == pos)
             {
                 Debug.Log("Get hit " + damage);
+                ObserverManager.InvokeEvent(PLAYER_GET_HIT, this);
                 HandleEnemyDamageCmd(damage);
                 
                 if(Health <= 0 && !isDead)
@@ -63,7 +64,15 @@ using static CONST;
         [Command]
         private void HandleEnemyDamageCmd(int damage)
         {
-            Health -= damage;
+            int newDamage = damage;
+            if (Shield > 0)
+            {
+                newDamage -= Shield;
+                Shield -= damage;
+            }
+            if(newDamage<=0) newDamage = 0;
+            this.Health -= newDamage;
+            Debug.Log("Take damage: " + damage);
         }
 
         [TargetRpc]

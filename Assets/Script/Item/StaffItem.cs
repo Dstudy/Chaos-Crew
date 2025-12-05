@@ -9,13 +9,13 @@ public class StaffItem : AttackItem
     public int charges;
     public int maxCharges;
     
-    public Dictionary<Element, Sprite> elementSprites;
+    // public Dictionary<Element, Sprite> elementSprites;
     
-    public StaffItem(int id, string name, int damage, Element element, int maxCharges) : base(id, name, damage, element)
+    public StaffItem(int id, string name, int damage, Element element, int maxCharges) : base(id, name, damage, element, Item.Staff)
     {
         this.maxCharges = maxCharges;
         this.charges = maxCharges;
-        this.elementSprites = new Dictionary<Element, Sprite>();
+        // this.elementSprites = new Dictionary<Element, Sprite>();
     }
 
     public override void UseOn(MonoBehaviour target)
@@ -25,7 +25,7 @@ public class StaffItem : AttackItem
             Debug.Log(element + "  " + enemy.element);
             if (element == enemy.element)
             {
-                enemy.TakeDamage(damage, this.element);
+                enemy.TakeDamage(damage, this.element, this);
                 
                 Debug.Log($"Used {name} on {enemy.name} - Dealt {damage} damage.");
                 
@@ -71,14 +71,4 @@ public class StaffItem : AttackItem
         }
     }
     
-    public Sprite GetSpriteForElement(Element elem)
-    {
-        if (elementSprites != null && elementSprites.ContainsKey(elem))
-        {
-            return elementSprites[elem];
-        }
-        // Fallback to default prefab sprite
-        return icon;
-    }
-
 }

@@ -9,10 +9,11 @@ public class AttackItem : BaseItem
     public int damage;
     public Element element;
         
-    public AttackItem(int id, string name, int damage, Element element) : base(id, name, ItemType.Attack)
+    public AttackItem(int id, string name, int damage, Element element, Item itemType) : base(id, name, ItemType.Attack, Item.Attack)
     {
         this.damage = damage;
         this.element = element;
+        this.itemType = itemType;
     }
 
 
@@ -30,7 +31,7 @@ public class AttackItem : BaseItem
                 Debug.Log("Not right element");
                 return;
             }
-            enemy.TakeDamage(this.damage, this.element);
+            enemy.TakeDamage(this.damage, this.element, this);
             Debug.Log($"Used {name} on {enemy.name}.");
         }
         else if (target is DraggableItem item && item.GetItem() is Augment augment)

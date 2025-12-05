@@ -24,13 +24,6 @@ public class StaffItemData : ScriptableObject
         var item = new StaffItem(id, itemName, damage, initialElement, maxCharges);
         item.prefab = prefab;
         
-        // Map sprites to elements
-        item.elementSprites[Element.Fire] = fireSprite;
-        item.elementSprites[Element.Water] = waterSprite;
-        item.elementSprites[Element.Earth] = earthSprite;
-        item.elementSprites[Element.Air] = airSprite;
-        item.elementSprites[Element.Chaos] = chaosSprite;
-        
         return item;
     }
 }

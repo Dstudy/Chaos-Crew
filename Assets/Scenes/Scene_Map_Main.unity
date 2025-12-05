@@ -877,6 +877,21 @@ MonoBehaviour:
   - {fileID: 11400000, guid: dc074a6c3d058114eabccf897f79e1eb, type: 2}
   - {fileID: 11400000, guid: 2120a5efaf3820d4baf83856731f6f97, type: 2}
   - {fileID: 11400000, guid: 1152a31eb0768c349b65b65258a962c7, type: 2}
+  staffFireSprite: {fileID: 21300000, guid: df4dee30c553f0146a6da962fd04f762, type: 3}
+  staffWaterSprite: {fileID: 21300000, guid: c612e340505c60a478ea8c1627f33c01, type: 3}
+  staffEarthSprite: {fileID: 21300000, guid: b1b06daa4fa9d3c4891979973836ac4d, type: 3}
+  staffAirSprite: {fileID: 21300000, guid: 7046672a022580c4a838d92d8bf1ced1, type: 3}
+  staffChaosSprite: {fileID: 21300000, guid: 0adc20ccbed772f449f71b6ce6354813, type: 3}
+  swordFireSprite: {fileID: 21300000, guid: 02ca5a2a2860e984e90547de6da50963, type: 3}
+  swordWaterSprite: {fileID: 21300000, guid: 289409cfdbbcf0d4e9c137f84a541eb7, type: 3}
+  swordEarthSprite: {fileID: 21300000, guid: 1d7e1106890d7e34bbb2bd1d5b0ade1e, type: 3}
+  swordAirSprite: {fileID: 21300000, guid: 9b5c283af469bb74982475d2cdd8fc1c, type: 3}
+  swordChaosSprite: {fileID: 21300000, guid: c7d758540df313b4591b83d815e746c9, type: 3}
+  hammerFireSprite: {fileID: 21300000, guid: f2133025551ddbb458cda257e0cb587d, type: 3}
+  hammerWaterSprite: {fileID: 21300000, guid: 99e223f26e217724f82d5096c440ba45, type: 3}
+  hammerEarthSprite: {fileID: 21300000, guid: 6d4c46ddb75493c429c2c717dddfb3aa, type: 3}
+  hammerAirSprite: {fileID: 21300000, guid: 7361c3da5144a8849b7c74f134d801df, type: 3}
+  hammerChaosSprite: {fileID: 21300000, guid: 5828d1a994cc8ba4d887ba63f4100e5a, type: 3}
 --- !u!1 &720275978
 GameObject:
   m_ObjectHideFlags: 0

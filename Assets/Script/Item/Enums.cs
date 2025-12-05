@@ -33,8 +33,8 @@ public enum SupportEffect
 
 public enum SpawnType
 {
-    AllAttackItemsPerElement,
-    AttackAndSupport,
+    AttackAndShield,
+    AttackSupportStaff,
     RandomAll,
     Reward,
     OnlyOne,
