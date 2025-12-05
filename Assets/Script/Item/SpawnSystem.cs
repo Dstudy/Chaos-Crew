@@ -303,6 +303,7 @@ public class SpawnSystem : NetworkBehaviour
     [Server]
     public void StartRoundWaves()
     {
+        Debug.Log("Start Round Spawn");
         if (isSpawning)
         {
             Debug.LogWarning("SpawnSystem: Cannot start round waves while spawning is in progress.");
@@ -324,6 +325,11 @@ public class SpawnSystem : NetworkBehaviour
 
         List<Player> players = GetAllPlayers();
 
+        foreach (var foundPlayer in players)
+        {
+            Debug.Log(foundPlayer.name);
+        }
+        
         if (players.Count == 0)
         {
             Debug.LogWarning("No players found to spawn items for!");
@@ -363,29 +369,43 @@ public class SpawnSystem : NetworkBehaviour
     [Server]
     private List<Player> GetAllPlayers()
     {
-        // Prefer the authoritative PlayerManager list (populated on the server during spawn)
-        if (PlayerManager.instance != null && PlayerManager.instance.players != null && PlayerManager.instance.players.Count > 0)
+        List<Player> players = new List<Player>();
+        
+        if (NetworkManager.singleton is NetworkManagerLobby lobby)
         {
-            return PlayerManager.instance.players
-                .Where(go => go != null)
-                .Select(go => go.GetComponent<Player>())
-                .Where(p => p != null)
-                .ToList();
+            foreach (var gamePlayer in lobby.GamePlayers)
+            {
+                if (gamePlayer != null && gamePlayer.gameObject != null)
+                {
+                    // NetworkGamePlayerLobby might be a separate object, try to find Player component
+                    Player player = gamePlayer.GetComponent<Player>();
+                    if (player == null)
+                    {
+                        // Try to find Player in children or parent
+                        player = gamePlayer.GetComponentInChildren<Player>();
+                        if (player == null)
+                        {
+                            player = gamePlayer.GetComponentInParent<Player>();
+                        }
+                    }
+                
+                    if (player != null)
+                    {
+                        players.Add(player);
+                    }
+                }
+            }
         }
-
-        // Fallback to lobby GamePlayers if PlayerManager is not ready
-        if (NetworkManager.singleton is NetworkManagerLobby lobby && lobby.GamePlayers != null)
+    
+        Debug.Log($"GetAllPlayers found {players.Count} players from PlayerManager");
+        // Fallback: Find all Player objects in scene
+        if (players.Count == 0)
         {
-            var lobbyPlayers = lobby.GamePlayers
-                .Where(gp => gp != null)
-                .SelectMany(gp => gp.GetComponentsInChildren<Player>())
-                .Where(p => p != null)
-                .ToList();
-            if (lobbyPlayers.Count > 0) return lobbyPlayers;
+            Player[] allPlayers = FindObjectsOfType<Player>();
+            players.AddRange(allPlayers);
         }
-
-        // Final fallback: find all Player objects in the scene
-        return FindObjectsOfType<Player>().ToList();
+        
+        return players;
     }
 
     [Server]
@@ -499,8 +519,9 @@ public class SpawnSystem : NetworkBehaviour
             Debug.LogWarning("No elements found from EnemyManager!");
             yield break;
         }
-
-
+        
+        Debug.Log("So player la: " + players.Count);
+        
         foreach (Player player in players)
         {
             List<BaseItem> itemsToSpawn = new List<BaseItem>();
@@ -958,73 +979,73 @@ public class SpawnSystem : NetworkBehaviour
     }
 
     [TargetRpc]
-    private void TargetSpawnItemLocal(NetworkConnectionToClient conn, int instanceId, int itemId, Vector3 position, int spawnPointIndex, Vector2 shootDirection, int charges, Element element)
+private void TargetSpawnItemLocal(NetworkConnectionToClient conn, int instanceId, int itemId, Vector3 position, int spawnPointIndex, Vector2 shootDirection, int charges, Element element)
+{
+    // This runs on the client that owns the item
+    if (draggableItemPrefab == null)
     {
-        // This runs on the client that owns the item
-        if (draggableItemPrefab == null)
+        Debug.LogError("draggableItemPrefab is null on client!");
+        return;
+    }
+    
+    // Get item from local pool (client-side only)
+    if (LocalItemPool.singleton == null)
+    {
+        Debug.LogError("LocalItemPool.singleton is null! Make sure LocalItemPool is in the scene.");
+        return;
+    }
+    
+    LocalItemPool.singleton.SetPrefab(draggableItemPrefab);
+    GameObject dragItem = LocalItemPool.singleton.Get(position, Quaternion.identity);
+    DraggableItem draggableItem = dragItem.GetComponent<DraggableItem>();
+    
+    if (draggableItem != null)
+    {
+        // Get item data from ItemManager
+        BaseItem itemData = ItemManager.Instance.GetItemById(itemId);
+        if (itemData == null)
         {
-            Debug.LogError("draggableItemPrefab is null on client!");
+            Debug.LogError($"Could not find item with id {itemId} in ItemManager!");
+            LocalItemPool.singleton.Return(dragItem);
             return;
         }
-
-        // Get item from local pool (client-side only)
-        if (LocalItemPool.singleton == null)
+        
+        // Set up the local item
+        draggableItem.SetItemLocal(instanceId, itemData, charges, element);
+        draggableItem.gameObject.name = $"{itemData.name} - Instance {instanceId}";
+        draggableItem.transform.position = position;
+        
+        // Reset Rigidbody2D state before applying force
+        Rigidbody2D rb = dragItem.GetComponent<Rigidbody2D>();
+        if (rb != null)
         {
-            Debug.LogError("LocalItemPool.singleton is null! Make sure LocalItemPool is in the scene.");
-            return;
+            rb.velocity = Vector2.zero;
+            rb.angularVelocity = 0f;
+            rb.WakeUp(); // Ensure the rigidbody is awake
         }
-
-        LocalItemPool.singleton.SetPrefab(draggableItemPrefab);
-        GameObject dragItem = LocalItemPool.singleton.Get(position, Quaternion.identity);
-        DraggableItem draggableItem = dragItem.GetComponent<DraggableItem>();
-
-        if (draggableItem != null)
-        {
-            // Get item data from ItemManager
-            BaseItem itemData = ItemManager.Instance.GetItemById(itemId);
-            if (itemData == null)
-            {
-                Debug.LogError($"Could not find item with id {itemId} in ItemManager!");
-                LocalItemPool.singleton.Return(dragItem);
-                return;
-            }
-
-            // Set up the local item
-            draggableItem.SetItemLocal(instanceId, itemData, charges, element);
-            draggableItem.gameObject.name = $"{itemData.name} - Instance {instanceId}";
-            draggableItem.transform.position = position;
-
-            // Reset Rigidbody2D state before applying force
-            Rigidbody2D rb = dragItem.GetComponent<Rigidbody2D>();
-            if (rb != null)
-            {
-                rb.velocity = Vector2.zero;
-                rb.angularVelocity = 0f;
-                rb.WakeUp(); // Ensure the rigidbody is awake
-            }
-
-            // Apply shoot force - use a coroutine to ensure Rigidbody2D is ready
-            StartCoroutine(ApplyShootForceDelayed(draggableItem, shootDirection, shootForce));
-
-            Debug.Log($"Client spawned local item instance {instanceId} at {position} with shoot direction: " + shootDirection + " and shootforce: " + shootForce);
-        }
-        else
-        {
-            Debug.LogError("Failed to get DraggableItem component from pool!");
-        }
+        
+        // Apply shoot force - use a coroutine to ensure Rigidbody2D is ready
+        StartCoroutine(ApplyShootForceDelayed(draggableItem, shootDirection, shootForce));
+        
+        Debug.Log($"Client spawned local item instance {instanceId} at {position} with shoot direction: " + shootDirection +" and shootforce: "+ shootForce);
     }
-
-    private IEnumerator ApplyShootForceDelayed(DraggableItem draggableItem, Vector2 shootDirection, float force)
+    else
     {
-        // Wait one frame to ensure Rigidbody2D is fully initialized
-        yield return null;
-
-        if (draggableItem != null)
-        {
-            draggableItem.Shoot(shootDirection, force);
-        }
+        Debug.LogError("Failed to get DraggableItem component from pool!");
     }
+}
 
+private IEnumerator ApplyShootForceDelayed(DraggableItem draggableItem, Vector2 shootDirection, float force)
+{
+    // Wait one frame to ensure Rigidbody2D is fully initialized
+    yield return null;
+    
+    if (draggableItem != null)
+    {
+        draggableItem.Shoot(shootDirection, force);
+    }
+}
+    
 
     private Transform GetSpawnPoint(PlayerMap playerMap)
     {
