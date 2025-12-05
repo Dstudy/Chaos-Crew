@@ -28,7 +28,8 @@ namespace Script.UI
         [Header("Game")]
         [SerializeField] private NetworkGamePlayerLobby gamePlayerPrefab = null;
         [SerializeField] private GameObject playerSpawnSystem = null;
-    
+        [SerializeField] private GameObject roundManagerPrefab = null;
+
         [SerializeField] private string gameScene = string.Empty;
     
         public List<NetworkRoomPlayerLobby> RoomPlayers { get; } = new List<NetworkRoomPlayerLobby>();
@@ -173,6 +174,7 @@ namespace Script.UI
                 Debug.Log($"OnServerSceneChanged: {sceneName}");
                 GameObject playerSpawnSystemInstance = Instantiate(playerSpawnSystem);
                 NetworkServer.Spawn(playerSpawnSystemInstance);
+                EnsureRoundManagerExists();
             }
         }
     
@@ -200,6 +202,24 @@ namespace Script.UI
             yield return null; // defer to avoid modifying collections during Mirror broadcast
             pendingReadyConnections.Remove(conn.connectionId);
             OnServerReadied?.Invoke(conn);
+        }
+
+        private void EnsureRoundManagerExists()
+        {
+            if (RoundManager.instance != null)
+            {
+                return;
+            }
+
+            if (roundManagerPrefab == null)
+            {
+                Debug.LogWarning("NetworkManagerLobby: roundManagerPrefab is not assigned, cannot spawn RoundManager.");
+                return;
+            }
+
+            GameObject roundManagerInstance = Instantiate(roundManagerPrefab);
+            NetworkServer.Spawn(roundManagerInstance);
+            Debug.Log("NetworkManagerLobby: Spawned RoundManager in game scene.");
         }
 
         public override void OnStartHost()

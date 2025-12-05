@@ -20,7 +20,9 @@ public class EnemyManager : NetworkBehaviour
     [SerializeField] private int aliveEnemies;
     public Element[] elementList = {Element.Fire, Element.Water, Element.Earth, Element.Air, Element.Chaos};
 
-    private readonly SyncList<Element> elements = new SyncList<Element>();
+    // We don't need network-synchronized elements; a simple list avoids Mirror SyncList null refs when the manager
+    // isn't spawned as a networked object.
+    private readonly List<Element> elements = new List<Element>();
 
     public static EnemyManager instance;
 
@@ -72,6 +74,23 @@ public class EnemyManager : NetworkBehaviour
     public void InitElements()
     {
         elements.Clear();
+    }
+
+    [Server]
+    public void ResetRoundState()
+    {
+        foreach (var enemy in enemies.ToList())
+        {
+            if (enemy != null && enemy.gameObject != null)
+            {
+                NetworkServer.Destroy(enemy.gameObject);
+            }
+        }
+
+        enemies.Clear();
+        elements.Clear();
+        aliveEnemies = 0;
+        enemyCreationCounter = 0;
     }
 
     public List<Element> GetElements()

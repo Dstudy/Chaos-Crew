@@ -12,6 +12,16 @@ using static CONST;
         public PlayerMap playerMap;
         public Enemy enemy;
         private bool isDead;
+        
+        // Reset per-round state so players are alive and topped up
+        public void ResetForRound(RoundPlayerSettings settings)
+        {
+            isDead = false;
+            maxHealth = settings.maxHealth;
+            Health = settings.maxHealth;
+            maxShield = settings.maxShield;
+            Shield = settings.maxShield;
+        }
 
         private void OnEnable()
         {
@@ -441,6 +451,18 @@ using static CONST;
                 TargetRemoveItemLocal(conn, itemInstanceId);
             }
         }
+    }
+
+    [Command]
+    public void CmdRequestNextRound()
+    {
+        if (RoundManager.instance == null)
+        {
+            Debug.LogWarning("CmdRequestNextRound: RoundManager instance is null on server.");
+            return;
+        }
+
+        RoundManager.instance.ServerRequestNextRound();
     }
 
     [Command]

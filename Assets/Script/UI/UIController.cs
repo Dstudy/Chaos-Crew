@@ -13,10 +13,12 @@ public class UIController : MonoBehaviour
     public GameObject gameOverUI;
     public GameObject winUI;
     public Button exitUI;
+    public Button nextUI;
     
     private bool gameEnded;
     private bool exitHooked;
     private bool warnedMissingExit;
+    private bool warnedMissingNext;
 
     private void Awake()
     {
@@ -30,16 +32,21 @@ public class UIController : MonoBehaviour
         SceneManager.sceneLoaded += OnSceneLoaded;
         EnsureUIReferences();
         ResetUIState();
+        RoundManager.OnRoundEndedClient += HandleRoundEnded;
+        RoundManager.OnRoundStartedClient += HandleRoundStarted;
         ObserverManager.Register(PLAYER_DIED, (Action<Player>)HandlePlayerDied);
         ObserverManager.Register(ALL_ENEMIES_DEFEATED, (Action)HandleGameWon);
         ObserverManager.Register(GAME_WON, (Action)HandleGameWon);
         ObserverManager.Register(GAME_LOST, (Action<Player>)HandlePlayerDied);
         WireExitButton();
+        WireNextButton();
     }
 
     private void OnDisable()
     {
         SceneManager.sceneLoaded -= OnSceneLoaded;
+        RoundManager.OnRoundEndedClient -= HandleRoundEnded;
+        RoundManager.OnRoundStartedClient -= HandleRoundStarted;
         ObserverManager.Unregister(PLAYER_DIED, (Action<Player>)HandlePlayerDied);
         ObserverManager.Unregister(ALL_ENEMIES_DEFEATED, (Action)HandleGameWon);
         ObserverManager.Unregister(GAME_WON, (Action)HandleGameWon);
@@ -57,12 +64,15 @@ public class UIController : MonoBehaviour
         }
 
         gameOverUI.SetActive(true);
+        ToggleNextButton(false);
+        ToggleExitButton(true);
         Debug.Log("UIController: Game Over UI shown");
     }
 
-    public void ShowWinUI()
+    public void ShowWinUI(bool showNextButton)
     {
         EnsureUIReferences();
+        WireNextButton();
         if (winUI == null)
         {
             Debug.LogWarning("UIController: winUI is not assigned, cannot show Win UI.");
@@ -70,6 +80,8 @@ public class UIController : MonoBehaviour
         }
 
         winUI.SetActive(true);
+        ToggleNextButton(showNextButton);
+        ToggleExitButton(true);
         Debug.Log("UIController: Win UI shown");
     }
 
@@ -85,8 +97,9 @@ public class UIController : MonoBehaviour
     {
         Debug.Log($"UIController: HandleGameWon received; gameEnded={gameEnded}");
         if (gameEnded) return;
+        bool hasNext = RoundManager.instance != null && RoundManager.instance.HasNextRound();
         gameEnded = true;
-        ShowWinUI();
+        ShowWinUI(hasNext);
     }
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -94,6 +107,7 @@ public class UIController : MonoBehaviour
         EnsureUIReferences();
         ResetUIState();
         WireExitButton();
+        WireNextButton();
     }
 
     private void ResetUIState()
@@ -107,6 +121,7 @@ public class UIController : MonoBehaviour
         {
             winUI.SetActive(false);
         }
+        ToggleNextButton(false);
     }
 
     private void EnsureUIReferences()
@@ -163,6 +178,27 @@ public class UIController : MonoBehaviour
         Debug.Log($"UIController: exit button wired to ExitToMenu. Active={exitUI.gameObject.activeInHierarchy}, Enabled={exitUI.enabled}, Interactable={exitUI.interactable}");
     }
 
+    private void WireNextButton()
+    {
+        if (nextUI == null)
+        {
+            if (!warnedMissingNext)
+            {
+                TryAssignNextFromWinUI();
+                TryAutoAssignNextButton();
+                if (nextUI == null)
+                {
+                    Debug.LogWarning("UIController: nextUI is not assigned.");
+                    warnedMissingNext = true;
+                }
+            }
+            return;
+        }
+
+        nextUI.onClick.RemoveAllListeners();
+        nextUI.onClick.AddListener(RequestNextRound);
+    }
+
     private void TryAutoAssignExitButton()
     {
         var buttons = Resources.FindObjectsOfTypeAll<Button>();
@@ -175,6 +211,35 @@ public class UIController : MonoBehaviour
             exitUI = match;
             warnedMissingExit = false;
             Debug.Log($"UIController: auto-assigned exit button: {match.name}");
+        }
+    }
+
+    private void TryAutoAssignNextButton()
+    {
+        var buttons = Resources.FindObjectsOfTypeAll<Button>();
+        var match = buttons.FirstOrDefault(b =>
+            b != null &&
+            (b.CompareTag("NextButton") || b.name.IndexOf("next", StringComparison.OrdinalIgnoreCase) >= 0));
+
+        if (match != null)
+        {
+            nextUI = match;
+            warnedMissingNext = false;
+            Debug.Log($"UIController: auto-assigned next button: {match.name}");
+        }
+    }
+
+    // Prefer a next button under the win UI if one exists
+    private void TryAssignNextFromWinUI()
+    {
+        if (winUI == null) return;
+        var candidate = winUI.GetComponentsInChildren<Button>(true)
+            .FirstOrDefault(b => b != null && (b.CompareTag("NextButton") || b.name.IndexOf("next", StringComparison.OrdinalIgnoreCase) >= 0));
+        if (candidate != null)
+        {
+            nextUI = candidate;
+            warnedMissingNext = false;
+            Debug.Log($"UIController: assigned next button from Win UI: {candidate.name}");
         }
     }
 
@@ -196,5 +261,61 @@ public class UIController : MonoBehaviour
         }
 
         SceneManager.LoadScene(0);
+    }
+
+    private void RequestNextRound()
+    {
+        Debug.Log("UIController: Next round clicked.");
+        if (RoundManager.instance != null)
+        {
+            RoundManager.instance.RequestNextRound();
+            return;
+        }
+
+        if (PlayerManager.instance != null && PlayerManager.instance.localPlayer != null)
+        {
+            PlayerManager.instance.localPlayer.CmdRequestNextRound();
+            return;
+        }
+
+        Debug.LogWarning("UIController: Could not find RoundManager or local Player to request next round.");
+    }
+
+    private void HandleRoundStarted(RoundStartClientData _)
+    {
+        gameEnded = false;
+        ResetUIState();
+    }
+
+    private void HandleRoundEnded(RoundEndClientData data)
+    {
+        gameEnded = true;
+        if (data.won)
+        {
+            ShowWinUI(data.hasNextRound);
+        }
+        else
+        {
+            ShowGameOverUI();
+        }
+    }
+
+    private void ToggleNextButton(bool show)
+    {
+        if (nextUI != null)
+        {
+            nextUI.gameObject.SetActive(show);
+            nextUI.enabled = show;
+            nextUI.interactable = show;
+        }
+    }
+
+    private void ToggleExitButton(bool show)
+    {
+        if (exitUI != null)
+        {
+            exitUI.gameObject.SetActive(show);
+            exitUI.interactable = show;
+        }
     }
 }

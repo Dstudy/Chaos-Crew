@@ -191,7 +191,18 @@ public class SpawnSystem : NetworkBehaviour
     private IEnumerator StartWaveAfterDelay()
     {
         Debug.Log("SpawnStart");
-        yield return new WaitForSeconds(2f);
+
+        float delay = Mathf.Max(0f, waveStartDelay);
+        if (delay > 0f)
+        {
+            yield return new WaitForSeconds(delay);
+        }
+
+        while (PlayerManager.instance == null || PlayerManager.instance.players == null || PlayerManager.instance.players.Count == 0)
+        {
+            yield return null;
+        }
+
         StartNextWave();
     }
     
@@ -262,6 +273,35 @@ public class SpawnSystem : NetworkBehaviour
         }
 
         StartCoroutine(SpawnWave(currentWave));
+    }
+
+    [Server]
+    public void ConfigureRound(List<WaveSpawn> newWaves, List<WaveSpawn> newRewardWaves, float startDelay, bool autoStart)
+    {
+        waves = newWaves ?? new List<WaveSpawn>();
+        rewardWaves = newRewardWaves ?? new List<WaveSpawn>();
+        waveStartDelay = Mathf.Max(0f, startDelay);
+        autoStartWaves = autoStart;
+
+        currentWaveIndex = 0;
+        rewardWaveIndex = 0;
+        isSpawning = false;
+        wavesStarted = false;
+        readyPlayersCount = 0;
+    }
+
+    [Server]
+    public void StartRoundWaves()
+    {
+        if (isSpawning)
+        {
+            Debug.LogWarning("SpawnSystem: Cannot start round waves while spawning is in progress.");
+            return;
+        }
+
+        StopAllCoroutines();
+        wavesStarted = true;
+        StartCoroutine(StartWaveAfterDelay());
     }
 
     [Server]
