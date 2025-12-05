@@ -23,6 +23,12 @@ public class WaveSpawn : ScriptableObject
 
    public Item itemType;
 
+    [Header("RandomAll Probabilities (weights)")]
+    [Range(0f, 1f)] public float attackProbability = 0f;
+    [Range(0f, 1f)] public float supportProbability = 0f;
+    [Range(0f, 1f)] public float staffProbability = 0f;
+    [Range(0f, 1f)] public float hammerProbability = 0f;
+
     public AttackItemData GetAttackItem(Element element)
     {
         foreach (var item in attackItemData)

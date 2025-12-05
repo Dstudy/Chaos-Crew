@@ -285,11 +285,11 @@ public class SpawnSystem : NetworkBehaviour
 
         switch (wave.spawnType)
         {
-            case SpawnType.AllAttackItemsPerElement:
-                yield return StartCoroutine(SpawnAllAttackItemsPerElement(wave, players));
+            case SpawnType.AttackAndShield:
+                yield return StartCoroutine(SpawnAttackAndShield(wave, players));
                 break;
-            case SpawnType.AttackAndSupport:
-                yield return StartCoroutine(SpawnAttackAndSupport(wave, players));
+            case SpawnType.AttackSupportStaff:
+                yield return StartCoroutine(SpawnAttackSupportStaff(wave, players));
                 break;
             case SpawnType.OnlyOne:
                 yield return StartCoroutine(SpawnOnlyOne(wave, players));
@@ -441,21 +441,12 @@ public class SpawnSystem : NetworkBehaviour
     }
 
     [Server]
-    private IEnumerator SpawnAllAttackItemsPerElement(WaveSpawn wave, List<Player> players)
+    private IEnumerator SpawnAttackAndShield(WaveSpawn wave, List<Player> players)
     {
-        if (EnemyManager.instance == null)
-        {
-            Debug.LogError("EnemyManager instance is null!");
-            yield break;
-        }
-
-        if (wave.attackItemData == null || wave.attackItemData.Count == 0)
-        {
-            Debug.LogWarning("No attack item data in wave!");
-            yield break;
-        }
-
-        List<Element> elements;
+         Dictionary<Player, List<BaseItem>> playerItems = new Dictionary<Player, List<BaseItem>>();
+        int totalItemsToSpawn = wave.waveCount;
+        
+        List<Element> elements = null;
         try
         {
             elements = EnemyManager.instance.GetElements();
@@ -471,40 +462,50 @@ public class SpawnSystem : NetworkBehaviour
             Debug.LogWarning("No elements found from EnemyManager!");
             yield break;
         }
-
-        // Get unique elements
-        HashSet<Element> uniqueElements = new HashSet<Element>(elements);
-        uniqueElements.Remove(Element.None); // Remove None element
-
-        // Convert to list for easier iteration
-        List<Element> elementsList = new List<Element>(uniqueElements);
         
-        // Determine how many items to spawn per player
-        int totalItemsToSpawn = wave.waveCount;
-
-        
-        Dictionary<Player, List<AttackItemData>> playerItems = new();
         
         foreach (Player player in players)
         {
-            List<Element> shuffled = elementsList.OrderBy(_ => UnityEngine.Random.value).ToList();
-            List<AttackItemData> items = new();
-            for (int i = 0; i < totalItemsToSpawn; i++)
+            List<BaseItem> itemsToSpawn = new List<BaseItem>();
+            for (int itemIndex = 0; itemIndex < totalItemsToSpawn; itemIndex++)
             {
-                AttackItemData data = wave.attackItemData[shuffled.IndexOf(shuffled[i])];
-                if (data != null) items.Add(data);
+                Item itemType = GetWeightedRandomItemType(wave);
+                switch (itemType)
+                {
+                    case Item.Attack:
+                    {
+                        AttackItemData attackData = wave.GetAttackItem(elements[UnityEngine.Random.Range(0, elements.Count)]);
+                        if (attackData != null)
+                        {
+                            itemsToSpawn.Add(attackData.CreateAttackItem());
+                        }
+
+                        break;
+                    }
+                    case Item.Support:
+                    {
+                        //Chỉ spawn ra heal thôi
+                        SupportItemData supportData = wave.supportItemData[0];
+                        if (supportData != null)
+                        {
+                            itemsToSpawn.Add(supportData.CreateSupportItem());
+                        }
+                        break;
+                    }
+                }
             }
-            playerItems[player] = items;
+            
+            playerItems[player] = itemsToSpawn;
         }
         
-        // Spawn per index so players roll different elements
+        
         for (int itemIndex = 0; itemIndex < totalItemsToSpawn; itemIndex++)
         {
             foreach (Player player in players)
             {
                 if (playerItems[player].Count > itemIndex)
                 {
-                    SpawnItemForPlayer(player, playerItems[player][itemIndex].CreateAttackItem(), wave.spawnOffset);
+                    SpawnItemForPlayer(player, playerItems[player][itemIndex], wave.spawnOffset);
                 }
             }
             yield return new WaitForSeconds(wave.spawnDelay);
@@ -540,10 +541,10 @@ public class SpawnSystem : NetworkBehaviour
             List<BaseItem> itemsToSpawn = new List<BaseItem>();
             for (int itemIndex = 0; itemIndex < totalItemsToSpawn; itemIndex++)
             {
-                int index = UnityEngine.Random.Range(0, 4);
-                switch (index)
+                Item itemType = GetWeightedRandomItemType(wave);
+                switch (itemType)
                 {
-                    case 0:
+                    case Item.Attack:
                     {
                         AttackItemData attackData = wave.GetAttackItem(elements[UnityEngine.Random.Range(0, elements.Count)]);
                         if (attackData != null)
@@ -553,7 +554,7 @@ public class SpawnSystem : NetworkBehaviour
 
                         break;
                     }
-                    case 1:
+                    case Item.Support:
                     {
                         SupportItemData supportData = wave.supportItemData[UnityEngine.Random.Range(0, wave.supportItemData.Count)];
                         if (supportData != null)
@@ -562,7 +563,7 @@ public class SpawnSystem : NetworkBehaviour
                         }
                         break;
                     }
-                    case 2:
+                    case Item.Staff:
                     {
                         StaffItemData staffItemData = wave.GetStaffItem(elements[UnityEngine.Random.Range(0, elements.Count)]);
                         if (staffItemData != null)
@@ -571,7 +572,7 @@ public class SpawnSystem : NetworkBehaviour
                         }
                         break;
                     }
-                    case 3:
+                    case Item.Hammer:
                     {
                         HammerData hammerData = wave.GetHammerItem(elements[UnityEngine.Random.Range(0, elements.Count)]);
                         if (hammerData != null)
@@ -600,6 +601,29 @@ public class SpawnSystem : NetworkBehaviour
         }
     }
     
+    private Item GetWeightedRandomItemType(WaveSpawn wave)
+    {
+        float attack = Mathf.Max(0f, wave.attackProbability);
+        float support = Mathf.Max(0f, wave.supportProbability);
+        float staff = Mathf.Max(0f, wave.staffProbability);
+        float hammer = Mathf.Max(0f, wave.hammerProbability);
+
+        float total = attack + support + staff + hammer;
+        if (total <= 0f)
+        {
+            // Fall back to equal probability if weights are invalid
+            return (Item)UnityEngine.Random.Range(0, 4);
+        }
+
+        float roll = UnityEngine.Random.value * total;
+        if (roll < attack) return Item.Attack;
+        roll -= attack;
+        if (roll < support) return Item.Support;
+        roll -= support;
+        if (roll < staff) return Item.Staff;
+        return Item.Hammer;
+    }
+
     [Server]
     private IEnumerator SpawnReward(WaveSpawn wave, Player player)
     {
@@ -678,97 +702,82 @@ public class SpawnSystem : NetworkBehaviour
     }
 
     [Server]
-    private IEnumerator SpawnAttackAndSupport(WaveSpawn wave, List<Player> players)
+    private IEnumerator SpawnAttackSupportStaff(WaveSpawn wave, List<Player> players)
     {
-        if (wave.attackItemData == null || wave.attackItemData.Count == 0)
-        {
-            Debug.LogWarning("No attack item data in wave!");
-            yield break;
-        }
-
-        if (wave.supportItemData == null || wave.supportItemData.Count == 0)
-        {
-            Debug.LogWarning("No support item data in wave!");
-            yield break;
-        }
-
-        // Determine how many items to spawn per player
-        int itemsPerPlayer = wave.itemsPerPlayer > 0 ? wave.itemsPerPlayer : 2;
+       Dictionary<Player, List<BaseItem>> playerItems = new Dictionary<Player, List<BaseItem>>();
+        int totalItemsToSpawn = wave.waveCount;
         
-        // Prepare item lists for each player (different items per player)
-        Dictionary<Player, List<BaseItem>> playerItems = new Dictionary<Player, List<BaseItem>>();
+        List<Element> elements = null;
+        try
+        {
+            elements = EnemyManager.instance.GetElements();
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Error getting elements from EnemyManager: {e.Message}");
+            yield break;
+        }
+        
+        if (elements == null || elements.Count == 0)
+        {
+            Debug.LogWarning("No elements found from EnemyManager!");
+            yield break;
+        }
+        
         
         foreach (Player player in players)
         {
             List<BaseItem> itemsToSpawn = new List<BaseItem>();
-            
-            // First item: Attack
-            AttackItemData attackData = wave.attackItemData[UnityEngine.Random.Range(0, wave.attackItemData.Count)];
-            if (attackData != null)
+            for (int itemIndex = 0; itemIndex < totalItemsToSpawn; itemIndex++)
             {
-                itemsToSpawn.Add(attackData.CreateAttackItem());
-            }
+                Item itemType = GetWeightedRandomItemType(wave);
+                switch (itemType)
+                {
+                    case Item.Attack:
+                    {
+                        AttackItemData attackData = wave.GetAttackItem(elements[UnityEngine.Random.Range(0, elements.Count)]);
+                        if (attackData != null)
+                        {
+                            itemsToSpawn.Add(attackData.CreateAttackItem());
+                        }
 
-            // Second item: Support
-            SupportItemData supportData = wave.supportItemData[UnityEngine.Random.Range(0, wave.supportItemData.Count)];
-            if (supportData != null)
-            {
-                itemsToSpawn.Add(supportData.CreateSupportItem());
-            }
-            
-            // Fill remaining slots with random attack or support items
-            while (itemsToSpawn.Count < itemsPerPlayer)
-            {
-                bool spawnAttack = UnityEngine.Random.Range(0, 2) == 0;
-                
-                if (spawnAttack && wave.attackItemData != null && wave.attackItemData.Count > 0)
-                {
-                    AttackItemData randomAttackData = wave.attackItemData[UnityEngine.Random.Range(0, wave.attackItemData.Count)];
-                    if (randomAttackData != null)
+                        break;
+                    }
+                    case Item.Support:
                     {
-                        itemsToSpawn.Add(randomAttackData.CreateAttackItem());
-                        continue;
+                        //Chỉ spawn ra heal thôi
+                        SupportItemData supportData = wave.supportItemData[1];
+                        if (supportData != null)
+                        {
+                            itemsToSpawn.Add(supportData.CreateSupportItem());
+                        }
+                        break;
+                    }
+                    case Item.Staff:
+                    {
+                        StaffItemData staffItemData = wave.GetStaffItem(elements[UnityEngine.Random.Range(0, elements.Count)]);
+                        if (staffItemData != null)
+                        {
+                            itemsToSpawn.Add(staffItemData.CreateStaffItem());
+                        }
+                        break;
                     }
                 }
-                
-                if (wave.supportItemData != null && wave.supportItemData.Count > 0)
-                {
-                    SupportItemData randomSupportData = wave.supportItemData[UnityEngine.Random.Range(0, wave.supportItemData.Count)];
-                    if (randomSupportData != null)
-                    {
-                        itemsToSpawn.Add(randomSupportData.CreateSupportItem());
-                        continue;
-                    }
-                }
-                
-                break;
             }
             
             playerItems[player] = itemsToSpawn;
         }
-
-        // Find the maximum number of items any player will receive
-        int maxItems = 0;
-        foreach (var kvp in playerItems)
+        
+        
+        for (int itemIndex = 0; itemIndex < totalItemsToSpawn; itemIndex++)
         {
-            if (kvp.Value.Count > maxItems)
-                maxItems = kvp.Value.Count;
-        }
-
-        // Spawn all items for all players simultaneously
-        for (int itemIndex = 0; itemIndex < maxItems; itemIndex++)
-        {
-            // Spawn this item index for ALL players at the same time
             foreach (Player player in players)
             {
-                if (playerItems.ContainsKey(player) && itemIndex < playerItems[player].Count)
+                if (playerItems[player].Count > itemIndex)
                 {
-                    BaseItem item = playerItems[player][itemIndex];
-                    SpawnItemForPlayer(player, item, wave.spawnOffset);
+                    SpawnItemForPlayer(player, playerItems[player][itemIndex], wave.spawnOffset);
                 }
             }
-            
-            // Wait after spawning this item for all players
             yield return new WaitForSeconds(wave.spawnDelay);
         }
     }
