@@ -35,7 +35,7 @@ using static CONST;
 
         private void HandleEnemyDamage(int damage, int pos)
         {
-            if (isDead)
+            if (isDead || Health - damage <= 0)
             {
                 return;
             }

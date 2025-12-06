@@ -1,4 +1,5 @@
 using System;
+using TMPro;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -7,16 +8,23 @@ using UnityEngine.EventSystems;
 using Mirror;
 using Script.UI;
 using static CONST;
+using System.Collections.Generic;
 
 public class UIController : MonoBehaviour
 {
     public GameObject gameOverUI;
     public GameObject winUI;
     public Button exitUI;
+    public Button homeUI;
     public Button nextUI;
-    
+
+    [Header("Round Notices")]
+    public TextMeshProUGUI winNoticeText;
+    public TextMeshProUGUI loseNoticeText;
+    public List<string> winNotices;
+    public List<string> loseNotices;
+
     private bool gameEnded;
-    private bool exitHooked;
     private bool warnedMissingExit;
     private bool warnedMissingNext;
 
@@ -25,6 +33,10 @@ public class UIController : MonoBehaviour
         EnsureUIReferences();
         ResetUIState();
         WireExitButton();
+    }
+    public void OnHomeButtonClicked()
+    {
+        ExitToMenu();
     }
 
     private void OnEnable()
@@ -42,6 +54,7 @@ public class UIController : MonoBehaviour
         WireNextButton();
     }
 
+
     private void OnDisable()
     {
         SceneManager.sceneLoaded -= OnSceneLoaded;
@@ -51,7 +64,6 @@ public class UIController : MonoBehaviour
         ObserverManager.Unregister(ALL_ENEMIES_DEFEATED, (Action)HandleGameWon);
         ObserverManager.Unregister(GAME_WON, (Action)HandleGameWon);
         ObserverManager.Unregister(GAME_LOST, (Action<Player>)HandlePlayerDied);
-        exitHooked = false;
     }
 
     public void ShowGameOverUI()
@@ -73,16 +85,22 @@ public class UIController : MonoBehaviour
     {
         EnsureUIReferences();
         WireNextButton();
-        if (winUI == null)
-        {
-            Debug.LogWarning("UIController: winUI is not assigned, cannot show Win UI.");
-            return;
-        }
+        if (winUI == null) return;
 
         winUI.SetActive(true);
+
+        // Next button = chỉ bật khi còn round
         ToggleNextButton(showNextButton);
-        ToggleExitButton(true);
-        Debug.Log("UIController: Win UI shown");
+
+        // Home button = bật khi không còn round
+        if (homeUI != null)
+            homeUI.gameObject.SetActive(!showNextButton);
+    }
+
+    private string GetRandomNotice(List<string> list)
+    {
+        if (list == null || list.Count == 0) return "";
+        return list[UnityEngine.Random.Range(0, list.Count)];
     }
 
     private void HandlePlayerDied(Player deadPlayer)
@@ -90,6 +108,10 @@ public class UIController : MonoBehaviour
         Debug.Log($"UIController: HandlePlayerDied received for {deadPlayer?.name ?? "unknown"}; gameEnded={gameEnded}");
         if (gameEnded) return;
         gameEnded = true;
+
+        if (loseNoticeText != null)
+        loseNoticeText.text = GetRandomNotice(loseNotices);
+        
         ShowGameOverUI();
     }
 
@@ -99,6 +121,10 @@ public class UIController : MonoBehaviour
         if (gameEnded) return;
         bool hasNext = RoundManager.instance != null && RoundManager.instance.HasNextRound();
         gameEnded = true;
+
+        if (winNoticeText != null)
+        winNoticeText.text = GetRandomNotice(winNotices);
+
         ShowWinUI(hasNext);
     }
 
@@ -174,7 +200,6 @@ public class UIController : MonoBehaviour
 
         exitUI.onClick.RemoveAllListeners();
         exitUI.onClick.AddListener(ExitToMenu);
-        exitHooked = true;
         Debug.Log($"UIController: exit button wired to ExitToMenu. Active={exitUI.gameObject.activeInHierarchy}, Enabled={exitUI.enabled}, Interactable={exitUI.interactable}");
     }
 

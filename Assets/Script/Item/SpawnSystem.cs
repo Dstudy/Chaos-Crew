@@ -915,16 +915,16 @@ public class SpawnSystem : NetworkBehaviour
         if (spawnPointIndex < 0) spawnPointIndex = 0;
 
         // Align spawn to gameplay plane to avoid uneven Y/Z causing skewed directions
-        Vector3 spawnPos = spawnPosition.position + offset;
-        if (player.enemy != null)
-        {
-            spawnPos.y = player.enemy.transform.position.y;
-        }
-        else if (player.playerMap != null)
-        {
-            spawnPos.y = player.playerMap.playerPos.y;
-        }
-        spawnPos.z = 0f;
+        // Vector3 spawnPos = spawnPosition.position + offset;
+        // if (player.enemy != null)
+        // {
+        //     spawnPos.y = player.enemy.transform.position.y;
+        // }
+        // else if (player.playerMap != null)
+        // {
+        //     spawnPos.y = player.playerMap.playerPos.y;
+        // }
+        // spawnPos.z = 0f;
 
         // Create server-side item instance
         int instanceId = nextInstanceId++;
@@ -933,7 +933,7 @@ public class SpawnSystem : NetworkBehaviour
             item.id,
             player.id,
             item,
-            spawnPos,
+            spawnPosition.position + offset,
             spawnPointIndex
         );
 
@@ -958,19 +958,19 @@ public class SpawnSystem : NetworkBehaviour
             }
 
             // Aim toward this player's enemy so items fly into the lane center regardless of spawn point orientation
-            Vector3 targetPos = player.enemy != null ? player.enemy.transform.position : player.transform.position;
-            targetPos.y = spawnPos.y; // flatten Y to same height as spawn for consistent trajectories
-            targetPos.z = 0f;
+            // Vector3 targetPos = player.enemy != null ? player.enemy.transform.position : player.transform.position;
+            // targetPos.y = spawnPos.y; // flatten Y to same height as spawn for consistent trajectories
+            // targetPos.z = 0f;
 
-            Vector2 shootDirection = (targetPos - spawnPos).normalized;
-            if (shootDirection == Vector2.zero)
-            {
-                shootDirection = Vector2.up;
-            }
+            // Vector2 shootDirection = (targetPos - spawnPos).normalized;
+            // if (shootDirection == Vector2.zero)
+            // {
+            //     shootDirection = Vector2.up;
+            // }
 
             // Send RPC to client to spawn local visual
-            TargetSpawnItemLocal(conn, instanceId, item.id, spawnPos, spawnPointIndex, shootDirection, charges, element);
-            Debug.Log($"Spawned item {item.name} for player {player.id} at {spawnPos} ={spawnPosition.position} + {offset} with shoot direction {shootDirection}");
+            TargetSpawnItemLocal(conn, instanceId, item.id, spawnPosition.position, spawnPointIndex, spawnPosition.up, charges, element);
+            // Debug.Log($"Spawned item {item.name} for player {player.id} at {spawnPos} ={spawnPosition.position} + {offset} with shoot direction {shootDirection}");
         }
         else
         {

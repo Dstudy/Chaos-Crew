@@ -41,7 +41,7 @@ MonoBehaviour:
   itemsPerPlayer: 10
   spawnOffset: {x: 0, y: 0, z: 0}
   itemType: 3
-  attackProbability: 0.75
+  attackProbability: 0.25
   supportProbability: 0.25
-  staffProbability: 0
-  hammerProbability: 0
+  staffProbability: 0.25
+  hammerProbability: 0.25
