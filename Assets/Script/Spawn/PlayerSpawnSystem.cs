@@ -186,6 +186,9 @@ public class PlayerSpawnSystem : NetworkBehaviour
         enemyStat.id = nextIndex.ToString();
         enemyStat.Pos = nextIndex;
 
+        // Ensure the server-side player has a reference to its enemy so server logic (e.g., item aiming) can use it
+        playerStat.enemy = enemyStat;
+
         enemyManager.AddEnemy(enemyStat);
         NetworkServer.Spawn(enemy, conn);
         

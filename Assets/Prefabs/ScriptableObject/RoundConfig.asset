@@ -29,7 +29,7 @@ MonoBehaviour:
       maxShield: 10
   - roundName: Boss2
     waves:
-    - {fileID: 11400000, guid: e0ba5e0b7d9925d408a03e8d4bb15077, type: 2}
+    - {fileID: 11400000, guid: cbe66b9d460529e48b2fa3d109d857f9, type: 2}
     rewardWaves:
     - {fileID: 11400000, guid: 3e0f03ea33b5ef74dbe70b62e3120502, type: 2}
     - {fileID: 11400000, guid: 17e9705d715da8a4b8b44eeeb201f50e, type: 2}
@@ -43,7 +43,7 @@ MonoBehaviour:
       maxShield: 20
   - roundName: Boss3
     waves:
-    - {fileID: 11400000, guid: e0ba5e0b7d9925d408a03e8d4bb15077, type: 2}
+    - {fileID: 11400000, guid: 5ad9136299053cb499df020b4cc55314, type: 2}
     rewardWaves:
     - {fileID: 11400000, guid: 3e0f03ea33b5ef74dbe70b62e3120502, type: 2}
     - {fileID: 11400000, guid: 17e9705d715da8a4b8b44eeeb201f50e, type: 2}
