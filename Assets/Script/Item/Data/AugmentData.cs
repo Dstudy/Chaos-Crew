@@ -15,7 +15,7 @@ public class AugmentData : ScriptableObject
         var item = new Augment(id, itemName, augmentType, bonusValue);
         item.prefab = prefab;
         
-        valueText.text = (augmentType == AugmentType.Add ? "+" : "x") + bonusValue.ToString();
+        // valueText.text = (augmentType == AugmentType.Add ? "+" : "x") + bonusValue.ToString();
         
         return item;
     }

@@ -18,13 +18,6 @@ namespace Script.Enemy
                 return;
             }
             
-            Player facingPlayer = GetFacingPlayer();
-            if (facingPlayer != null && facingPlayer.connectionToClient != null)
-            {
-                int itemID = item.id;
-                TargetInvokeEnemyHit(facingPlayer.connectionToClient, itemID);
-            }
-            
             int newDamage = damage;
             if (Shield > 0)
             {
@@ -34,6 +27,16 @@ namespace Script.Enemy
             if(newDamage<=0) newDamage = 0;
             this.Health -= newDamage;
             Debug.Log("Take damage: " + damage);
+            
+            Player facingPlayer = GetFacingPlayer();
+            if (facingPlayer != null && facingPlayer.connectionToClient != null)
+            {
+                bool hitShield = false;
+                if(newDamage == 0)
+                    hitShield = true;
+                int itemID = item.id;
+                TargetInvokeEnemyHit(facingPlayer.connectionToClient, itemID, hitShield);
+            }
 
             if (Health <= 0 && !isDead)
             {
@@ -83,15 +86,15 @@ namespace Script.Enemy
             // This runs only on the client that faces this enemy
             Instantiate(SpawnSystem.singleton.meow, transform.position, transform.rotation);
             ObserverManager.InvokeEvent(ENEMY_DEFEATED, this);
-            DisableEnemy();
+            // DisableEnemy();
             
         }
 
         [TargetRpc]
-        private void TargetInvokeEnemyHit(NetworkConnectionToClient conn, int itemID)
+        private void TargetInvokeEnemyHit(NetworkConnectionToClient conn, int itemID, bool hitShield)
         {
             BaseItem item = ItemManager.Instance.GetItemById(itemID);
-            ObserverManager.InvokeEvent(ENEMY_GET_HIT, this, item);
+            ObserverManager.InvokeEvent(ENEMY_GET_HIT, this, item, hitShield);
         }
         
         [TargetRpc]
@@ -106,7 +109,7 @@ namespace Script.Enemy
             ObserverManager.InvokeEvent(ENEMY_GET_STUNNED);
         }
 
-        private void DisableEnemy()
+        public void DisableEnemy()
         {
             foreach (Transform child in transform)
             {
@@ -116,13 +119,21 @@ namespace Script.Enemy
 
         public void DoAttack(int damage, int pos)
         {
+            if(!isLocalEnemy) return;
             ObserverManager.InvokeEvent(ENEMY_CAST_NORMAL_ATTACK, damage, pos);
         }
 
         public void DoShield(int shield)
         {
+            if(!isLocalEnemy) return;
             ObserverManager.InvokeEvent(ENEMY_CAST_SHIELD, this);
             Debug.Log("Shield + " +  shield);
+            ShieldUp(shield);
+        }
+
+        [Command]
+        private void ShieldUp(int shield)
+        {
             Shield += shield;
         }
 

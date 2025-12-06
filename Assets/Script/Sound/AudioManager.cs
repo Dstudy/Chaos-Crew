@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
+using static CONST;
 
 public class AudioManager : MonoBehaviour
 {
@@ -7,7 +9,35 @@ public class AudioManager : MonoBehaviour
 
     [SerializeField] private AudioSource musicSource;
     [SerializeField] private AudioSource effectSource;
-    [SerializeField] private AudioSource audioSource;
+    // [SerializeField] private AudioSource audioSource;
+    
+    [Header("Sound List")]
+    [SerializeField] private List<AudioClip> collideSounds;
+    [SerializeField] private List<AudioClip> swordSounds;
+    [SerializeField] private List<AudioClip> staffSounds;
+    [SerializeField] private AudioClip hammerSound;
+    [SerializeField] private AudioClip useHealSound;
+    [SerializeField] private AudioClip healSound;
+    [SerializeField] private AudioClip enemyHitSound;
+    [SerializeField] private AudioClip shieldUpSound;
+    [SerializeField] private AudioClip shieldBlockSound;
+
+    [SerializeField] private AudioClip playerDefeated;
+    
+    [Header("Music")]
+    [SerializeField] private AudioClip backgroundMusic;
+
+    private void OnEnable()
+    {
+        ObserverManager.Register(PLAYER_DIED, (Action<Player>)PlayPlayerDieSound);
+        
+    }
+
+    private void OnDisable()
+    {
+        ObserverManager.Unregister(PLAYER_DIED, (Action<Player>)PlayPlayerDieSound);
+    }
+
 
     public float SoundVolume { get; private set; } = 1f;
     public float MusicVolume { get; private set; } = 1f;
@@ -39,6 +69,17 @@ public class AudioManager : MonoBehaviour
 
         LoadVolumes();
         ApplyVolumes();
+    }
+
+    private void Start()
+    {
+        StartBackgroundMusic();
+    }
+
+    private void StartBackgroundMusic()
+    {
+        musicSource.clip = backgroundMusic;
+        musicSource.Play();
     }
 
     private void LoadVolumes()
@@ -97,5 +138,108 @@ public class AudioManager : MonoBehaviour
         {
             musicSource.volume = MusicVolume;
         }
+    }
+
+    public void PlayCollideSound(AudioSource source = null)
+    {
+        if (collideSounds == null || collideSounds.Count == 0) return;
+        
+        AudioSource audioSource = source != null ? source : effectSource;
+        if (audioSource == null) return;
+        
+        AudioClip clip = collideSounds[UnityEngine.Random.Range(0, collideSounds.Count)];
+        audioSource.PlayOneShot(clip, SoundVolume);
+    }
+    
+    public void PlaySwordSound(AudioSource source = null)
+    {
+        if (swordSounds == null || swordSounds.Count == 0) return;
+        
+        AudioSource audioSource = source != null ? source : effectSource;
+        if (audioSource == null) return;
+        
+        AudioClip clip = swordSounds[UnityEngine.Random.Range(0, swordSounds.Count)];
+        audioSource.PlayOneShot(clip, SoundVolume);
+    }
+    
+    public void PlayStaffSound(AudioSource source = null)
+    {
+        if (staffSounds == null || staffSounds.Count == 0) return;
+        
+        AudioSource audioSource = source != null ? source : effectSource;
+        if (audioSource == null) return;
+        
+        AudioClip clip = staffSounds[UnityEngine.Random.Range(0, staffSounds.Count)];
+        audioSource.PlayOneShot(clip, SoundVolume);
+    }
+    
+    public void PlayHammerSound(AudioSource source = null)
+    {
+        if (hammerSound == null) return;
+        
+        AudioSource audioSource = source != null ? source : effectSource;
+        if (audioSource == null) return;
+        
+        audioSource.PlayOneShot(hammerSound, SoundVolume);
+    }
+    
+    public void PlayUseHealSound(AudioSource source = null)
+    {
+        if (healSound == null) return;
+        
+        AudioSource audioSource = source != null ? source : effectSource;
+        if (audioSource == null) return;
+        
+        audioSource.PlayOneShot(useHealSound, SoundVolume);
+    }
+    
+    public void PlayHealSound(AudioSource source = null)
+    {
+        if (healSound == null) return;
+        
+        AudioSource audioSource = source != null ? source : effectSource;
+        if (audioSource == null) return;
+        
+        audioSource.PlayOneShot(healSound, SoundVolume);
+    }
+    
+    public void PlayEnemyHitSound(AudioSource source = null)
+    {
+        if (enemyHitSound == null) return;
+        
+        AudioSource audioSource = source != null ? source : effectSource;
+        if (audioSource == null) return;
+        
+        audioSource.PlayOneShot(enemyHitSound, SoundVolume);
+    }
+    
+    public void PlayShieldUpSound(AudioSource source = null)
+    {
+        if (shieldUpSound == null) return;
+        
+        AudioSource audioSource = source != null ? source : effectSource;
+        if (audioSource == null) return;
+        
+        audioSource.PlayOneShot(shieldUpSound, SoundVolume);
+    }
+    
+    public void PlayShieldBlockSound(AudioSource source = null)
+    {
+        if (shieldBlockSound == null) return;
+        
+        AudioSource audioSource = source != null ? source : effectSource;
+        if (audioSource == null) return;
+        
+        audioSource.PlayOneShot(shieldBlockSound, SoundVolume);
+    }
+    
+    public void PlayPlayerDieSound(Player _)
+    {
+        if (healSound == null) return;
+        
+        AudioSource audioSource = effectSource;
+        if (audioSource == null) return;
+        
+        audioSource.PlayOneShot(playerDefeated, SoundVolume);
     }
 }

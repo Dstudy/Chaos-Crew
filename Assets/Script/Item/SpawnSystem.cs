@@ -840,7 +840,7 @@ public class SpawnSystem : NetworkBehaviour
             return;
         }
 
-        Transform spawnPosition = player.enemy.transform;
+        Vector3 spawnPosition = player.enemy.transform.position;
         
         int spawnPointIndex = player.playerMap.spawnItemPoints.IndexOf(spawnPosition);
         if (spawnPointIndex < 0) spawnPointIndex = 0;
@@ -852,7 +852,7 @@ public class SpawnSystem : NetworkBehaviour
             item.id,
             player.id,
             item,
-            spawnPosition.position ,
+            spawnPosition ,
             spawnPointIndex
         );
         
@@ -881,7 +881,7 @@ public class SpawnSystem : NetworkBehaviour
             Vector2 shootDirection = new Vector2(Mathf.Cos(degree * Mathf.Deg2Rad), Mathf.Sin(degree * Mathf.Deg2Rad));
             
             // Send RPC to client to spawn local visual
-            TargetSpawnItemLocal(conn, instanceId, item.id, spawnPosition.position , spawnPointIndex, shootDirection, charges, element);
+            TargetSpawnItemLocal(conn, instanceId, item.id, spawnPosition , spawnPointIndex, shootDirection, charges, element);
         }
         else
         {
@@ -900,7 +900,7 @@ public class SpawnSystem : NetworkBehaviour
             return;
         }
 
-        Transform spawnPosition = GetSpawnPoint(player.playerMap);
+        Vector3 spawnPosition = GetSpawnPoint(player.playerMap);
         int spawnPointIndex = player.playerMap.spawnItemPoints.IndexOf(spawnPosition);
         if (spawnPointIndex < 0) spawnPointIndex = 0;
         
@@ -911,7 +911,7 @@ public class SpawnSystem : NetworkBehaviour
             item.id,
             player.id,
             item,
-            spawnPosition.position + offset,
+            spawnPosition + offset,
             spawnPointIndex
         );
         
@@ -936,7 +936,7 @@ public class SpawnSystem : NetworkBehaviour
             }
             
             // Send RPC to client to spawn local visual
-                TargetSpawnItemLocal(conn, instanceId, item.id, spawnPosition.position + offset, spawnPointIndex, spawnPosition.up, charges, element);
+                TargetSpawnItemLocal(conn, instanceId, item.id, spawnPosition + offset, spawnPointIndex, new Vector2(0,1), charges, element);
         }
         else
         {
@@ -993,7 +993,6 @@ private void TargetSpawnItemLocal(NetworkConnectionToClient conn, int instanceId
         // Apply shoot force - use a coroutine to ensure Rigidbody2D is ready
         StartCoroutine(ApplyShootForceDelayed(draggableItem, shootDirection, shootForce));
         
-        Debug.Log($"Client spawned local item instance {instanceId} at {position} with shoot direction: " + shootDirection +" and shootforce: "+ shootForce);
     }
     else
     {
@@ -1013,11 +1012,11 @@ private IEnumerator ApplyShootForceDelayed(DraggableItem draggableItem, Vector2 
 }
     
 
-    private Transform GetSpawnPoint(PlayerMap playerMap)
+    private Vector3 GetSpawnPoint(PlayerMap playerMap)
     {
         Random random = new Random();
         int randomIndex = random.Next(playerMap.spawnItemPoints.Count);
-        Transform spawnPoint = playerMap.spawnItemPoints[randomIndex];
+        Vector3 spawnPoint = playerMap.spawnItemPoints[randomIndex];
         return spawnPoint;
     }
 

@@ -31,6 +31,7 @@ public abstract class BaseEntity : NetworkBehaviour
 
     private void OnShieldChanged(int oldShield, int newShield)
     {
+        Debug.Log($"{gameObject.name} is [OnShieldChanged] {(isServer ? "SERVER" : "CLIENT")}  {oldShield} -> {newShield}");
         onShieldChanged?.Invoke(newShield, oldShield);
     }
 
@@ -58,6 +59,7 @@ public abstract class BaseEntity : NetworkBehaviour
         set 
         {
             int newShield = Mathf.Clamp(value, 0, maxShield);
+            // onShieldChanged?.Invoke(newShield, shield);
             if (newShield != shield)
             {
                 shield = newShield;

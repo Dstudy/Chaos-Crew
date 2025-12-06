@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5819a9202a4620040a95a8a5e0dd577a, type: 3}
   m_Name: MainWave
   m_EditorClassIdentifier: 
-  spawnType: 0
+  spawnType: 4
   attackItemData:
   - {fileID: 11400000, guid: 3a9fafe329c6db04fb0ac7c785907e29, type: 2}
   - {fileID: 11400000, guid: d6a62ed11b002e3478fef34f202fff2e, type: 2}
@@ -44,4 +44,4 @@ MonoBehaviour:
   attackProbability: 0.75
   supportProbability: 0.25
   staffProbability: 0
-  hammerProbability: 0
+  hammerProbability: 1

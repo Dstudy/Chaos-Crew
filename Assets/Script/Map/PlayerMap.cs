@@ -17,7 +17,7 @@ public class PlayerMap : NetworkBehaviour
     public Transform rightSpawnPoint;
     
     //Để 4 điểm thôi
-    public List<Transform> spawnItemPoints = new List<Transform>();
+    public List<Vector3> spawnItemPoints = new List<Vector3>();
     
     public Vector3 playerPos;
     
@@ -59,30 +59,32 @@ public class PlayerMap : NetworkBehaviour
         // if (isClient) // Only the owner client sends
         // {
         Debug.Log("Local map pos: " + mapPos);
-            CmdUpdateSpawnPoints(mapPos, leftSpawnPoint.position, rightSpawnPoint.position);
+            
         
         point = Camera.main.ScreenToWorldPoint(new Vector3(Screen.width/6 + playerPos.x, Screen.height/9, Camera.main.nearClipPlane));
-        spawnItemPoints[0].transform.position = point;
+        spawnItemPoints[0] = point;
         
         point = Camera.main.ScreenToWorldPoint(new Vector3(Screen.width/3 + playerPos.x, Screen.height/9, Camera.main.nearClipPlane));
-        spawnItemPoints[1].transform.position = point;
+        spawnItemPoints[1] = point;
         
         point = Camera.main.ScreenToWorldPoint(new Vector3((Screen.width*2)/3 + playerPos.x, Screen.height/9, Camera.main.nearClipPlane));
-        spawnItemPoints[2].transform.position = point;
+        spawnItemPoints[2] = point;
         
         point = Camera.main.ScreenToWorldPoint(new Vector3((Screen.width*5)/6 + playerPos.x, Screen.height/9, Camera.main.nearClipPlane));
-        spawnItemPoints[3].transform.position = point;
+        spawnItemPoints[3] = point;
+        
+        CmdUpdateSpawnPoints(mapPos, leftSpawnPoint.position, rightSpawnPoint.position, spawnItemPoints);
     }
     
     [Command(requiresAuthority = false)]
-    private void CmdUpdateSpawnPoints(int mapPosition, Vector3 leftPos, Vector3 rightPos)
+    private void CmdUpdateSpawnPoints(int mapPosition, Vector3 leftPos, Vector3 rightPos, List<Vector3> spawnPoints)
     {
         // Server broadcasts to all clients
-        RpcUpdateSpawnPoints(mapPosition, leftPos, rightPos);
+        RpcUpdateSpawnPoints(mapPosition, leftPos, rightPos, spawnPoints);
     }
     
     [ClientRpc]
-    private void RpcUpdateSpawnPoints(int mapPosition, Vector3 leftPos, Vector3 rightPos)
+    private void RpcUpdateSpawnPoints(int mapPosition, Vector3 leftPos, Vector3 rightPos, List<Vector3> spawnPoints)
     {
         Debug.Log("Map pos " + mapPosition);
         if (this.mapPos == mapPosition)
@@ -97,6 +99,7 @@ public class PlayerMap : NetworkBehaviour
             {
                 rightSpawnPoint.position = rightPos;
             }
+            spawnItemPoints = new List<Vector3>(spawnPoints);
         }
     }
 }

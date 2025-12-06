@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using Mirror;
 using Script.Enemy;
@@ -172,50 +173,116 @@ using static CONST;
     }
     
     [TargetRpc]
-    public void TargetReceiveTeleportedItem(NetworkConnectionToClient conn, int instanceId, int itemId, Vector3 position, int spawnPointIndex, Vector2 shootDirection, int charges, Element element)
+public void TargetReceiveTeleportedItem(NetworkConnectionToClient conn, int instanceId, int itemId, Vector3 position, int spawnPointIndex, Vector2 shootDirection, int charges, Element element)
+{
+    // Client receives a teleported item - spawn it locally
+    if (SpawnSystem.singleton == null)
     {
-        // Client receives a teleported item - spawn it locally
-        if (SpawnSystem.singleton == null)
+        Debug.LogError("SpawnSystem.singleton is null!");
+        return;
+    }
+    
+    GameObject draggableItemPrefab = SpawnSystem.singleton.draggableItemPrefab;
+    if (draggableItemPrefab == null)
+    {
+        Debug.LogError("draggableItemPrefab is null!");
+        return;
+    }
+    
+    // Get item from local pool
+    if (LocalItemPool.singleton == null)
+    {
+        Debug.LogError("LocalItemPool.singleton is null! Make sure LocalItemPool is in the scene.");
+        return;
+    }
+    
+    // Find a safe position that doesn't overlap with existing items
+    Vector3 safePosition = FindSafeSpawnPosition(position, shootDirection);
+    
+    LocalItemPool.singleton.SetPrefab(draggableItemPrefab);
+    GameObject dragItem = LocalItemPool.singleton.Get(safePosition, Quaternion.identity);
+    DraggableItem draggableItem = dragItem.GetComponent<DraggableItem>();
+    
+    if (draggableItem != null)
+    {
+        BaseItem itemData = ItemManager.Instance.GetItemById(itemId);
+        if (itemData == null)
         {
-            Debug.LogError("SpawnSystem.singleton is null!");
+            Debug.LogError($"Could not find item with id {itemId} in ItemManager!");
+            LocalItemPool.singleton.Return(dragItem);
             return;
         }
         
-        GameObject draggableItemPrefab = SpawnSystem.singleton.draggableItemPrefab;
-        if (draggableItemPrefab == null)
+        draggableItem.SetItemLocal(instanceId, itemData, charges, element);
+        Rigidbody2D rb = dragItem.GetComponent<Rigidbody2D>();
+        if (rb != null)
         {
-            Debug.LogError("draggableItemPrefab is null!");
-            return;
+            rb.velocity = Vector2.zero;
+            rb.angularVelocity = 0f;
+            rb.WakeUp(); // Ensure the rigidbody is awake
         }
+        draggableItem.gameObject.name = $"{itemData.name} - Instance {instanceId} (Teleported)";
+        draggableItem.transform.position = safePosition;
+        StartCoroutine(ApplyShootForceDelayed(draggableItem, shootDirection, 5f));
         
-        // Get item from local pool
-        if (LocalItemPool.singleton == null)
-        {
-            Debug.LogError("LocalItemPool.singleton is null! Make sure LocalItemPool is in the scene.");
-            return;
-        }
-        
-        LocalItemPool.singleton.SetPrefab(draggableItemPrefab);
-        GameObject dragItem = LocalItemPool.singleton.Get(position, Quaternion.identity);
-        DraggableItem draggableItem = dragItem.GetComponent<DraggableItem>();
-        
+        RegisterLocalItemInstance(instanceId, draggableItem);
+        Debug.Log($"Client received teleported item instance {instanceId}");
+    }
+}
+
+private Vector3 FindSafeSpawnPosition(Vector3 originalPosition, Vector2 shootDirection)
+{
+    // Check if there's an item at the original position
+    float checkRadius = 0.5f; // Adjust based on your item size
+    Collider2D overlap = Physics2D.OverlapCircle(originalPosition, checkRadius);
+    
+    // If no overlap, use original position
+    if (overlap == null || overlap.GetComponent<DraggableItem>() == null)
+    {
+        return originalPosition;
+    }
+    
+    // Try offsetting in the shoot direction first
+    float offsetDistance = 0.6f; // Distance to offset
+    Vector3 offsetPosition = originalPosition + (Vector3)(shootDirection.normalized * offsetDistance);
+    
+    // Check if offset position is safe
+    Collider2D offsetOverlap = Physics2D.OverlapCircle(offsetPosition, checkRadius);
+    if (offsetOverlap == null || offsetOverlap.GetComponent<DraggableItem>() == null)
+    {
+        return offsetPosition;
+    }
+    
+    // If shoot direction offset didn't work, try perpendicular directions
+    Vector2 perpendicular1 = new Vector2(-shootDirection.y, shootDirection.x).normalized;
+    Vector2 perpendicular2 = new Vector2(shootDirection.y, -shootDirection.x).normalized;
+    
+    Vector3 perp1Position = originalPosition + (Vector3)(perpendicular1 * offsetDistance);
+    Collider2D perp1Overlap = Physics2D.OverlapCircle(perp1Position, checkRadius);
+    if (perp1Overlap == null || perp1Overlap.GetComponent<DraggableItem>() == null)
+    {
+        return perp1Position;
+    }
+    
+    Vector3 perp2Position = originalPosition + (Vector3)(perpendicular2 * offsetDistance);
+    Collider2D perp2Overlap = Physics2D.OverlapCircle(perp2Position, checkRadius);
+    if (perp2Overlap == null || perp2Overlap.GetComponent<DraggableItem>() == null)
+    {
+        return perp2Position;
+    }
+    
+    // If all positions are occupied, offset further in shoot direction
+    return originalPosition + (Vector3)(shootDirection.normalized * (offsetDistance * 1.5f));
+}
+    
+    private IEnumerator ApplyShootForceDelayed(DraggableItem draggableItem, Vector2 shootDirection, float force)
+    {
+        // Wait one frame to ensure Rigidbody2D is fully initialized
+        yield return null;
+    
         if (draggableItem != null)
         {
-            BaseItem itemData = ItemManager.Instance.GetItemById(itemId);
-            if (itemData == null)
-            {
-                Debug.LogError($"Could not find item with id {itemId} in ItemManager!");
-                LocalItemPool.singleton.Return(dragItem);
-                return;
-            }
-            
-            draggableItem.SetItemLocal(instanceId, itemData, charges, element);
-            draggableItem.gameObject.name = $"{itemData.name} - Instance {instanceId} (Teleported)";
-            draggableItem.transform.position = position;
-            draggableItem.Shoot(shootDirection, 5f);
-            
-            RegisterLocalItemInstance(instanceId, draggableItem);
-            Debug.Log($"Client received teleported item instance {instanceId}");
+            draggableItem.Shoot(shootDirection, force);
         }
     }
     

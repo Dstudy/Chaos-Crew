@@ -12,15 +12,12 @@ public class DraggableItem : MonoBehaviour
     // Local item data (not synced, set by client)
     [SerializeReference] [SerializeField] private BaseItem itemData; 
 
+    [SerializeField] private AudioSource audioSource;
+    
     private SpriteRenderer spriteRenderer;
 
     private bool isBeingDragged;
     private TargetJoint2D joint;
-    
-    [Header("Authority Debug Info")]
-    [SerializeField] private string currentAuthorityOwner = "None";
-    [SerializeField] private Player authorityPlayer;
-    
     
     public string GetPoolID()
     {
@@ -29,6 +26,8 @@ public class DraggableItem : MonoBehaviour
 
     private void Awake()
     {
+        if(audioSource == null)
+            audioSource = GetComponent<AudioSource>();
         spriteRenderer = GetComponent<SpriteRenderer>();
         GetComponent<Collider2D>().isTrigger = false;
         
@@ -76,7 +75,6 @@ public class DraggableItem : MonoBehaviour
     
     public void Shoot(Vector2 direction, float force)
     {
-        Debug.Log(direction + " + " + force);
         // Local-only shooting
         Rigidbody2D rb = GetComponent<Rigidbody2D>();
         if (rb != null)
@@ -144,6 +142,7 @@ public class DraggableItem : MonoBehaviour
                 }
                 else if (target is DraggableItem targetItem)
                 {
+                    AudioManager.Instance.PlayCollideSound(audioSource);
                     targetId = targetItem.instanceId;
                     targetType = "Item";
                 }

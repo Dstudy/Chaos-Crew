@@ -32,5 +32,20 @@ public class EntityEffect : MonoBehaviour
         this.matColor = color;
         material.SetColor("_Tint", color);
     }
-    
+
+    public void PayMau()
+    {
+        StartCoroutine(PayMauAnimation());
+    }
+
+    IEnumerator PayMauAnimation()
+    {
+        DOTween.To(
+            () => material.GetFloat("_dissolveAmount"),
+            x => material.SetFloat("_dissolveAmount", x),
+            1f,
+            3f);
+        yield return new WaitForSeconds(3f);
+        material.SetFloat("_dissolveAmount", 0f);
+    }
 }
