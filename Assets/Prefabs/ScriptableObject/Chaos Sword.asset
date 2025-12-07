@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 7
   itemName: Earth Sword
-  damage: 7
+  damage: 6
   element: 5
   prefab: {fileID: 6996428664516009030, guid: 22be43c5cafe0694c88978ef537e045a, type: 3}

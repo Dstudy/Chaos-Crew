@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 9
   itemName: Sword
-  damage: 7
+  damage: 6
   element: 1
   prefab: {fileID: 9191884441307506756, guid: 093b775d47517da49a25880b9cae640e, type: 3}

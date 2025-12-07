@@ -108,7 +108,7 @@ public class AudioManager : MonoBehaviour
 
     public void SetSoundVolume(float value)
     {
-        float newValue = Mathf.Clamp01(effectSlider.value);
+        float newValue = Mathf.Clamp01(value);
         if (Mathf.Approximately(newValue, SoundVolume)) return;
 
         SoundVolume = newValue;
@@ -118,7 +118,7 @@ public class AudioManager : MonoBehaviour
 
     public void SetMusicVolume(float value)
     {
-        float newValue = Mathf.Clamp01(musicSlider.value);
+        float newValue = Mathf.Clamp01(value);
         if (Mathf.Approximately(newValue, MusicVolume)) return;
 
         MusicVolume = newValue;
@@ -128,7 +128,6 @@ public class AudioManager : MonoBehaviour
 
     private void ApplyVolumes()
     {
-        AudioListener.volume = SoundVolume;
         if (effectSource != null)
         {
             effectSource.volume = SoundVolume;
