@@ -9,9 +9,9 @@ namespace Script.Enemy
         public Element element;
         
         public bool isLocalEnemy = false;
-        private bool isDead;
+        [SyncVar] private bool isDead;
 
-    public void TakeDamage(int damage, Element element, BaseItem item)
+        public void TakeDamage(int damage, Element element, BaseItem item)
         {
             if (this.element != element)
             {
@@ -86,6 +86,7 @@ namespace Script.Enemy
             // This runs only on the client that faces this enemy
             Instantiate(SpawnSystem.singleton.meow, transform.position, transform.rotation);
             ObserverManager.InvokeEvent(ENEMY_DEFEATED, this);
+            isDead = true;
             // DisableEnemy();
             
         }
@@ -119,13 +120,13 @@ namespace Script.Enemy
 
         public void DoAttack(int damage, int pos)
         {
-            if(!isLocalEnemy) return;
+            if(!isLocalEnemy || isDead) return;
             ObserverManager.InvokeEvent(ENEMY_CAST_NORMAL_ATTACK, damage, pos);
         }
 
         public void DoShield(int shield)
         {
-            if(!isLocalEnemy) return;
+            if(!isLocalEnemy || isDead) return;
             ObserverManager.InvokeEvent(ENEMY_CAST_SHIELD, this);
             Debug.Log("Shield + " +  shield);
             ShieldUp(shield);
@@ -144,7 +145,46 @@ namespace Script.Enemy
             element = assignedElement;
             gameObject.GetComponent<EnemyUI>().EnemyHead.sprite = EnemyManager.instance.GetSpriteForElement(assignedElement);
         }
-        
+
+        [Server]
+        public void ServerResetForRound(RoundEnemySettings settings)
+        {
+            isDead = false;
+            maxHealth = settings.maxHealth;
+            Health = settings.maxHealth;
+            maxShield = settings.maxShield;
+            Shield = settings.maxShield;
+        }
+
+        [Server]
+        public void ApplyPatternSettings(RoundEnemySettings settings)
+        {
+            if (settings == null) return;
+
+            ApplyPatternSettingsLocal(settings.punchChargeTime, settings.punchValue, settings.shieldChargeTime, settings.shieldValue);
+
+            NetworkConnectionToClient conn = connectionToClient;
+            if (conn != null)
+            {
+                TargetApplyPatternSettings(conn, settings.punchChargeTime, settings.punchValue, settings.shieldChargeTime, settings.shieldValue);
+            }
+        }
+
+        private void ApplyPatternSettingsLocal(float punchChargeTime, int punchValue, float shieldChargeTime, int shieldValue)
+        {
+            EnemyPattern pattern = GetComponent<EnemyPattern>();
+            if (pattern != null)
+            {
+                pattern.OverrideMoveSettings(punchChargeTime, punchValue, shieldChargeTime, shieldValue);
+            }
+        }
+
+        [TargetRpc]
+        private void TargetApplyPatternSettings(NetworkConnectionToClient conn, float punchChargeTime, int punchValue, float shieldChargeTime, int shieldValue)
+        {
+            ApplyPatternSettingsLocal(punchChargeTime, punchValue, shieldChargeTime, shieldValue);
+        }
+
         
     }
 }

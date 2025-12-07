@@ -10,16 +10,17 @@ public abstract class BaseEntity : NetworkBehaviour
     public string id;
     [SyncVar (hook = nameof(OnHealthChanged))]
     public int health;
-    public int maxHealth;
+    [SyncVar] public int maxHealth;
     [SyncVar (hook = nameof(OnShieldChanged))]
     public int shield;
-    public int maxShield;
+    [SyncVar(hook = nameof(OnMaxShieldChanged))] public int maxShield;
     
     [SyncVar]
     [SerializeField] public int position; 
     
     public event Action<int, int> onHealthChanged;
     public event Action<int, int> onShieldChanged;
+    public event Action<int, int> onMaxShieldChanged;
 
     private void OnHealthChanged(int oldHealth, int newHealth)
     {
@@ -33,6 +34,11 @@ public abstract class BaseEntity : NetworkBehaviour
     {
         Debug.Log($"{gameObject.name} is [OnShieldChanged] {(isServer ? "SERVER" : "CLIENT")}  {oldShield} -> {newShield}");
         onShieldChanged?.Invoke(newShield, oldShield);
+    }
+
+    private void OnMaxShieldChanged(int oldMaxShield, int newMaxShield)
+    {
+        onMaxShieldChanged?.Invoke(newMaxShield, oldMaxShield);
     }
 
     public virtual void OnEntityCreated(string _, string id)

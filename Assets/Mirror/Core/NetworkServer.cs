@@ -866,7 +866,15 @@ namespace Mirror
                     Debug.LogError($"Still had {connection.unbatcher.BatchesCount} batches remaining after processing, even though processing was not interrupted by a scene change. This should never happen, as it would cause ever growing batches.\nPossible reasons:\n* A message didn't deserialize as much as it serialized\n*There was no message handler for a message id, so the reader wasn't read until the end.");
                 }
             }
-            else Debug.LogError($"HandleData Unknown connectionId:{connectionId}");
+            else
+            {
+                // If the host local connection has already been removed (e.g. after stopping host),
+                // ignore any late packets still queued locally instead of logging errors.
+                if (connectionId == NetworkConnection.LocalConnectionId && localConnection == null)
+                    return;
+
+                Debug.LogError($"HandleData Unknown connectionId:{connectionId}");
+            }
         }
 
         // called by transport

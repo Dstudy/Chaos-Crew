@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Mirror;
@@ -15,15 +16,25 @@ public class RoundManager : NetworkBehaviour
     [SerializeField] private SpawnSystem spawnSystem;
     [SerializeField] private EnemyManager enemyManager;
 
-    [SyncVar] private int currentRoundIndex = -1;
+    [SyncVar(hook = nameof(OnRoundIndexChanged))] private int currentRoundIndex = -1;
     private bool roundResolved;
+    private bool enemiesPreparedForCurrentRound;
+    private int enemiesPreparedForPlayerCount;
 
     public static event Action<RoundStartClientData> OnRoundStartedClient;
     public static event Action<RoundEndClientData> OnRoundEndedClient;
 
+    public static void RaiseRoundEndedClient(RoundEndClientData data)
+    {
+        OnRoundEndedClient?.Invoke(data);
+    }
+
     private bool roundsInitialized;
     private int pendingRoundIndex = -1;
     private bool sceneReloadInProgress;
+    private Coroutine applyBackgroundRoutine;
+    private int lastBackgroundWarnRound = -1;
+    private Sprite lastRoundBackground;
 
     private void Awake()
     {
@@ -42,6 +53,7 @@ public class RoundManager : NetworkBehaviour
 
         ObserverManager.Register(GAME_WON, (Action)HandleRoundWonServer);
         ObserverManager.Register(GAME_LOST, (Action<Player>)HandleRoundLostServer);
+        ObserverManager.Register(ALL_ENEMIES_DEFEATED, (Action)HandleRoundWonServer);
         ObserverManager.Register(SPAWN_PLAYER, (Action)HandlePlayerSpawned);
 
         SceneManager.sceneLoaded += OnSceneLoadedServer;
@@ -49,12 +61,35 @@ public class RoundManager : NetworkBehaviour
         TryStartRoundsForActiveScene();
     }
 
+    public override void OnStartClient()
+    {
+        base.OnStartClient();
+        ApplyRoundBackgroundClient(currentRoundIndex);
+    }
+
+    private void OnEnable()
+    {
+        if (isClient)
+        {
+            ObserverManager.Register(MAP_ENABLED, (Action<PlayerMap, bool, GameObject>)HandleMapEnabledClient);
+        }
+    }
+
     public override void OnStopServer()
     {
         ObserverManager.Unregister(GAME_WON, (Action)HandleRoundWonServer);
         ObserverManager.Unregister(GAME_LOST, (Action<Player>)HandleRoundLostServer);
+        ObserverManager.Unregister(ALL_ENEMIES_DEFEATED, (Action)HandleRoundWonServer);
         ObserverManager.Unregister(SPAWN_PLAYER, (Action)HandlePlayerSpawned);
         SceneManager.sceneLoaded -= OnSceneLoadedServer;
+    }
+
+    private void OnDisable()
+    {
+        if (isClient)
+        {
+            ObserverManager.Unregister(MAP_ENABLED, (Action<PlayerMap, bool, GameObject>)HandleMapEnabledClient);
+        }
     }
 
     private void OnSceneLoadedServer(Scene scene, LoadSceneMode mode)
@@ -111,8 +146,24 @@ public class RoundManager : NetworkBehaviour
         if (roundResolved) return;
 
         roundResolved = true;
+        if (enemyManager != null) enemyManager.SetWinCheckEnabled(false);
         bool hasNext = HasNextRound();
         RpcRoundEnded(true, !hasNext, hasNext);
+        Debug.Log($"RoundManager: HandleRoundWonServer -> RpcRoundEnded(won=true, finalRound={!hasNext}, hasNext={hasNext})");
+    }
+
+    [ServerCallback]
+    private void Update()
+    {
+        // Fallback: if all enemies are gone but the win event never fired, trigger it.
+        if (!roundResolved && NetworkServer.active && IsGameplayScene(SceneManager.GetActiveScene()) && enemiesPreparedForCurrentRound && enemyManager != null && enemyManager.AliveEnemyCount > 0)
+        {
+            if (!enemyManager.HasLivingActiveEnemies())
+            {
+                Debug.Log("RoundManager: No enemies found in scene, triggering win fallback.");
+                HandleRoundWonServer();
+            }
+        }
     }
 
     [Server]
@@ -121,6 +172,7 @@ public class RoundManager : NetworkBehaviour
         if (roundResolved) return;
 
         roundResolved = true;
+        if (enemyManager != null) enemyManager.SetWinCheckEnabled(false);
         RpcRoundEnded(false, true, false);
     }
 
@@ -160,12 +212,20 @@ public class RoundManager : NetworkBehaviour
 
         roundResolved = false;
         currentRoundIndex = roundIndex;
+        enemiesPreparedForCurrentRound = false;
+        enemiesPreparedForPlayerCount = 0;
 
-        PrepareEnemies(round.enemySettings);
+        bool enemiesReady = PrepareEnemies(round.enemySettings);
         PreparePlayers(round.playerSettings);
         PrepareWaves(round);
 
         RpcRoundStarted(currentRoundIndex, string.IsNullOrWhiteSpace(round.roundName) ? $"Round {currentRoundIndex + 1}" : round.roundName, currentRoundIndex >= roundConfig.RoundCount - 1);
+        Debug.Log($"RoundManager: RpcRoundStarted server roundIndex={currentRoundIndex}");
+
+        if (enemiesReady && enemyManager != null)
+        {
+            enemyManager.SetWinCheckEnabled(true);
+        }
 
         if (round.autoStartWaves)
         {
@@ -210,23 +270,49 @@ public class RoundManager : NetworkBehaviour
         if (round == null) return;
 
         PreparePlayers(round.playerSettings);
+
+        int playerCount = PlayerManager.instance != null && PlayerManager.instance.players != null
+            ? PlayerManager.instance.players.Count
+            : 0;
+
+        // If enemies were deferred because players weren't spawned yet (or new players joined), configure them once everyone is in.
+        if (( !enemiesPreparedForCurrentRound || playerCount > enemiesPreparedForPlayerCount) && AllPlayersSpawned())
+        {
+            bool enemiesReady = PrepareEnemies(round.enemySettings);
+            if (enemiesReady && enemyManager != null)
+            {
+                enemyManager.SetWinCheckEnabled(true);
+            }
+        }
     }
 
     [Server]
-    private void PrepareEnemies(RoundEnemySettings enemySettings)
+    private bool AllPlayersSpawned()
+    {
+        if (PlayerManager.instance == null || PlayerManager.instance.players == null) return false;
+
+        int spawnedPlayers = PlayerManager.instance.players.Count;
+        int expectedPlayers = NetworkServer.connections.Count;
+
+        return spawnedPlayers > 0 && expectedPlayers > 0 && spawnedPlayers >= expectedPlayers;
+    }
+
+    [Server]
+    private bool PrepareEnemies(RoundEnemySettings enemySettings)
     {
         if (!TryResolveEnemyManager())
         {
             Debug.LogWarning("RoundManager: EnemyManager not found.");
-            return;
+            return false;
         }
 
-        enemyManager.ResetRoundState();
+        // Clear tracking without destroying existing enemies so we can re-use ones spawned by PlayerSpawnSystem.
+        enemyManager.ResetRoundState(false);
 
-        if (PlayerManager.instance == null || PlayerManager.instance.players == null)
+        if (PlayerManager.instance == null || PlayerManager.instance.players == null || PlayerManager.instance.players.Count == 0)
         {
-            Debug.LogWarning("RoundManager: No players available to spawn enemies for.");
-            return;
+            Debug.LogWarning("RoundManager: No players available to spawn enemies for. Enemy setup will be retried when players spawn.");
+            return false;
         }
 
         foreach (GameObject playerObject in PlayerManager.instance.players)
@@ -234,20 +320,30 @@ public class RoundManager : NetworkBehaviour
             Player player = playerObject != null ? playerObject.GetComponent<Player>() : null;
             if (player == null) continue;
 
-            SpawnEnemyForPlayer(player, enemySettings);
+            // If an enemy already exists for this player, just update its stats; otherwise create one.
+            if (player.enemy != null && player.enemy.gameObject != null)
+            {
+                Enemy enemyComponent = player.enemy;
+                enemyComponent.ServerResetForRound(enemySettings);
+                enemyComponent.gameObject.SetActive(true);
+                enemyManager.AddEnemy(enemyComponent);
+                enemyComponent.ApplyPatternSettings(enemySettings);
+            }
+            else
+            {
+                SpawnEnemyForPlayer(player, enemySettings);
+            }
         }
+
+        enemiesPreparedForCurrentRound = true;
+        enemiesPreparedForPlayerCount = PlayerManager.instance.players.Count;
+        return true;
     }
 
     [Server]
     private void SpawnEnemyForPlayer(Player player, RoundEnemySettings enemySettings)
     {
         if (player == null || !TryResolveEnemyManager()) return;
-
-        if (player.enemy != null && player.enemy.gameObject != null)
-        {
-            NetworkServer.Destroy(player.enemy.gameObject);
-            player.enemy = null;
-        }
 
         Vector3 spawnPosition = player.playerMap != null ? player.playerMap.playerPos : player.transform.position;
 
@@ -265,6 +361,9 @@ public class RoundManager : NetworkBehaviour
 
         NetworkServer.Spawn(enemyObject, player.connectionToClient);
         player.RPCSetEnemy(enemyObject);
+
+        enemyComponent.ApplyPatternSettings(enemySettings);
+        Debug.Log($"RoundManager: SpawnEnemyForPlayer pos={player.Pos} hp={enemySettings.maxHealth} shield={enemySettings.maxShield}");
     }
 
     public bool HasNextRound()
@@ -358,13 +457,139 @@ public class RoundManager : NetworkBehaviour
     [ClientRpc]
     private void RpcRoundStarted(int roundIndex, string roundName, bool isFinalRound)
     {
+        Debug.Log($"RoundManager: RpcRoundStarted received on client. roundIndex={roundIndex} isFinalRound={isFinalRound}");
+        ApplyRoundBackgroundClient(roundIndex);
         OnRoundStartedClient?.Invoke(new RoundStartClientData(roundIndex, roundName, isFinalRound));
     }
 
     [ClientRpc]
     private void RpcRoundEnded(bool won, bool isFinalRound, bool hasNextRound)
     {
+        Debug.Log($"RoundManager: RpcRoundEnded received on client. won={won} isFinalRound={isFinalRound} hasNextRound={hasNextRound}");
         OnRoundEndedClient?.Invoke(new RoundEndClientData(won, isFinalRound, hasNextRound));
+    }
+
+    private void OnRoundIndexChanged(int _, int newIndex)
+    {
+        // SyncVar hook to ensure late-joining/replicated clients apply the right background
+        if (isClient)
+        {
+            ApplyRoundBackgroundClient(newIndex);
+        }
+    }
+
+    [Client]
+    private void ApplyRoundBackgroundClient(int roundIndex)
+    {
+        if (roundIndex < 0) return;
+        lastRoundBackground = GetRoundBackground(roundIndex);
+
+        if (applyBackgroundRoutine != null)
+        {
+            StopCoroutine(applyBackgroundRoutine);
+        }
+
+        applyBackgroundRoutine = StartCoroutine(ApplyRoundBackgroundWhenReady(roundIndex));
+    }
+
+    [Client]
+    private IEnumerator ApplyRoundBackgroundWhenReady(int roundIndex)
+    {
+        Sprite background = GetRoundBackground(roundIndex);
+        if (background == null)
+        {
+            if (roundConfig == null || roundConfig.RoundCount == 0)
+            {
+                Debug.LogWarning("RoundManager: roundConfig is missing on client; cannot set background.");
+            }
+            else
+            {
+                Debug.LogWarning($"RoundManager: Round {roundIndex} has no backgroundMap Sprite assigned.");
+            }
+            yield break;
+        }
+
+        float timeout = 8f;
+        float elapsed = 0f;
+
+        while (elapsed < timeout)
+        {
+            if (TryApplyBackgroundToMaps(background))
+            {
+                yield break;
+            }
+
+            yield return null;
+            elapsed += Time.deltaTime;
+        }
+
+        if (!TryApplyBackgroundToMaps(background))
+        {
+            Debug.LogWarning($"RoundManager: Unable to apply background for round {roundIndex}; no PlayerMap instances found.");
+        }
+    }
+
+    [Client]
+    private bool TryApplyBackgroundToMaps(Sprite backgroundSprite)
+    {
+        if (backgroundSprite == null) return true;
+
+        IEnumerable<PlayerMap> maps = MapManager.instance != null && MapManager.instance.playerMaps != null && MapManager.instance.playerMaps.Count > 0
+            ? MapManager.instance.playerMaps
+            : FindObjectsOfType<PlayerMap>(true);
+
+        bool applied = false;
+        foreach (PlayerMap map in maps)
+        {
+            applied |= TrySetMapBackground(map, backgroundSprite);
+        }
+
+        return applied;
+    }
+
+    private bool TrySetMapBackground(PlayerMap map, Sprite sprite)
+    {
+        if (map == null || map.mapBackground == null) return false;
+
+        SpriteRenderer renderer = map.mapBackground.GetComponent<SpriteRenderer>();
+        if (renderer == null) return false;
+
+        renderer.sprite = sprite;
+        return true;
+    }
+
+    private Sprite GetRoundBackground(int roundIndex)
+    {
+        RoundDefinition round = roundConfig != null ? roundConfig.GetRound(roundIndex) : null;
+        if (round == null) return null;
+
+        if (round.backgroundMap == null && lastBackgroundWarnRound != roundIndex)
+        {
+            Debug.LogWarning($"RoundManager: Round {roundIndex} has no backgroundMap Sprite assigned.");
+            lastBackgroundWarnRound = roundIndex;
+        }
+
+        return round.backgroundMap;
+    }
+
+    [Client]
+    private void HandleMapEnabledClient(PlayerMap map, bool enable, GameObject _)
+    {
+        if (!enable || map == null) return;
+
+        Sprite background = GetCurrentRoundBackground();
+        if (background == null) return;
+
+        if (!TrySetMapBackground(map, background))
+        {
+            Debug.LogWarning($"RoundManager: Failed to set background on map {map.name}");
+        }
+    }
+
+    public Sprite GetCurrentRoundBackground()
+    {
+        if (lastRoundBackground != null) return lastRoundBackground;
+        return GetRoundBackground(currentRoundIndex);
     }
 }
 

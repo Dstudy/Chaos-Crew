@@ -1051,11 +1051,11 @@ MonoBehaviour:
     indicatorColor: {r: 0.9529412, g: 0.43488237, b: 0.30196083, a: 0}
     value: 1
   - moveName: Shield
-    actionType: 0
+    actionType: 1
     chargeTime: 5
     indicatorColor: {r: 0.30196083, g: 0.9529412, b: 0.9464348, a: 0}
     value: 1
-  timeBetweenMoves: 2
+  timeBetweenMoves: 1
   worldSpaceCanvas: {fileID: 5223888165521198843}
   indicatorImage: {fileID: 1643046067212526076}
   attackIcon: {fileID: 4382056904367621014}

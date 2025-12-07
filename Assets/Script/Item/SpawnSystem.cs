@@ -8,6 +8,8 @@ using Script.Enemy;
 using Script.UI;
 using Random = System.Random;
 using static CONST;
+// using static UnityEngine.Transform;
+// using static UnityEngine.Vector3;
 
 // Server-side item instance tracking
 [Serializable]
@@ -120,7 +122,13 @@ public class SpawnSystem : NetworkBehaviour
 
     public override void OnStopServer()
     {
+        Debug.Log("SpawnSystem stopping server...");
         NetworkManagerLobby.OnServerReadied -= OnPlayerReady;
+        
+        // ADD THIS: Stop all spawning coroutines immediately
+        StopAllCoroutines(); 
+        isSpawning = false;
+        wavesStarted = false;
     }
 
     private void OnPlayerReady(NetworkConnectionToClient conn)
@@ -486,6 +494,9 @@ public class SpawnSystem : NetworkBehaviour
 
         for (int itemIndex = 0; itemIndex < totalItemsToSpawn; itemIndex++)
         {
+            // ADD THIS CHECK
+            if (!NetworkServer.active) yield break;
+            
             foreach (Player player in players)
             {
                 if (playerItems[player].Count > itemIndex)
@@ -850,9 +861,15 @@ public class SpawnSystem : NetworkBehaviour
             return;
         }
 
-        Transform spawnPosition = player.enemy.transform;
+        if (player.playerMap == null || player.enemy == null)
+        {
+            Debug.LogWarning("Cannot spawn reward: player map or enemy is null.");
+            return;
+        }
 
-        int spawnPointIndex = player.playerMap.spawnItemPoints.IndexOf(spawnPosition);
+        Transform spawnPosition = player.enemy.transform;
+        // Use .position to match the List<Vector3> type
+        int spawnPointIndex = player.playerMap.spawnItemPoints.IndexOf(spawnPosition.position);
         if (spawnPointIndex < 0) spawnPointIndex = 0;
 
         // Create server-side item instance
@@ -904,13 +921,25 @@ public class SpawnSystem : NetworkBehaviour
     [Server]
     private void SpawnItemForPlayer(Player player, BaseItem item, Vector3 offset)
     {
+        // 1. Safety Check: Is the server still running?
+        if (!NetworkServer.active) return;
+
         if (player == null || item == null || draggableItemPrefab == null)
         {
             Debug.LogError("Cannot spawn item: player, item, or prefab or map is null!");
             return;
         }
 
-        Transform spawnPosition = GetSpawnPoint(player.playerMap);
+        if (player.playerMap == null || player.playerMap.spawnItemPoints == null || player.playerMap.spawnItemPoints.Count == 0)
+        {
+            Debug.LogWarning("Cannot spawn item: player map or spawn points are null/empty.");
+            return;
+        }
+
+        // 1. Change type to Vector3
+        Vector3 spawnPosition = GetSpawnPoint(player.playerMap);
+        
+        // 2. IndexOf now works correctly because both are Vector3
         int spawnPointIndex = player.playerMap.spawnItemPoints.IndexOf(spawnPosition);
         if (spawnPointIndex < 0) spawnPointIndex = 0;
 
@@ -927,13 +956,13 @@ public class SpawnSystem : NetworkBehaviour
         // spawnPos.z = 0f;
 
         // Create server-side item instance
-        int instanceId = nextInstanceId++;
+    int instanceId = nextInstanceId++;
         ServerItemInstance itemInstance = new ServerItemInstance(
             instanceId,
             item.id,
             player.id,
             item,
-            spawnPosition.position + offset,
+            spawnPosition + offset, // 3. Removed .position (it is already a vector)
             spawnPointIndex
         );
 
@@ -942,9 +971,10 @@ public class SpawnSystem : NetworkBehaviour
 
         // Get player's connection and send TargetRpc to spawn locally
         NetworkConnectionToClient conn = GetPlayerConnection(player);
-        if (conn != null)
+        
+        // 2. Safety Check: Is the connection valid and ready?
+        if (conn != null && conn.isReady)
         {
-            // Get additional state data
             int charges = 0;
             Element element = Element.None;
             if (item is StaffItem staffItem)
@@ -968,8 +998,10 @@ public class SpawnSystem : NetworkBehaviour
             //     shootDirection = Vector2.up;
             // }
 
+            // FIXED: Define a direction (since Vector3 has no .up property)
+            Vector2 shootDirection = Vector2.up;
             // Send RPC to client to spawn local visual
-            TargetSpawnItemLocal(conn, instanceId, item.id, spawnPosition.position, spawnPointIndex, spawnPosition.up, charges, element);
+            TargetSpawnItemLocal(conn, instanceId, item.id, spawnPosition, spawnPointIndex, shootDirection, charges, element);
             // Debug.Log($"Spawned item {item.name} for player {player.id} at {spawnPos} ={spawnPosition.position} + {offset} with shoot direction {shootDirection}");
         }
         else
@@ -1047,11 +1079,11 @@ private IEnumerator ApplyShootForceDelayed(DraggableItem draggableItem, Vector2 
 }
     
 
-    private Transform GetSpawnPoint(PlayerMap playerMap)
+    private Vector3 GetSpawnPoint(PlayerMap playerMap)
     {
         Random random = new Random();
         int randomIndex = random.Next(playerMap.spawnItemPoints.Count);
-        Transform spawnPoint = playerMap.spawnItemPoints[randomIndex];
+        Vector3 spawnPoint = playerMap.spawnItemPoints[randomIndex];
         return spawnPoint;
     }
 

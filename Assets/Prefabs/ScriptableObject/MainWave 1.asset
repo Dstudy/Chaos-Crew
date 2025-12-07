@@ -36,8 +36,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: dc074a6c3d058114eabccf897f79e1eb, type: 2}
   - {fileID: 11400000, guid: 2120a5efaf3820d4baf83856731f6f97, type: 2}
   - {fileID: 11400000, guid: 1152a31eb0768c349b65b65258a962c7, type: 2}
-  spawnDelay: 4
-  waveCount: 10
+  spawnDelay: 3
+  waveCount: 30
   itemsPerPlayer: 10
   spawnOffset: {x: 0, y: 0, z: 0}
   itemType: 3

@@ -30,6 +30,9 @@ public class RoundDefinition
     [Header("Player Settings")]
     public RoundPlayerSettings playerSettings = new RoundPlayerSettings();
 
+    [Header("Map Settings")]
+    public Sprite backgroundMap;
+
     [Header("Enemy Settings")]
     public RoundEnemySettings enemySettings = new RoundEnemySettings();
 }
@@ -46,4 +49,9 @@ public class RoundEnemySettings
 {
     public int maxHealth = 100;
     public int maxShield = 0;
+    [Header("Moves")]
+    public float punchChargeTime = 5f;
+    public int punchValue = 1;
+    public float shieldChargeTime = 5f;
+    public int shieldValue = 1;
 }

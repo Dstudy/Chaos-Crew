@@ -34,6 +34,7 @@ public class PlayerUI : MonoBehaviour
 
         player.onHealthChanged += (health, oldHealth) => UpdateHealthBar(health);
         player.onShieldChanged += (shield, maxShield) => UpdateShield(shield);
+        player.onMaxShieldChanged += (newMax, oldMax) => UpdateShield(player.Shield);
 
         healthText.text = $"{player.maxHealth}/{player.maxHealth}";
         shieldText.text = $"0/{player.maxShield}";
