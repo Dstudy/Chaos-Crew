@@ -62,7 +62,6 @@ public class SpawnSystem : NetworkBehaviour
     [SerializeField] private bool autoStartWaves = true;
 
     private int currentWaveIndex = 0;
-    private int rewardWaveIndex = 0;
     private bool isSpawning = false;
 
     [SerializeField] private float shootForce = 5f;
@@ -70,8 +69,6 @@ public class SpawnSystem : NetworkBehaviour
     public static event Action<int> OnWaveStarted;
     public static event Action<int> OnWaveCompleted;
     public static event Action OnAllWavesCompleted;
-
-    private int localID = 0;
 
     private int readyPlayersCount;
     private bool wavesStarted;
@@ -295,7 +292,6 @@ public class SpawnSystem : NetworkBehaviour
         autoStartWaves = autoStart;
 
         currentWaveIndex = 0;
-        rewardWaveIndex = 0;
         isSpawning = false;
         wavesStarted = false;
         readyPlayersCount = 0;

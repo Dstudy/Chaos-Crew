@@ -25,12 +25,36 @@ public class IPAddressManager : MonoBehaviour
                 {
                     if (ip.Address.AddressFamily == AddressFamily.InterNetwork)
                     {
-                        return ip.Address.ToString();
+                        // Skip loopback and link-local addresses
+                        string ipString = ip.Address.ToString();
+                        if (!ipString.StartsWith("127.") && !ipString.StartsWith("169.254."))
+                        {
+                            return ipString;
+                        }
                     }
                 }
             }
         }
         return "No local IPv4 address found.";
+    }
+
+    public void LogAllIPv4Addresses()
+    {
+        Debug.Log("=== ALL NETWORK INTERFACES ===");
+        foreach (NetworkInterface ni in NetworkInterface.GetAllNetworkInterfaces())
+        {
+            if (ni.OperationalStatus == OperationalStatus.Up)
+            {
+                Debug.Log($"Interface: {ni.Name} ({ni.NetworkInterfaceType})");
+                foreach (IPAddressInformation ip in ni.GetIPProperties().UnicastAddresses)
+                {
+                    if (ip.Address.AddressFamily == AddressFamily.InterNetwork)
+                    {
+                        Debug.Log($"  - {ip.Address}");
+                    }
+                }
+            }
+        }
     }
 
     void Start()

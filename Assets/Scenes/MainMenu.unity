@@ -1279,7 +1279,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c7424c1070fad4ba2a7a96b02fbeb4bb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  port: 7777
+  port: 8888
   NoDelay: 1
   SendTimeout: 5000
   ReceiveTimeout: 30000
@@ -1347,7 +1347,6 @@ MonoBehaviour:
   minPlayers: 2
   menuScene: MainMenu
   lobbyPrefab: {fileID: 1960486452393496309, guid: 1253c1b1350719e47a5cbd06985b325e, type: 3}
-  gamePlayerPrefab: {fileID: 2890596084178191765, guid: db7b3a189c28082469403e22e4f8fb1f, type: 3}
   playerSpawnSystem: {fileID: 5984010414798129522, guid: 1e80b05c30959b24db75b43b91a6409e, type: 3}
   roundManagerPrefab: {fileID: 0}
   gameScene: Scene_Map_Main

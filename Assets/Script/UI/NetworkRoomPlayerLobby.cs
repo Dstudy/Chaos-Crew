@@ -13,7 +13,6 @@ public class NetworkRoomPlayerLobby : NetworkBehaviour
     [SerializeField] private GameObject lobbyUI = null;
     [SerializeField] internal TextMeshProUGUI numText = null;
     [SerializeField] private Button startGameButton = null;
-    private int playerReadyNumber = 0;
     
     [SyncVar(hook = nameof(HandleReadyStatusChanged))]
     public bool IsReady = false;

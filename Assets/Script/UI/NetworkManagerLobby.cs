@@ -26,7 +26,6 @@ namespace Script.UI
         [SerializeField] private NetworkRoomPlayerLobby lobbyPrefab = null;
     
         [Header("Game")]
-        [SerializeField] private NetworkGamePlayerLobby gamePlayerPrefab = null;
         [SerializeField] private GameObject playerSpawnSystem = null;
         [SerializeField] private GameObject roundManagerPrefab = null;
 
@@ -65,6 +64,63 @@ namespace Script.UI
             base.OnClientDisconnect();
         
             onClientDisconnected?.Invoke();
+        }
+
+        public override void OnClientError(TransportError error, string reason)
+        {
+            base.OnClientError(error, reason);
+            
+            Debug.LogError($"=== CLIENT CONNECTION ERROR ===");
+            Debug.LogError($"Error: {error}");
+            Debug.LogError($"Reason: {reason}");
+            Debug.LogError($"Attempted to connect to: {networkAddress}");
+            
+            if (transport is PortTransport portTransport)
+            {
+                Debug.LogError($"Port: {portTransport.Port}");
+            }
+            
+            // Detect timeout errors specifically
+            bool isTimeout = error == TransportError.Timeout || 
+                           (reason != null && (
+                               reason.Contains("timeout") || 
+                               reason.Contains("did not properly respond") ||
+                               reason.Contains("failed to respond")));
+            
+            if (isTimeout)
+            {
+                Debug.LogError($"=== TIMEOUT ERROR DETECTED ===");
+                Debug.LogError($"Connection attempt timed out - this usually means:");
+                Debug.LogError($"1. FIREWALL IS BLOCKING (MOST LIKELY)");
+                Debug.LogError($"   - Windows Firewall is silently dropping packets");
+                Debug.LogError($"   - Check Windows Defender Firewall settings");
+                Debug.LogError($"   - Add inbound rule for TCP port {((PortTransport)transport)?.Port ?? 7777}");
+                Debug.LogError($"   - Or allow Unity/your game through firewall");
+                Debug.LogError($"2. Server IP address might be wrong: {networkAddress}");
+                Debug.LogError($"3. Server might not be listening on that IP interface");
+                Debug.LogError($"4. Network routing issue - verify both devices are on same network");
+                Debug.LogError($"");
+                Debug.LogError($"QUICK FIX - Run in PowerShell (as Administrator):");
+                Debug.LogError($"netsh advfirewall firewall add rule name=\"Unity Server {((PortTransport)transport)?.Port ?? 7777}\" dir=in action=allow protocol=TCP localport={((PortTransport)transport)?.Port ?? 7777}");
+                Debug.LogError($"");
+                Debug.LogError($"VERIFICATION STEPS:");
+                Debug.LogError($"1. On the SERVER machine, verify it's listening:");
+                Debug.LogError($"   netstat -an | findstr {((PortTransport)transport)?.Port ?? 7777}");
+                Debug.LogError($"   Should show: 0.0.0.0:{((PortTransport)transport)?.Port ?? 7777} LISTENING");
+                Debug.LogError($"2. On the CLIENT machine, try to ping the server:");
+                Debug.LogError($"   ping {networkAddress}");
+                Debug.LogError($"3. Check if you can reach the port (requires telnet or Test-NetConnection):");
+                Debug.LogError($"   Test-NetConnection -ComputerName {networkAddress} -Port {((PortTransport)transport)?.Port ?? 7777}");
+            }
+            else
+            {
+                Debug.LogError($"Troubleshooting:");
+                Debug.LogError($"1. Verify the server IP address is correct: {networkAddress}");
+                Debug.LogError($"2. Check if the server is actually running and listening");
+                Debug.LogError($"3. Check Windows Firewall - it may be blocking port {((PortTransport)transport)?.Port ?? 7777}");
+                Debug.LogError($"4. Ensure both devices are on the same network");
+                Debug.LogError($"5. Try pinging the server IP from this machine");
+            }
         }
 
         public override void OnServerConnect(NetworkConnectionToClient conn)
@@ -251,7 +307,70 @@ namespace Script.UI
         public override void OnStartHost()
         {
             isShuttingDown = false;
-            Debug.Log("OnStartHost");
+            Debug.Log("=== HOST STARTING ===");
+            Debug.Log($"OnStartHost called");
+            base.OnStartHost();
+        }
+
+        public override void OnStartServer()
+        {
+            base.OnStartServer();
+            
+            // Debug server status
+            Debug.Log($"=== SERVER STARTED ===");
+            Debug.Log($"NetworkServer.active: {NetworkServer.active}");
+            Debug.Log($"NetworkServer.listen: {NetworkServer.listen}");
+            
+            // Debug transport info
+            if (transport != null)
+            {
+                Debug.Log($"Transport Type: {transport.GetType().Name}");
+                Debug.Log($"Transport Server Active: {transport.ServerActive()}"); // Call on transport, not portTransport
+                if (transport is PortTransport portTransport)
+                {
+                    Debug.Log($"Transport Port: {portTransport.Port}");
+                }
+            }
+            else
+            {
+                Debug.LogError("Transport is NULL!");
+            }
+            
+            // Debug IP address - get all available IPs
+            if (IPAddressManager.instance != null)
+            {
+                string localIP = IPAddressManager.instance.GetLocalIPv4Address();
+                Debug.Log($"Server IP Address: {localIP}");
+                
+                // Log all network interfaces for troubleshooting
+                IPAddressManager.instance.LogAllIPv4Addresses();
+                
+                if (transport is PortTransport pt)
+                {
+                    Debug.Log($"=== SERVER LISTENING ===");
+                    Debug.Log($"Clients should connect to: {localIP}:{pt.Port}");
+                    Debug.Log($"Server is listening on ALL interfaces (0.0.0.0:{pt.Port})");
+                    Debug.Log($"=== FIREWALL TROUBLESHOOTING ===");
+                    Debug.Log($"If clients cannot connect, check Windows Firewall:");
+                    Debug.Log($"1. Open Windows Defender Firewall");
+                    Debug.Log($"2. Click 'Allow an app or feature through Windows Defender Firewall'");
+                    Debug.Log($"3. Find Unity/your game and ensure both Private and Public are checked");
+                    Debug.Log($"4. Or add an inbound rule for port {pt.Port} (TCP)");
+                    Debug.Log($"5. Run as Administrator: netsh advfirewall firewall add rule name=\"Unity Server {pt.Port}\" dir=in action=allow protocol=TCP localport={pt.Port}");
+                    Debug.Log($"=== ANDROID EMULATOR NOTE ===");
+                    Debug.Log($"If hosting from Android emulator:");
+                    Debug.Log($"- Emulator may use virtual network adapter");
+                    Debug.Log($"- Ensure both devices are on the same physical network");
+                    Debug.Log($"- Try using the host machine's IP (not emulator's virtual IP)");
+                    Debug.Log($"- Verify server is listening: netstat -an | findstr {pt.Port}");
+                }
+            }
+            else
+            {
+                Debug.LogWarning("IPAddressManager instance not found - cannot display server IP");
+            }
+            
+            Debug.Log($"Max Connections: {maxConnections}");
         }
 
         public override void OnClientSceneChanged()
@@ -322,6 +441,54 @@ namespace Script.UI
             if (SceneManager.GetActiveScene().name != menuScene)
             {
                 SceneManager.LoadScene(menuScene);
+            }
+        }
+
+        // Add this public method to check server status anytime
+        public void DebugServerStatus()
+        {
+            Debug.Log("=== SERVER STATUS DEBUG ===");
+            Debug.Log($"NetworkServer.active: {NetworkServer.active}");
+            Debug.Log($"NetworkServer.listen: {NetworkServer.listen}");
+            Debug.Log($"NetworkClient.active: {NetworkClient.active}");
+            Debug.Log($"NetworkClient.isConnected: {NetworkClient.isConnected}");
+            Debug.Log($"Mode: {mode}");
+            
+            if (transport != null)
+            {
+                Debug.Log($"Transport: {transport.GetType().Name}");
+                Debug.Log($"Transport Server Active: {transport.ServerActive()}"); // Call on transport directly
+                
+                if (transport is PortTransport portTransport)
+                {
+                    Debug.Log($"Port: {portTransport.Port}");
+                }
+            }
+            else
+            {
+                Debug.LogError("Transport is NULL!");
+            }
+            
+            if (IPAddressManager.instance != null)
+            {
+                Debug.Log($"Local IP: {IPAddressManager.instance.GetLocalIPv4Address()}");
+            }
+            
+            // Check if port is actually listening
+            int port = ((PortTransport)transport)?.Port ?? 7777;
+            Debug.Log($"Run 'netstat -an | findstr {port}' to verify port is listening");
+        }
+
+        // Add Update method to periodically check server status (optional, for debugging)
+        private void Update()
+        {
+            // Only log once per second to avoid spam
+            if (Time.frameCount % 60 == 0 && NetworkServer.active)
+            {
+                if (transport is PortTransport portTransport)
+                {
+                    Debug.Log($"[Server Status] Active: {NetworkServer.active}, Port: {portTransport.Port}");
+                }
             }
         }
     }

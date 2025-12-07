@@ -52,9 +52,30 @@ namespace Script.UI
                 return;
             }
             
-            string ipAddress = ipAddressInputField.text;
+            string ipAddress = ipAddressInputField.text.Trim();
+            
+            if (string.IsNullOrEmpty(ipAddress))
+            {
+                Debug.LogError("IP address cannot be empty!");
+                return;
+            }
         
             manager.networkAddress = ipAddress;
+            
+            // Get port for logging
+            int port = 7777;
+            if (manager.transport is Mirror.PortTransport portTransport)
+            {
+                port = portTransport.Port;
+            }
+            
+            Debug.Log($"=== CLIENT CONNECTING ===");
+            Debug.Log($"Attempting to connect to: {ipAddress}:{port}");
+            Debug.Log($"Make sure:");
+            Debug.Log($"  1. Server is running and listening on {ipAddress}:{port}");
+            Debug.Log($"  2. Firewall allows connections on port {port}");
+            Debug.Log($"  3. Both devices are on the same network");
+            
             manager.StartClient();
         
             Debug.Log("Joining lobby");
