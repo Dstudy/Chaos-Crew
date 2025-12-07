@@ -5,6 +5,8 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using System.Collections;
+using DG.Tweening;
 using Mirror;
 using Script.UI;
 using static CONST;
@@ -24,9 +26,20 @@ public class UIController : MonoBehaviour
     public List<string> winNotices;
     public List<string> loseNotices;
 
+    [Header("Timing")]
+    [SerializeField] private float uiShowDelaySeconds = 3f;
+
+    [Header("Pop-up Animation")]
+    [SerializeField] private float popupStartScale = 0.5f;
+    [SerializeField] private float popupEndScale = 1f;
+    [SerializeField] private float popupDuration = 0.35f;
+    [SerializeField] private Ease popupEase = Ease.OutBack;
+
     private bool gameEnded;
     private bool warnedMissingExit;
     private bool warnedMissingNext;
+    private Coroutine winUICoroutine;
+    private Coroutine gameOverUICoroutine;
 
     private void Awake()
     {
@@ -60,6 +73,7 @@ public class UIController : MonoBehaviour
         SceneManager.sceneLoaded -= OnSceneLoaded;
         RoundManager.OnRoundEndedClient -= HandleRoundEnded;
         RoundManager.OnRoundStartedClient -= HandleRoundStarted;
+        StopPendingUIRoutines();
         ObserverManager.Unregister(PLAYER_DIED, (Action<Player>)HandlePlayerDied);
         ObserverManager.Unregister(ALL_ENEMIES_DEFEATED, (Action)HandleGameWon);
         ObserverManager.Unregister(GAME_WON, (Action)HandleGameWon);
@@ -75,26 +89,64 @@ public class UIController : MonoBehaviour
             return;
         }
 
-        gameOverUI.SetActive(true);
+        RestartGameOverRoutine();
+    }
+
+    private void RestartGameOverRoutine()
+    {
+        if (gameOverUICoroutine != null)
+        {
+            StopCoroutine(gameOverUICoroutine);
+        }
+        gameOverUICoroutine = StartCoroutine(ShowGameOverUIDelayed());
+    }
+
+    private IEnumerator ShowGameOverUIDelayed()
+    {
+        yield return new WaitForSeconds(uiShowDelaySeconds);
         ToggleNextButton(false);
         ToggleExitButton(true);
+        PlayPopup(gameOverUI);
         Debug.Log("UIController: Game Over UI shown");
+        gameOverUICoroutine = null;
     }
 
     public void ShowWinUI(bool showNextButton)
     {
         EnsureUIReferences();
         WireNextButton();
-        if (winUI == null) return;
+        if (winUI == null)
+        {
+            Debug.LogWarning("UIController: winUI is not assigned, cannot show Win UI.");
+            return;
+        }
 
-        winUI.SetActive(true);
+        RestartWinRoutine(showNextButton);
+    }
 
-        // Next button = chỉ bật khi còn round
+    private void RestartWinRoutine(bool showNextButton)
+    {
+        if (winUICoroutine != null)
+        {
+            StopCoroutine(winUICoroutine);
+        }
+        winUICoroutine = StartCoroutine(ShowWinUIDelayed(showNextButton));
+    }
+
+    private IEnumerator ShowWinUIDelayed(bool showNextButton)
+    {
+        yield return new WaitForSeconds(uiShowDelaySeconds);
+        // Next button = bat khi con round
         ToggleNextButton(showNextButton);
 
-        // Home button = bật khi không còn round
+        // Home button = bat khi khong con round
         if (homeUI != null)
             homeUI.gameObject.SetActive(!showNextButton);
+
+        PlayPopup(winUI);
+        Debug.Log($"UIController: ShowWinUI called. showNextButton={showNextButton} active={winUI.activeSelf} name={winUI.name}");
+
+        winUICoroutine = null;
     }
 
     private string GetRandomNotice(List<string> list)
@@ -118,12 +170,12 @@ public class UIController : MonoBehaviour
     private void HandleGameWon()
     {
         Debug.Log($"UIController: HandleGameWon received; gameEnded={gameEnded}");
-        if (gameEnded) return;
+        // Even if we already marked gameEnded, still try to show the win UI in case it never appeared.
         bool hasNext = RoundManager.instance != null && RoundManager.instance.HasNextRound();
         gameEnded = true;
 
         if (winNoticeText != null)
-        winNoticeText.text = GetRandomNotice(winNotices);
+            winNoticeText.text = GetRandomNotice(winNotices);
 
         ShowWinUI(hasNext);
     }
@@ -134,11 +186,14 @@ public class UIController : MonoBehaviour
         ResetUIState();
         WireExitButton();
         WireNextButton();
+
+        Debug.Log($"UIController: Scene loaded ({scene.name}). winUI active={winUI?.activeSelf} gameOver active={gameOverUI?.activeSelf}");
     }
 
     private void ResetUIState()
     {
         gameEnded = false;
+        StopPendingUIRoutines();
         if (gameOverUI != null && gameOverUI.activeSelf)
         {
             gameOverUI.SetActive(false);
@@ -148,6 +203,41 @@ public class UIController : MonoBehaviour
             winUI.SetActive(false);
         }
         ToggleNextButton(false);
+    }
+
+    private void StopPendingUIRoutines()
+    {
+        if (winUICoroutine != null)
+        {
+            StopCoroutine(winUICoroutine);
+            winUICoroutine = null;
+        }
+
+        if (gameOverUICoroutine != null)
+        {
+            StopCoroutine(gameOverUICoroutine);
+            gameOverUICoroutine = null;
+        }
+
+        KillPopupTween(winUI);
+        KillPopupTween(gameOverUI);
+    }
+
+    private void PlayPopup(GameObject panel)
+    {
+        if (panel == null) return;
+
+        var target = panel.transform;
+        target.DOKill(true);
+        target.localScale = Vector3.one * popupStartScale;
+        panel.SetActive(true);
+        target.DOScale(Vector3.one * popupEndScale, popupDuration).SetEase(popupEase);
+    }
+
+    private void KillPopupTween(GameObject panel)
+    {
+        if (panel == null) return;
+        panel.transform.DOKill();
     }
 
     private void EnsureUIReferences()
@@ -314,6 +404,7 @@ public class UIController : MonoBehaviour
 
     private void HandleRoundEnded(RoundEndClientData data)
     {
+        Debug.Log($"UIController: HandleRoundEnded received. won={data.won} hasNext={data.hasNextRound} gameEnded(before)={gameEnded}");
         gameEnded = true;
         if (data.won)
         {

@@ -12,7 +12,7 @@ using static CONST;
     {
         public PlayerMap playerMap;
         public Enemy enemy;
-        private bool isDead;
+        [SyncVar] private bool isDead;
         
         // Reset per-round state so players are alive and topped up
         public void ResetForRound(RoundPlayerSettings settings)
@@ -36,7 +36,7 @@ using static CONST;
 
         private void HandleEnemyDamage(int damage, int pos)
         {
-            if (isDead || Health - damage <= 0)
+            if (isDead)
             {
                 return;
             }
@@ -46,19 +46,6 @@ using static CONST;
                 Debug.Log("Get hit " + damage);
                 ObserverManager.InvokeEvent(PLAYER_GET_HIT, this);
                 HandleEnemyDamageCmd(damage);
-                
-                if(Health <= 0 && !isDead)
-                {
-                    isDead = true;
-                    Health = 0;
-                    Debug.Log("Player dead");
-                    ObserverManager.InvokeEvent(PLAYER_DIED, this);
-                    ObserverManager.InvokeEvent(GAME_LOST, this);
-                    if (isServer && PlayerSpawnSystem.instance != null && PlayerSpawnSystem.instance.isActiveAndEnabled)
-                    {
-                        PlayerSpawnSystem.instance.ServerBroadcastGameLost(this);
-                    }
-                }
             }   
         }
 
@@ -74,6 +61,29 @@ using static CONST;
             if(newDamage<=0) newDamage = 0;
             this.Health -= newDamage;
             Debug.Log("Take damage: " + damage);
+
+            if (Health <= 0 && !isDead)
+            {
+                ServerHandlePlayerDeath();
+            }
+        }
+
+        [Server]
+        private void ServerHandlePlayerDeath()
+        {
+            if (isDead) return;
+
+            isDead = true;
+            Health = 0;
+            Debug.Log("Player dead (server)");
+
+            ObserverManager.InvokeEvent(PLAYER_DIED, this);
+            ObserverManager.InvokeEvent(GAME_LOST, this);
+
+            if (PlayerSpawnSystem.instance != null && PlayerSpawnSystem.instance.isActiveAndEnabled)
+            {
+                PlayerSpawnSystem.instance.ServerBroadcastGameLost(this);
+            }
         }
 
         [TargetRpc]

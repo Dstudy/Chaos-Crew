@@ -28,6 +28,17 @@ public class PlayerMap : NetworkBehaviour
         topLeft.SetActive(enable);
         bottomRight.SetActive(enable);
         mapBackground.SetActive(enable);
+
+        // Ensure background uses the current round sprite when enabling the map.
+        Sprite roundBackground = RoundManager.instance != null ? RoundManager.instance.GetCurrentRoundBackground() : null;
+        if (roundBackground != null)
+        {
+            SpriteRenderer renderer = mapBackground.GetComponent<SpriteRenderer>();
+            if (renderer != null)
+            {
+                renderer.sprite = roundBackground;
+            }
+        }
         SetPointForScreen();
         
         playerPos = Camera.main.ScreenToWorldPoint(new Vector3(playerPos.x + Screen.width/2, 0, 1));

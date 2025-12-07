@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 2
   itemName: AirHammer
-  damage: 1
+  damage: 6
   element: 4
   prefab: {fileID: 7829017506573580826, guid: ca5702c11dbe20b4d972e6f62005941f, type: 3}

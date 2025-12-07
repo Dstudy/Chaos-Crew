@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using Mirror;
 using System.Linq;
@@ -203,7 +203,11 @@ public class PlayerSpawnSystem : NetworkBehaviour
     {
         if (gameEnded) return;
         gameEnded = true;
-        RpcGameWon();
+
+        bool hasNextRound = RoundManager.instance != null && RoundManager.instance.HasNextRound();
+        bool isFinalRound = !hasNextRound;
+
+        RpcGameWon(hasNextRound, isFinalRound);
     }
 
     [Server]
@@ -215,10 +219,11 @@ public class PlayerSpawnSystem : NetworkBehaviour
     }
 
     [ClientRpc]
-    private void RpcGameWon()
+    private void RpcGameWon(bool hasNextRound, bool isFinalRound)
     {
         ObserverManager.InvokeEvent(ALL_ENEMIES_DEFEATED);
         ObserverManager.InvokeEvent(GAME_WON);
+        RoundManager.RaiseRoundEndedClient(new RoundEndClientData(true, isFinalRound, hasNextRound));
     }
 
     [ClientRpc]

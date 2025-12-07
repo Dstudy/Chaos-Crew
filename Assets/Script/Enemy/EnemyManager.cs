@@ -27,6 +27,9 @@ public class EnemyManager : NetworkBehaviour
     public static EnemyManager instance;
 
     private int enemyCreationCounter;
+    private bool winCheckEnabled;
+    public int AliveEnemyCount => aliveEnemies;
+    public bool WinCheckEnabled => winCheckEnabled;
 
     private void Awake()
     {
@@ -67,8 +70,14 @@ public class EnemyManager : NetworkBehaviour
 
     public void AddEnemy(Enemy enemy)
     {
-        enemies.Add(enemy);
-        elements.Add(enemy.element);
+        if (enemy == null) return;
+
+        if (!enemies.Contains(enemy))
+        {
+            enemies.Add(enemy);
+            elements.Add(enemy.element);
+            aliveEnemies = enemies.Count;
+        }
     }
 
     public void InitElements()
@@ -77,13 +86,16 @@ public class EnemyManager : NetworkBehaviour
     }
 
     [Server]
-    public void ResetRoundState()
+    public void ResetRoundState(bool destroyExisting = true)
     {
-        foreach (var enemy in enemies.ToList())
+        if (destroyExisting)
         {
-            if (enemy != null && enemy.gameObject != null)
+            foreach (var enemy in enemies.ToList())
             {
-                NetworkServer.Destroy(enemy.gameObject);
+                if (enemy != null && enemy.gameObject != null)
+                {
+                    NetworkServer.Destroy(enemy.gameObject);
+                }
             }
         }
 
@@ -91,6 +103,7 @@ public class EnemyManager : NetworkBehaviour
         elements.Clear();
         aliveEnemies = 0;
         enemyCreationCounter = 0;
+        winCheckEnabled = false;
     }
 
     public List<Element> GetElements()
@@ -114,12 +127,45 @@ public class EnemyManager : NetworkBehaviour
 
         if (aliveEnemies == 0)
         {
-            ObserverManager.InvokeEvent(ALL_ENEMIES_DEFEATED);
-            ObserverManager.InvokeEvent(GAME_WON);
-            if (PlayerSpawnSystem.instance != null && PlayerSpawnSystem.instance.isActiveAndEnabled)
-            {
-                PlayerSpawnSystem.instance.ServerBroadcastGameWon();
-            }
+            TriggerAllEnemiesDefeated();
         }
+    }
+
+    [ServerCallback]
+    private void Update()
+    {
+        if (!winCheckEnabled) return;
+        // Safety check: if tracking says enemies remain but none are alive/active, finish the round.
+        if (!NetworkServer.active) return;
+
+        if (aliveEnemies > 0 && !HasLivingActiveEnemies())
+        {
+            Debug.Log("EnemyManager: No living enemies detected but aliveEnemies > 0; forcing defeat event.");
+            aliveEnemies = 0;
+            TriggerAllEnemiesDefeated();
+        }
+    }
+
+    [Server]
+    public bool HasLivingActiveEnemies()
+    {
+        return enemies.Any(e => e != null && e.gameObject.activeInHierarchy && e.Health > 0);
+    }
+
+    [Server]
+    private void TriggerAllEnemiesDefeated()
+    {
+        ObserverManager.InvokeEvent(ALL_ENEMIES_DEFEATED);
+        ObserverManager.InvokeEvent(GAME_WON);
+        if (PlayerSpawnSystem.instance != null && PlayerSpawnSystem.instance.isActiveAndEnabled)
+        {
+            PlayerSpawnSystem.instance.ServerBroadcastGameWon();
+        }
+    }
+
+    [Server]
+    public void SetWinCheckEnabled(bool enabled)
+    {
+        winCheckEnabled = enabled;
     }
 }

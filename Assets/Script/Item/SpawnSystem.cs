@@ -8,6 +8,8 @@ using Script.Enemy;
 using Script.UI;
 using Random = System.Random;
 using static CONST;
+// using static UnityEngine.Transform;
+// using static UnityEngine.Vector3;
 
 // Server-side item instance tracking
 [Serializable]
@@ -117,7 +119,13 @@ public class SpawnSystem : NetworkBehaviour
 
     public override void OnStopServer()
     {
+        Debug.Log("SpawnSystem stopping server...");
         NetworkManagerLobby.OnServerReadied -= OnPlayerReady;
+        
+        // ADD THIS: Stop all spawning coroutines immediately
+        StopAllCoroutines(); 
+        isSpawning = false;
+        wavesStarted = false;
     }
 
     private void OnPlayerReady(NetworkConnectionToClient conn)
@@ -483,6 +491,9 @@ public class SpawnSystem : NetworkBehaviour
 
         for (int itemIndex = 0; itemIndex < totalItemsToSpawn; itemIndex++)
         {
+            // ADD THIS CHECK
+            if (!NetworkServer.active) yield break;
+            
             foreach (Player player in players)
             {
                 if (playerItems[player].Count > itemIndex)
@@ -847,6 +858,12 @@ public class SpawnSystem : NetworkBehaviour
             return;
         }
 
+        if (player.playerMap == null || player.enemy == null)
+        {
+            Debug.LogWarning("Cannot spawn reward: player map or enemy is null.");
+            return;
+        }
+
         Transform spawnPosition = player.enemy.transform;
 
         int spawnPointIndex = 0;
@@ -899,6 +916,9 @@ public class SpawnSystem : NetworkBehaviour
     [Server]
     private void SpawnItemForPlayer(Player player, BaseItem item, Vector3 offset)
     {
+        // 1. Safety Check: Is the server still running?
+        if (!NetworkServer.active) return;
+
         if (player == null || item == null || draggableItemPrefab == null)
         {
             Debug.LogError("Cannot spawn item: player, item, or prefab or map is null!");
@@ -910,7 +930,7 @@ public class SpawnSystem : NetworkBehaviour
         if (spawnPointIndex < 0) spawnPointIndex = 0;
 
         // Create server-side item instance
-        int instanceId = nextInstanceId++;
+    int instanceId = nextInstanceId++;
         ServerItemInstance itemInstance = new ServerItemInstance(
             instanceId,
             item.id,
@@ -925,9 +945,10 @@ public class SpawnSystem : NetworkBehaviour
 
         // Get player's connection and send TargetRpc to spawn locally
         NetworkConnectionToClient conn = GetPlayerConnection(player);
-        if (conn != null)
+        
+        // 2. Safety Check: Is the connection valid and ready?
+        if (conn != null && conn.isReady)
         {
-            // Get additional state data
             int charges = 0;
             Element element = Element.None;
             if (item is StaffItem staffItem)

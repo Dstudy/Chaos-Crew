@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 17
   itemName: FireStaff
-  damage: 1
+  damage: 4
   initialElement: 1
-  maxCharges: 5
+  maxCharges: 3
   prefab: {fileID: 7829017506573580826, guid: 350e4e3656e25fd4c86b3db599fafa6c, type: 3}
   fireSprite: {fileID: 21300000, guid: df4dee30c553f0146a6da962fd04f762, type: 3}
   waterSprite: {fileID: 21300000, guid: c612e340505c60a478ea8c1627f33c01, type: 3}

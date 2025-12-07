@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 4
   itemName: EarthHammer
-  damage: 1
+  damage: 6
   element: 3
   prefab: {fileID: 7829017506573580826, guid: aa893d23d21200a40a23119847d3eaf5, type: 3}

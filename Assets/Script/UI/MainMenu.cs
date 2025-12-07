@@ -4,6 +4,7 @@ using Script.UI;
 using UnityEngine;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
+using DG.Tweening;
 
 public class MainMenu : MonoBehaviour
 {
@@ -21,9 +22,16 @@ public class MainMenu : MonoBehaviour
     [SerializeField] private Slider musicSlider = null;
     [SerializeField] private AudioSource musicSource = null;
 
-    [SerializeField] private NetworkDiscovery networkDiscovery = null;
-    
+    [Header("Settings Animation")]
+    [SerializeField] private float settingsTweenDuration = 0.4f;
+    [SerializeField] private Ease settingsEase = Ease.OutCubic;
+    [SerializeField] private float settingsOffscreenPadding = 80f;
+
     private AudioManager audioManager;
+    private RectTransform settingsRect;
+    private Vector2 settingsVisiblePos;
+    private Vector2 settingsHiddenPos;
+    private Tween settingsTween;
 
     public void HostLobby()
     {
@@ -53,6 +61,7 @@ public class MainMenu : MonoBehaviour
     {
         EnsureNetworkManager();
         audioManager = AudioManager.EnsureExists();
+        CacheSettingsPanel();
         RestoreMainMenuUI();
         SetupSettingsUI();
         RegisterMusicSource();
@@ -65,20 +74,19 @@ public class MainMenu : MonoBehaviour
         if (musicSlider != null) musicSlider.onValueChanged.RemoveAllListeners();
         if (settingButton != null) settingButton.onClick.RemoveListener(ToggleSettings);
         if (exitSettingButton != null) exitSettingButton.onClick.RemoveListener(CloseSettings);
+        settingsTween?.Kill();
 
         UnsubscribeNetworkCallbacks();
     }
 
     public void ToggleSettings()
     {
-        if (settingsPanel == null) return;
-        settingsPanel.SetActive(!settingsPanel.activeSelf);
+        SetSettingsVisible(!IsSettingsVisible(), false);
     }
 
     public void CloseSettings()
     {
-        if (settingsPanel != null)
-            settingsPanel.SetActive(false);
+        SetSettingsVisible(false, false);
     }
 
     private void SetupSettingsUI()
@@ -130,7 +138,8 @@ public class MainMenu : MonoBehaviour
     {
         if (landingPagePanel != null) landingPagePanel.SetActive(true);
         if (enterIpBackground != null) enterIpBackground.SetActive(false);
-        if (settingsPanel != null) settingsPanel.SetActive(false);
+        // if (enterIpPanel != null) enterIpPanel.SetActive(false);
+        SetSettingsVisible(false, true);
     }
 
     private void SubscribeNetworkCallbacks()
@@ -157,6 +166,63 @@ public class MainMenu : MonoBehaviour
     {
         if (enterIpBackground != null) enterIpBackground.SetActive(true);
         if (enterIpPanel != null) enterIpPanel.SetActive(false);
+    }
+
+    private void CacheSettingsPanel()
+    {
+        if (settingsPanel == null) return;
+        settingsRect = settingsPanel.GetComponent<RectTransform>();
+        if (settingsRect == null) return;
+
+        settingsVisiblePos = settingsRect.anchoredPosition;
+        var offset = (settingsRect.rect.height > 0 ? settingsRect.rect.height : 800f) + settingsOffscreenPadding;
+        settingsHiddenPos = settingsVisiblePos + Vector2.up * offset;
+    }
+
+    private bool IsSettingsVisible()
+    {
+        return settingsPanel != null && settingsPanel.activeSelf && !(settingsTween != null && settingsTween.IsActive() && settingsTween.IsPlaying() && settingsRect != null && settingsRect.anchoredPosition == settingsHiddenPos);
+    }
+
+    private void SetSettingsVisible(bool show, bool instant)
+    {
+        if (settingsRect == null) CacheSettingsPanel();
+
+        if (settingsPanel == null || settingsRect == null)
+        {
+            if (settingsPanel != null)
+                settingsPanel.SetActive(show);
+            return;
+        }
+
+        settingsTween?.Kill();
+
+        if (show)
+        {
+            settingsPanel.SetActive(true);
+            if (instant)
+            {
+                settingsRect.anchoredPosition = settingsVisiblePos;
+                return;
+            }
+
+            settingsRect.anchoredPosition = settingsHiddenPos;
+            settingsTween = settingsRect.DOAnchorPos(settingsVisiblePos, settingsTweenDuration)
+                .SetEase(settingsEase);
+        }
+        else
+        {
+            if (instant)
+            {
+                settingsRect.anchoredPosition = settingsHiddenPos;
+                settingsPanel.SetActive(false);
+                return;
+            }
+
+            settingsTween = settingsRect.DOAnchorPos(settingsHiddenPos, settingsTweenDuration)
+                .SetEase(settingsEase)
+                .OnComplete(() => settingsPanel.SetActive(false));
+        }
     }
 
     private NetworkManagerLobby EnsureNetworkManager()

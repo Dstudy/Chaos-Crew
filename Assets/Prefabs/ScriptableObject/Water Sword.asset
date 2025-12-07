@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 13
   itemName: Water Sword
-  damage: 1
+  damage: 7
   element: 2
   prefab: {fileID: 6996428664516009030, guid: fa18554a73a612b4b87b25a8abc5a175, type: 3}

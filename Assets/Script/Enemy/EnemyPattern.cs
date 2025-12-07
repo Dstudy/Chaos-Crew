@@ -144,6 +144,7 @@ public class EnemyPattern : MonoBehaviour
     
     private void PerformAction(EnemyMove move)
     {
+        if (enemy == null || enemy.Health <= 0) return;
         Debug.Log(move.moveName + " " + move.value);
         switch (move.actionType)
         {
@@ -153,6 +154,28 @@ public class EnemyPattern : MonoBehaviour
             case EnemyActionType.Shield:
                 enemy.DoShield(move.value);
                 break;
+        }
+    }
+
+    public void OverrideMoveSettings(float punchChargeTime, int punchValue, float shieldChargeTime, int shieldValue)
+    {
+        if (moves == null || moves.Length == 0) return;
+
+        for (int i = 0; i < moves.Length; i++)
+        {
+            EnemyMove move = moves[i];
+            if (move.actionType == EnemyActionType.Attack)
+            {
+                move.chargeTime = punchChargeTime;
+                move.value = punchValue;
+            }
+            else if (move.actionType == EnemyActionType.Shield)
+            {
+                move.chargeTime = shieldChargeTime;
+                move.value = shieldValue;
+            }
+
+            moves[i] = move;
         }
     }
 }

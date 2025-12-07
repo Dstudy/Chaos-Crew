@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 12
   itemName: Shield
-  value: 4
+  value: 6
   effect: 1
   prefab: {fileID: 2635015951159172271, guid: 12b98eb9496cbd747924b4b3c3376053, type: 3}

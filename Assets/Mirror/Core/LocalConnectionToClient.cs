@@ -37,6 +37,14 @@ namespace Mirror
         {
             base.Update();
 
+            // If the server already removed this connection (e.g. during shutdown)
+            // skip processing any queued messages to avoid 'unknown connectionId' errors.
+            if (!NetworkServer.connections.ContainsKey(connectionId))
+            {
+                queue.Clear();
+                return;
+            }
+
             // process internal messages so they are applied at the correct time
             while (queue.Count > 0)
             {

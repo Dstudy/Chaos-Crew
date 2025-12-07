@@ -48,6 +48,7 @@ public class EnemyUI : MonoBehaviour
 
         enemy.onHealthChanged += (health, oldHealth) => UpdateHealthBar(health, oldHealth);
         enemy.onShieldChanged += (shield, oldShield) => UpdateShield(shield, oldShield);
+        enemy.onMaxShieldChanged += (newMax, oldMax) => UpdateShield(enemy.Shield, enemy.Shield);
 
         normalSpriteState = normalFace;
         
