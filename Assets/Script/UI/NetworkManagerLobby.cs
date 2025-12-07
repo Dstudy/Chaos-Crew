@@ -36,6 +36,23 @@ namespace Script.UI
         public List<NetworkGamePlayerLobby> GamePlayers { get; } = new List<NetworkGamePlayerLobby>();
         public string MenuSceneName => menuScene;
 
+        // Update player count display on all clients
+        public void UpdatePlayerCountDisplay()
+        {
+            // Find all NetworkRoomPlayerLobby instances to ensure accurate count
+            NetworkRoomPlayerLobby[] allPlayers = FindObjectsOfType<NetworkRoomPlayerLobby>();
+            int playerCount = allPlayers.Length;
+            
+            // Update all player displays
+            foreach (var player in allPlayers)
+            {
+                if (player != null && player.numText != null)
+                {
+                    player.numText.text = $"{playerCount.ToString()}/5";
+                }
+            }
+        }
+
         public override void OnClientConnect()
         {
             base.OnClientConnect();
@@ -75,6 +92,7 @@ namespace Script.UI
                 RoomPlayers.Remove(player);
 
                 NotifyPlayersOfReadyState();
+                UpdatePlayerCountDisplay();
             }
 
             base.OnServerDisconnect(conn);
@@ -115,10 +133,12 @@ namespace Script.UI
                 bool isLeader = RoomPlayers.Count == 0;
             
                 NetworkRoomPlayerLobby roomPlayerInstance = Instantiate(lobbyPrefab);
-
                 roomPlayerInstance.IsLeader = isLeader;
             
                 NetworkServer.AddPlayerForConnection(conn, roomPlayerInstance.gameObject);
+                
+                // Update display after player is added (called from OnStartClient, but ensure it happens)
+                StartCoroutine(UpdatePlayerCountNextFrame());
             }
             else
             {
@@ -202,6 +222,12 @@ namespace Script.UI
             yield return null; // defer to avoid modifying collections during Mirror broadcast
             pendingReadyConnections.Remove(conn.connectionId);
             OnServerReadied?.Invoke(conn);
+        }
+
+        private IEnumerator UpdatePlayerCountNextFrame()
+        {
+            yield return null; // defer to ensure RoomPlayers list is updated
+            UpdatePlayerCountDisplay();
         }
 
         private void EnsureRoundManagerExists()
