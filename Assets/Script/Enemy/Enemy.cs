@@ -84,7 +84,7 @@ namespace Script.Enemy
         private void TargetInvokeEnemyDefeated(NetworkConnectionToClient conn)
         {
             // This runs only on the client that faces this enemy
-            Instantiate(SpawnSystem.singleton.meow, transform.position, transform.rotation);
+            // Instantiate(SpawnSystem.singleton.meow, transform.position, transform.rotation);
             ObserverManager.InvokeEvent(ENEMY_DEFEATED, this);
             isDead = true;
             // DisableEnemy();

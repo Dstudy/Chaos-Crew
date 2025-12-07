@@ -10,8 +10,8 @@ public class NetworkGamePlayerLobby : NetworkBehaviour
 {
     private PlayerMap _playerMap;
     private PlayerManager playerManager;
-    [SyncVar]
-    private string displayName = "Loading...";
+    // [SyncVar]
+    // private string displayName = "Loading...";
 
     private NetworkManagerLobby room;
     private NetworkManagerLobby Room

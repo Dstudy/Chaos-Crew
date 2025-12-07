@@ -1,4 +1,5 @@
 using Mirror;
+using Mirror.Discovery;
 using Script.UI;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -40,8 +41,12 @@ public class MainMenu : MonoBehaviour
             Debug.LogWarning("MainMenu: NetworkManagerLobby missing; cannot host.");
             return;
         }
-
+    
+        // NetworkManager.singleton.StartHost();
         manager.StartHost();
+        networkManager.networkDiscovery.AdvertiseServer();
+        // NetworkManager.singleton.StartServer();
+        
 
         if (landingPagePanel != null)
         {

@@ -2,8 +2,10 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Mirror;
+using Mirror.Discovery;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.Serialization;
 
 namespace Script.UI
 {
@@ -26,7 +28,6 @@ namespace Script.UI
         [SerializeField] private NetworkRoomPlayerLobby lobbyPrefab = null;
     
         [Header("Game")]
-        [SerializeField] private NetworkGamePlayerLobby gamePlayerPrefab = null;
         [SerializeField] private GameObject playerSpawnSystem = null;
         [SerializeField] private GameObject roundManagerPrefab = null;
 
@@ -34,7 +35,25 @@ namespace Script.UI
     
         public List<NetworkRoomPlayerLobby> RoomPlayers { get; } = new List<NetworkRoomPlayerLobby>();
         public List<NetworkGamePlayerLobby> GamePlayers { get; } = new List<NetworkGamePlayerLobby>();
+        public NetworkDiscovery networkDiscovery;
         public string MenuSceneName => menuScene;
+
+        // Update player count display on all clients
+        public void UpdatePlayerCountDisplay()
+        {
+            // Find all NetworkRoomPlayerLobby instances to ensure accurate count
+            NetworkRoomPlayerLobby[] allPlayers = FindObjectsOfType<NetworkRoomPlayerLobby>();
+            int playerCount = allPlayers.Length;
+            
+            // Update all player displays
+            foreach (var player in allPlayers)
+            {
+                if (player != null && player.numText != null)
+                {
+                    player.numText.text = $"{playerCount.ToString()}/5";
+                }
+            }
+        }
 
         public override void OnClientConnect()
         {
@@ -49,6 +68,7 @@ namespace Script.UI
         
             onClientDisconnected?.Invoke();
         }
+        
 
         public override void OnServerConnect(NetworkConnectionToClient conn)
         {
@@ -75,6 +95,7 @@ namespace Script.UI
                 RoomPlayers.Remove(player);
 
                 NotifyPlayersOfReadyState();
+                UpdatePlayerCountDisplay();
             }
 
             base.OnServerDisconnect(conn);
@@ -115,10 +136,12 @@ namespace Script.UI
                 bool isLeader = RoomPlayers.Count == 0;
             
                 NetworkRoomPlayerLobby roomPlayerInstance = Instantiate(lobbyPrefab);
-
                 roomPlayerInstance.IsLeader = isLeader;
             
                 NetworkServer.AddPlayerForConnection(conn, roomPlayerInstance.gameObject);
+                
+                // Update display after player is added (called from OnStartClient, but ensure it happens)
+                StartCoroutine(UpdatePlayerCountNextFrame());
             }
             else
             {
@@ -204,6 +227,12 @@ namespace Script.UI
             OnServerReadied?.Invoke(conn);
         }
 
+        private IEnumerator UpdatePlayerCountNextFrame()
+        {
+            yield return null; // defer to ensure RoomPlayers list is updated
+            UpdatePlayerCountDisplay();
+        }
+
         private void EnsureRoundManagerExists()
         {
             if (RoundManager.instance != null)
@@ -225,14 +254,20 @@ namespace Script.UI
         public override void OnStartHost()
         {
             isShuttingDown = false;
-            Debug.Log("OnStartHost");
+            Debug.Log("=== HOST STARTING ===");
+            Debug.Log($"OnStartHost called");
+            base.OnStartHost();
         }
+        
 
         public override void OnClientSceneChanged()
         {
             // Don't auto-create player in game scenes - PlayerSpawnSystem handles it
             if (SceneManager.GetActiveScene().name.StartsWith("Scene_Map"))
             {
+                // Use coroutine to ensure scene is fully loaded before preparing scene objects
+                StartCoroutine(PrepareSceneObjectsAfterLoad());
+                
                 // Still need to set client ready
                 if (NetworkClient.connection.isAuthenticated && !NetworkClient.ready)
                 {
@@ -244,6 +279,19 @@ namespace Script.UI
         
             // For menu scene, use default behavior
             base.OnClientSceneChanged();
+        }
+
+        private IEnumerator PrepareSceneObjectsAfterLoad()
+        {
+            // Wait for end of frame to ensure scene is fully loaded before preparing scene objects
+            yield return new WaitForEndOfFrame();
+            
+            // IMPORTANT: Prepare scene objects before server tries to spawn them
+            // This registers all NetworkIdentity objects in the scene so they can be found by sceneId
+            NetworkClient.PrepareToSpawnSceneObjects();
+            
+            // Debug log to verify it was called
+            Debug.Log($"Prepared scene objects for scene: {SceneManager.GetActiveScene().name}");
         }
 
         public void ShutdownAndReturnToMenu()
@@ -296,6 +344,54 @@ namespace Script.UI
             if (SceneManager.GetActiveScene().name != menuScene)
             {
                 SceneManager.LoadScene(menuScene);
+            }
+        }
+
+        // Add this public method to check server status anytime
+        public void DebugServerStatus()
+        {
+            Debug.Log("=== SERVER STATUS DEBUG ===");
+            Debug.Log($"NetworkServer.active: {NetworkServer.active}");
+            Debug.Log($"NetworkServer.listen: {NetworkServer.listen}");
+            Debug.Log($"NetworkClient.active: {NetworkClient.active}");
+            Debug.Log($"NetworkClient.isConnected: {NetworkClient.isConnected}");
+            Debug.Log($"Mode: {mode}");
+            
+            if (transport != null)
+            {
+                Debug.Log($"Transport: {transport.GetType().Name}");
+                Debug.Log($"Transport Server Active: {transport.ServerActive()}"); // Call on transport directly
+                
+                if (transport is PortTransport portTransport)
+                {
+                    Debug.Log($"Port: {portTransport.Port}");
+                }
+            }
+            else
+            {
+                Debug.LogError("Transport is NULL!");
+            }
+            
+            if (IPAddressManager.instance != null)
+            {
+                Debug.Log($"Local IP: {IPAddressManager.instance.GetLocalIPv4Address()}");
+            }
+            
+            // Check if port is actually listening
+            int port = ((PortTransport)transport)?.Port ?? 7777;
+            Debug.Log($"Run 'netstat -an | findstr {port}' to verify port is listening");
+        }
+
+        // Add Update method to periodically check server status (optional, for debugging)
+        private void Update()
+        {
+            // Only log once per second to avoid spam
+            if (Time.frameCount % 60 == 0 && NetworkServer.active)
+            {
+                if (transport is PortTransport portTransport)
+                {
+                    Debug.Log($"[Server Status] Active: {NetworkServer.active}, Port: {portTransport.Port}");
+                }
             }
         }
     }

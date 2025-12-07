@@ -64,7 +64,6 @@ public class SpawnSystem : NetworkBehaviour
     [SerializeField] private bool autoStartWaves = true;
 
     private int currentWaveIndex = 0;
-    private int rewardWaveIndex = 0;
     private bool isSpawning = false;
 
     [SerializeField] private float shootForce = 5f;
@@ -72,8 +71,6 @@ public class SpawnSystem : NetworkBehaviour
     public static event Action<int> OnWaveStarted;
     public static event Action<int> OnWaveCompleted;
     public static event Action OnAllWavesCompleted;
-
-    private int localID = 0;
 
     private int readyPlayersCount;
     private bool wavesStarted;
@@ -259,6 +256,7 @@ public class SpawnSystem : NetworkBehaviour
 
     IEnumerator SpawnRewards(List<WaveSpawn> rewardWaves, Player player)
     {
+        yield return new WaitForSeconds(3f);
         foreach (var rewardWave in rewardWaves)
         {
             yield return StartCoroutine(SpawnWave(rewardWave, player));
@@ -302,7 +300,6 @@ public class SpawnSystem : NetworkBehaviour
         autoStartWaves = autoStart;
 
         currentWaveIndex = 0;
-        rewardWaveIndex = 0;
         isSpawning = false;
         wavesStarted = false;
         readyPlayersCount = 0;
@@ -868,10 +865,8 @@ public class SpawnSystem : NetworkBehaviour
         }
 
         Transform spawnPosition = player.enemy.transform;
-        // Use .position to match the List<Vector3> type
-        int spawnPointIndex = player.playerMap.spawnItemPoints.IndexOf(spawnPosition.position);
-        if (spawnPointIndex < 0) spawnPointIndex = 0;
 
+        int spawnPointIndex = 0;
         // Create server-side item instance
         int instanceId = nextInstanceId++;
         ServerItemInstance itemInstance = new ServerItemInstance(
@@ -879,7 +874,7 @@ public class SpawnSystem : NetworkBehaviour
             item.id,
             player.id,
             item,
-            spawnPosition.position,
+            spawnPosition.position + new Vector3(0, -3, 0),
             spawnPointIndex
         );
 
@@ -908,7 +903,7 @@ public class SpawnSystem : NetworkBehaviour
             Vector2 shootDirection = new Vector2(Mathf.Cos(degree * Mathf.Deg2Rad), Mathf.Sin(degree * Mathf.Deg2Rad));
 
             // Send RPC to client to spawn local visual
-            TargetSpawnItemLocal(conn, instanceId, item.id, spawnPosition.position, spawnPointIndex, shootDirection, charges, element);
+            TargetSpawnItemLocal(conn, instanceId, item.id, spawnPosition.position + new Vector3(0, -3, 0), spawnPointIndex, shootDirection, charges, element);
         }
         else
         {
@@ -930,30 +925,9 @@ public class SpawnSystem : NetworkBehaviour
             return;
         }
 
-        if (player.playerMap == null || player.playerMap.spawnItemPoints == null || player.playerMap.spawnItemPoints.Count == 0)
-        {
-            Debug.LogWarning("Cannot spawn item: player map or spawn points are null/empty.");
-            return;
-        }
-
-        // 1. Change type to Vector3
         Vector3 spawnPosition = GetSpawnPoint(player.playerMap);
-        
-        // 2. IndexOf now works correctly because both are Vector3
         int spawnPointIndex = player.playerMap.spawnItemPoints.IndexOf(spawnPosition);
         if (spawnPointIndex < 0) spawnPointIndex = 0;
-
-        // Align spawn to gameplay plane to avoid uneven Y/Z causing skewed directions
-        // Vector3 spawnPos = spawnPosition.position + offset;
-        // if (player.enemy != null)
-        // {
-        //     spawnPos.y = player.enemy.transform.position.y;
-        // }
-        // else if (player.playerMap != null)
-        // {
-        //     spawnPos.y = player.playerMap.playerPos.y;
-        // }
-        // spawnPos.z = 0f;
 
         // Create server-side item instance
     int instanceId = nextInstanceId++;
@@ -962,7 +936,7 @@ public class SpawnSystem : NetworkBehaviour
             item.id,
             player.id,
             item,
-            spawnPosition + offset, // 3. Removed .position (it is already a vector)
+            spawnPosition + offset,
             spawnPointIndex
         );
 
@@ -987,21 +961,8 @@ public class SpawnSystem : NetworkBehaviour
                 element = attackItem.element;
             }
 
-            // Aim toward this player's enemy so items fly into the lane center regardless of spawn point orientation
-            // Vector3 targetPos = player.enemy != null ? player.enemy.transform.position : player.transform.position;
-            // targetPos.y = spawnPos.y; // flatten Y to same height as spawn for consistent trajectories
-            // targetPos.z = 0f;
-
-            // Vector2 shootDirection = (targetPos - spawnPos).normalized;
-            // if (shootDirection == Vector2.zero)
-            // {
-            //     shootDirection = Vector2.up;
-            // }
-
-            // FIXED: Define a direction (since Vector3 has no .up property)
-            Vector2 shootDirection = Vector2.up;
             // Send RPC to client to spawn local visual
-            TargetSpawnItemLocal(conn, instanceId, item.id, spawnPosition, spawnPointIndex, shootDirection, charges, element);
+            TargetSpawnItemLocal(conn, instanceId, item.id, spawnPosition, spawnPointIndex, new Vector2(0,1), charges, element);
             // Debug.Log($"Spawned item {item.name} for player {player.id} at {spawnPos} ={spawnPosition.position} + {offset} with shoot direction {shootDirection}");
         }
         else
@@ -1026,9 +987,10 @@ private void TargetSpawnItemLocal(NetworkConnectionToClient conn, int instanceId
         Debug.LogError("LocalItemPool.singleton is null! Make sure LocalItemPool is in the scene.");
         return;
     }
-    
+
+    Vector3 safePosition = FindSafeSpawnPosition(position, shootDirection);
     LocalItemPool.singleton.SetPrefab(draggableItemPrefab);
-    GameObject dragItem = LocalItemPool.singleton.Get(position, Quaternion.identity);
+    GameObject dragItem = LocalItemPool.singleton.Get(safePosition, Quaternion.identity);
     DraggableItem draggableItem = dragItem.GetComponent<DraggableItem>();
     
     if (draggableItem != null)
@@ -1045,7 +1007,7 @@ private void TargetSpawnItemLocal(NetworkConnectionToClient conn, int instanceId
         // Set up the local item
         draggableItem.SetItemLocal(instanceId, itemData, charges, element);
         draggableItem.gameObject.name = $"{itemData.name} - Instance {instanceId}";
-        draggableItem.transform.position = position;
+        draggableItem.transform.position = safePosition;
         
         // Reset Rigidbody2D state before applying force
         Rigidbody2D rb = dragItem.GetComponent<Rigidbody2D>();
@@ -1067,16 +1029,16 @@ private void TargetSpawnItemLocal(NetworkConnectionToClient conn, int instanceId
     }
 }
 
-private IEnumerator ApplyShootForceDelayed(DraggableItem draggableItem, Vector2 shootDirection, float force)
-{
-    // Wait one frame to ensure Rigidbody2D is fully initialized
-    yield return null;
-    
-    if (draggableItem != null)
+    private IEnumerator ApplyShootForceDelayed(DraggableItem draggableItem, Vector2 shootDirection, float force)
     {
-        draggableItem.Shoot(shootDirection, force);
+        // Wait one frame to ensure Rigidbody2D is fully initialized
+        yield return null;
+        
+        if (draggableItem != null)
+        {
+            draggableItem.Shoot(shootDirection, force);
+        }
     }
-}
     
 
     private Vector3 GetSpawnPoint(PlayerMap playerMap)
@@ -1086,23 +1048,49 @@ private IEnumerator ApplyShootForceDelayed(DraggableItem draggableItem, Vector2 
         Vector3 spawnPoint = playerMap.spawnItemPoints[randomIndex];
         return spawnPoint;
     }
-
-    [Server]
-    public void SetWaves(List<WaveSpawn> newWaves)
+    
+    private Vector3 FindSafeSpawnPosition(Vector3 originalPosition, Vector2 shootDirection)
     {
-        waves = newWaves;
-        currentWaveIndex = 0;
-    }
-
-    [Server]
-    public int GetCurrentWaveIndex()
-    {
-        return currentWaveIndex;
-    }
-
-    [Server]
-    public int GetTotalWaves()
-    {
-        return waves.Count;
+        // Check if there's an item at the original position
+        float checkRadius = 0.5f; // Adjust based on your item size
+        Collider2D overlap = Physics2D.OverlapCircle(originalPosition, checkRadius);
+    
+        // If no overlap, use original position
+        if (overlap == null || overlap.GetComponent<DraggableItem>() == null)
+        {
+            return originalPosition;
+        }
+    
+        // Try offsetting in the shoot direction first
+        float offsetDistance = 0.6f; // Distance to offset
+        Vector3 offsetPosition = originalPosition + (Vector3)(shootDirection.normalized * offsetDistance);
+    
+        // Check if offset position is safe
+        Collider2D offsetOverlap = Physics2D.OverlapCircle(offsetPosition, checkRadius);
+        if (offsetOverlap == null || offsetOverlap.GetComponent<DraggableItem>() == null)
+        {
+            return offsetPosition;
+        }
+    
+        // If shoot direction offset didn't work, try perpendicular directions
+        Vector2 perpendicular1 = new Vector2(-shootDirection.y, shootDirection.x).normalized;
+        Vector2 perpendicular2 = new Vector2(shootDirection.y, -shootDirection.x).normalized;
+    
+        Vector3 perp1Position = originalPosition + (Vector3)(perpendicular1 * offsetDistance);
+        Collider2D perp1Overlap = Physics2D.OverlapCircle(perp1Position, checkRadius);
+        if (perp1Overlap == null || perp1Overlap.GetComponent<DraggableItem>() == null)
+        {
+            return perp1Position;
+        }
+    
+        Vector3 perp2Position = originalPosition + (Vector3)(perpendicular2 * offsetDistance);
+        Collider2D perp2Overlap = Physics2D.OverlapCircle(perp2Position, checkRadius);
+        if (perp2Overlap == null || perp2Overlap.GetComponent<DraggableItem>() == null)
+        {
+            return perp2Position;
+        }
+    
+        // If all positions are occupied, offset further in shoot direction
+        return originalPosition + (Vector3)(shootDirection.normalized * (offsetDistance * 1.5f));
     }
 }

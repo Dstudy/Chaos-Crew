@@ -11,11 +11,12 @@ public class NetworkRoomPlayerLobby : NetworkBehaviour
     
     [Header("UI")]
     [SerializeField] private GameObject lobbyUI = null;
-    [SerializeField] private TextMeshProUGUI numText = null;
+    [SerializeField] internal TextMeshProUGUI numText = null;
     [SerializeField] private Button startGameButton = null;
     
     [SyncVar(hook = nameof(HandleReadyStatusChanged))]
     public bool IsReady = false;
+    
     
     private bool isLeader;
     public bool IsLeader
@@ -39,23 +40,37 @@ public class NetworkRoomPlayerLobby : NetworkBehaviour
     }
     
     public void HandleReadyStatusChanged(bool oldValue, bool newValue) => UpdateDisplay();
-    
-    private void UpdateDisplay(){}
+
+    private void UpdateDisplay()
+    {
+        if (numText != null && Room != null)
+        {
+            numText.text = Room.RoomPlayers.Count.ToString();
+        }
+    }
     
     public override void OnStartAuthority()
     {
         if(isLocalPlayer)
+        {
             lobbyUI.SetActive(true);
+            if (Room != null)
+            {
+                Room.UpdatePlayerCountDisplay();
+            }
+        }
     }
 
     public override void OnStartClient()
     {
         Room.RoomPlayers.Add(this);
+        Room.UpdatePlayerCountDisplay();
     }
 
     public override void OnStopClient()
     {
         Room.RoomPlayers.Remove(this);
+        Room.UpdatePlayerCountDisplay();
     }
     
     

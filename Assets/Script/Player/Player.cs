@@ -240,50 +240,50 @@ public void TargetReceiveTeleportedItem(NetworkConnectionToClient conn, int inst
     }
 }
 
-private Vector3 FindSafeSpawnPosition(Vector3 originalPosition, Vector2 shootDirection)
-{
-    // Check if there's an item at the original position
-    float checkRadius = 0.5f; // Adjust based on your item size
-    Collider2D overlap = Physics2D.OverlapCircle(originalPosition, checkRadius);
-    
-    // If no overlap, use original position
-    if (overlap == null || overlap.GetComponent<DraggableItem>() == null)
+    private Vector3 FindSafeSpawnPosition(Vector3 originalPosition, Vector2 shootDirection)
     {
-        return originalPosition;
+        // Check if there's an item at the original position
+        float checkRadius = 0.5f; // Adjust based on your item size
+        Collider2D overlap = Physics2D.OverlapCircle(originalPosition, checkRadius);
+        
+        // If no overlap, use original position
+        if (overlap == null || overlap.GetComponent<DraggableItem>() == null)
+        {
+            return originalPosition;
+        }
+        
+        // Try offsetting in the shoot direction first
+        float offsetDistance = 0.6f; // Distance to offset
+        Vector3 offsetPosition = originalPosition + (Vector3)(shootDirection.normalized * offsetDistance);
+        
+        // Check if offset position is safe
+        Collider2D offsetOverlap = Physics2D.OverlapCircle(offsetPosition, checkRadius);
+        if (offsetOverlap == null || offsetOverlap.GetComponent<DraggableItem>() == null)
+        {
+            return offsetPosition;
+        }
+        
+        // If shoot direction offset didn't work, try perpendicular directions
+        Vector2 perpendicular1 = new Vector2(-shootDirection.y, shootDirection.x).normalized;
+        Vector2 perpendicular2 = new Vector2(shootDirection.y, -shootDirection.x).normalized;
+        
+        Vector3 perp1Position = originalPosition + (Vector3)(perpendicular1 * offsetDistance);
+        Collider2D perp1Overlap = Physics2D.OverlapCircle(perp1Position, checkRadius);
+        if (perp1Overlap == null || perp1Overlap.GetComponent<DraggableItem>() == null)
+        {
+            return perp1Position;
+        }
+        
+        Vector3 perp2Position = originalPosition + (Vector3)(perpendicular2 * offsetDistance);
+        Collider2D perp2Overlap = Physics2D.OverlapCircle(perp2Position, checkRadius);
+        if (perp2Overlap == null || perp2Overlap.GetComponent<DraggableItem>() == null)
+        {
+            return perp2Position;
+        }
+        
+        // If all positions are occupied, offset further in shoot direction
+        return originalPosition + (Vector3)(shootDirection.normalized * (offsetDistance * 1.5f));
     }
-    
-    // Try offsetting in the shoot direction first
-    float offsetDistance = 0.6f; // Distance to offset
-    Vector3 offsetPosition = originalPosition + (Vector3)(shootDirection.normalized * offsetDistance);
-    
-    // Check if offset position is safe
-    Collider2D offsetOverlap = Physics2D.OverlapCircle(offsetPosition, checkRadius);
-    if (offsetOverlap == null || offsetOverlap.GetComponent<DraggableItem>() == null)
-    {
-        return offsetPosition;
-    }
-    
-    // If shoot direction offset didn't work, try perpendicular directions
-    Vector2 perpendicular1 = new Vector2(-shootDirection.y, shootDirection.x).normalized;
-    Vector2 perpendicular2 = new Vector2(shootDirection.y, -shootDirection.x).normalized;
-    
-    Vector3 perp1Position = originalPosition + (Vector3)(perpendicular1 * offsetDistance);
-    Collider2D perp1Overlap = Physics2D.OverlapCircle(perp1Position, checkRadius);
-    if (perp1Overlap == null || perp1Overlap.GetComponent<DraggableItem>() == null)
-    {
-        return perp1Position;
-    }
-    
-    Vector3 perp2Position = originalPosition + (Vector3)(perpendicular2 * offsetDistance);
-    Collider2D perp2Overlap = Physics2D.OverlapCircle(perp2Position, checkRadius);
-    if (perp2Overlap == null || perp2Overlap.GetComponent<DraggableItem>() == null)
-    {
-        return perp2Position;
-    }
-    
-    // If all positions are occupied, offset further in shoot direction
-    return originalPosition + (Vector3)(shootDirection.normalized * (offsetDistance * 1.5f));
-}
     
     private IEnumerator ApplyShootForceDelayed(DraggableItem draggableItem, Vector2 shootDirection, float force)
     {

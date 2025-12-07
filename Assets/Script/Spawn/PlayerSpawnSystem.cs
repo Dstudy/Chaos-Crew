@@ -17,7 +17,6 @@ public class PlayerSpawnSystem : NetworkBehaviour
     private MapManager mapManager;
     private int nextIndex = 0;
     
-    private bool isServerReady = false;
     private readonly HashSet<int> pendingSpawns = new HashSet<int>();
     [SyncVar] private bool gameEnded;
     

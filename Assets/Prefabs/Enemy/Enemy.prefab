@@ -1122,6 +1122,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   material: {fileID: 2100000, guid: 301441e3c042d3c41a2a866e87fe1a06, type: 2}
+  faceEnemyMaterial: {fileID: 2100000, guid: fac98d0a542972c45af0f34321e88fba, type: 2}
 --- !u!82 &7963316930781139105
 AudioSource:
   m_ObjectHideFlags: 0
