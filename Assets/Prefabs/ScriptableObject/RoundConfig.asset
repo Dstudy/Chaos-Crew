@@ -23,10 +23,17 @@ MonoBehaviour:
     autoStartWaves: 0
     playerSettings:
       maxHealth: 30
-      maxShield: 10
+      maxShield: 15
     backgroundMap: {fileID: 21300000, guid: 619e9883b1d6e9c4dab7c23491d31c28, type: 3}
+    backgroundEffect:
+      effectType: 1
+      duration: 2
+      fadeAlpha: 0.8
+      amplitude: 0.05
+      panOffset: {x: 0.5, y: 0}
+      ease: 4
     enemySettings:
-      maxHealth: 50
+      maxHealth: 40
       maxShield: 10
       punchChargeTime: 2
       punchValue: 6
@@ -41,11 +48,18 @@ MonoBehaviour:
     waveStartDelay: 2
     autoStartWaves: 0
     playerSettings:
-      maxHealth: 50
+      maxHealth: 40
       maxShield: 0
     backgroundMap: {fileID: 21300000, guid: 04fccafb38a4608409fa97b84b86d9f0, type: 3}
+    backgroundEffect:
+      effectType: 2
+      duration: 2
+      fadeAlpha: 0.8
+      amplitude: 0.05
+      panOffset: {x: 0.5, y: 0}
+      ease: 4
     enemySettings:
-      maxHealth: 35
+      maxHealth: 25
       maxShield: 20
       punchChargeTime: 2
       punchValue: 6
@@ -63,6 +77,13 @@ MonoBehaviour:
       maxHealth: 55
       maxShield: 20
     backgroundMap: {fileID: 21300000, guid: d3ce07ff50306e345ad931485e518797, type: 3}
+    backgroundEffect:
+      effectType: 3
+      duration: 2
+      fadeAlpha: 0.8
+      amplitude: 0.05
+      panOffset: {x: 0.5, y: 0}
+      ease: 4
     enemySettings:
       maxHealth: 60
       maxShield: 30

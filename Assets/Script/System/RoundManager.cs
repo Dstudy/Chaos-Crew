@@ -7,6 +7,7 @@ using UnityEngine;
 using static CONST;
 using Script.Enemy;
 using UnityEngine.SceneManagement;
+using DG.Tweening;
 
 public class RoundManager : NetworkBehaviour
 {
@@ -35,6 +36,8 @@ public class RoundManager : NetworkBehaviour
     private Coroutine applyBackgroundRoutine;
     private int lastBackgroundWarnRound = -1;
     private Sprite lastRoundBackground;
+    private BackgroundEffectSettings lastBackgroundEffect;
+    private readonly Dictionary<Transform, BackgroundDefaultState> backgroundDefaults = new Dictionary<Transform, BackgroundDefaultState>();
 
     private void Awake()
     {
@@ -483,6 +486,7 @@ public class RoundManager : NetworkBehaviour
     {
         if (roundIndex < 0) return;
         lastRoundBackground = GetRoundBackground(roundIndex);
+        lastBackgroundEffect = GetRoundBackgroundEffect(roundIndex);
 
         if (applyBackgroundRoutine != null)
         {
@@ -496,6 +500,7 @@ public class RoundManager : NetworkBehaviour
     private IEnumerator ApplyRoundBackgroundWhenReady(int roundIndex)
     {
         Sprite background = GetRoundBackground(roundIndex);
+        BackgroundEffectSettings effect = GetRoundBackgroundEffect(roundIndex);
         if (background == null)
         {
             if (roundConfig == null || roundConfig.RoundCount == 0)
@@ -514,7 +519,7 @@ public class RoundManager : NetworkBehaviour
 
         while (elapsed < timeout)
         {
-            if (TryApplyBackgroundToMaps(background))
+            if (TryApplyBackgroundToMaps(background, effect))
             {
                 yield break;
             }
@@ -523,14 +528,14 @@ public class RoundManager : NetworkBehaviour
             elapsed += Time.deltaTime;
         }
 
-        if (!TryApplyBackgroundToMaps(background))
+        if (!TryApplyBackgroundToMaps(background, effect))
         {
             Debug.LogWarning($"RoundManager: Unable to apply background for round {roundIndex}; no PlayerMap instances found.");
         }
     }
 
     [Client]
-    private bool TryApplyBackgroundToMaps(Sprite backgroundSprite)
+    private bool TryApplyBackgroundToMaps(Sprite backgroundSprite, BackgroundEffectSettings effect)
     {
         if (backgroundSprite == null) return true;
 
@@ -541,13 +546,13 @@ public class RoundManager : NetworkBehaviour
         bool applied = false;
         foreach (PlayerMap map in maps)
         {
-            applied |= TrySetMapBackground(map, backgroundSprite);
+            applied |= TrySetMapBackground(map, backgroundSprite, effect);
         }
 
         return applied;
     }
 
-    private bool TrySetMapBackground(PlayerMap map, Sprite sprite)
+    private bool TrySetMapBackground(PlayerMap map, Sprite sprite, BackgroundEffectSettings effect)
     {
         if (map == null || map.mapBackground == null) return false;
 
@@ -555,6 +560,7 @@ public class RoundManager : NetworkBehaviour
         if (renderer == null) return false;
 
         renderer.sprite = sprite;
+        ApplyBackgroundEffect(map.mapBackground, renderer, effect);
         return true;
     }
 
@@ -572,15 +578,23 @@ public class RoundManager : NetworkBehaviour
         return round.backgroundMap;
     }
 
+    private BackgroundEffectSettings GetRoundBackgroundEffect(int roundIndex)
+    {
+        RoundDefinition round = roundConfig != null ? roundConfig.GetRound(roundIndex) : null;
+        if (round == null) return null;
+        return round.backgroundEffect;
+    }
+
     [Client]
     private void HandleMapEnabledClient(PlayerMap map, bool enable, GameObject _)
     {
         if (!enable || map == null) return;
 
         Sprite background = GetCurrentRoundBackground();
+        BackgroundEffectSettings effect = GetCurrentRoundEffect();
         if (background == null) return;
 
-        if (!TrySetMapBackground(map, background))
+        if (!TrySetMapBackground(map, background, effect))
         {
             Debug.LogWarning($"RoundManager: Failed to set background on map {map.name}");
         }
@@ -590,6 +604,89 @@ public class RoundManager : NetworkBehaviour
     {
         if (lastRoundBackground != null) return lastRoundBackground;
         return GetRoundBackground(currentRoundIndex);
+    }
+
+    public BackgroundEffectSettings GetCurrentRoundEffect()
+    {
+        if (lastBackgroundEffect != null) return lastBackgroundEffect;
+        return GetRoundBackgroundEffect(currentRoundIndex);
+    }
+
+    private void ApplyBackgroundEffect(GameObject backgroundGO, SpriteRenderer renderer, BackgroundEffectSettings effect)
+    {
+        if (backgroundGO == null) return;
+
+        DOTween.Kill(backgroundGO);
+        if (renderer != null)
+        {
+            DOTween.Kill(renderer);
+        }
+
+        Transform target = backgroundGO.transform;
+        if (!backgroundDefaults.TryGetValue(target, out BackgroundDefaultState defaults))
+        {
+            float alpha = renderer != null ? renderer.color.a : 1f;
+            defaults = new BackgroundDefaultState
+            {
+                scale = target.localScale,
+                position = target.localPosition,
+                alpha = alpha
+            };
+            backgroundDefaults[target] = defaults;
+        }
+
+        if (renderer != null)
+        {
+            Color reset = renderer.color;
+            reset.a = defaults.alpha;
+            renderer.color = reset;
+        }
+
+        target.localScale = defaults.scale;
+        target.localPosition = defaults.position;
+
+        if (effect == null || effect.effectType == BackgroundEffectType.None) return;
+
+        float duration = Mathf.Max(0.05f, effect.duration);
+
+        switch (effect.effectType)
+        {
+            case BackgroundEffectType.FadePulse:
+                if (renderer != null)
+                {
+                    renderer.DOFade(Mathf.Clamp01(effect.fadeAlpha), duration)
+                        .SetEase(effect.ease)
+                        .SetLoops(-1, LoopType.Yoyo)
+                        .SetTarget(renderer);
+                }
+                break;
+            case BackgroundEffectType.ScalePulse:
+                target.DOScale(defaults.scale * (1f + effect.amplitude), duration)
+                    .SetEase(effect.ease)
+                    .SetLoops(-1, LoopType.Yoyo)
+                    .SetTarget(backgroundGO);
+                break;
+            case BackgroundEffectType.FloatY:
+                target.DOLocalMoveY(defaults.position.y + effect.amplitude, duration)
+                    .SetEase(effect.ease)
+                    .SetLoops(-1, LoopType.Yoyo)
+                    .SetTarget(backgroundGO);
+                break;
+            case BackgroundEffectType.Pan:
+                Vector3 targetPos = defaults.position + new Vector3(effect.panOffset.x, effect.panOffset.y, 0f);
+                target.DOLocalMove(targetPos, duration)
+                    .SetEase(effect.ease)
+                    .SetLoops(-1, LoopType.Yoyo)
+                    .SetTarget(backgroundGO);
+                break;
+        }
+    }
+
+    private struct BackgroundDefaultState
+    {
+        public Vector3 scale;
+        public Vector3 position;
+        public float alpha;
     }
 }
 

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 using static CONST;
 
 public class AudioManager : MonoBehaviour
@@ -15,6 +16,9 @@ public class AudioManager : MonoBehaviour
     [SerializeField] private Slider musicSlider;
     [SerializeField] private Slider effectSlider;
     
+    [Header("UI Click")]
+    [SerializeField] private List<AudioClip> clickSounds;
+
     [Header("Sound List")]
     [SerializeField] private List<AudioClip> collideSounds;
     [SerializeField] private List<AudioClip> swordSounds;
@@ -34,12 +38,14 @@ public class AudioManager : MonoBehaviour
     private void OnEnable()
     {
         ObserverManager.Register(PLAYER_DIED, (Action<Player>)PlayPlayerDieSound);
-        
+        SceneManager.sceneLoaded += OnSceneLoaded;
+        RegisterAllButtons();
     }
 
     private void OnDisable()
     {
         ObserverManager.Unregister(PLAYER_DIED, (Action<Player>)PlayPlayerDieSound);
+        SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 
 
@@ -141,6 +147,35 @@ public class AudioManager : MonoBehaviour
         {
             musicSource.volume = MusicVolume;
         }
+    }
+
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        RegisterAllButtons();
+    }
+
+    public void RegisterAllButtons()
+    {
+        // Find all buttons in the scene (including inactive) and hook the click sound.
+        Button[] allButtons = FindObjectsOfType<Button>(true);
+        foreach (Button btn in allButtons)
+        {
+            if (btn == null) continue;
+
+            btn.onClick.RemoveListener(PlayClickSound);
+            btn.onClick.AddListener(PlayClickSound);
+        }
+    }
+
+    public void PlayClickSound()
+    {
+        if (clickSounds == null || clickSounds.Count == 0) return;
+
+        AudioSource audioSource = effectSource;
+        if (audioSource == null) return;
+
+        AudioClip clip = clickSounds[UnityEngine.Random.Range(0, clickSounds.Count)];
+        audioSource.PlayOneShot(clip, audioSource.volume);
     }
 
     public void PlayCollideSound(AudioSource source = null)
