@@ -6,6 +6,7 @@ using DG.Tweening;
 public class EntityEffect : MonoBehaviour
 {
     [SerializeField] private Material material;
+    [SerializeField] private Material faceEnemyMaterial;
     private Color matColor;
     private float tintFadeSpeed;
 
@@ -47,5 +48,21 @@ public class EntityEffect : MonoBehaviour
             3f);
         yield return new WaitForSeconds(3f);
         material.SetFloat("_dissolveAmount", 0f);
+    }
+
+    public void PayMauFaceEnemy()
+    {
+        StartCoroutine(PayMauFaceAnimation());
+    }
+    
+    IEnumerator PayMauFaceAnimation()
+    {
+        DOTween.To(
+            () => faceEnemyMaterial.GetFloat("_dissolveAmount"),
+            x => faceEnemyMaterial.SetFloat("_dissolveAmount", x),
+            1f,
+            3f);
+        yield return new WaitForSeconds(3f);
+        faceEnemyMaterial.SetFloat("_dissolveAmount", 0f);
     }
 }

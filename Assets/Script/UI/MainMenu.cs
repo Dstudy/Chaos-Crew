@@ -6,14 +6,16 @@ using UnityEngine.UI;
 
 public class MainMenu : MonoBehaviour
 {
-    [FormerlySerializedAs("networkGamePlayer")] [SerializeField]
+    [FormerlySerializedAs("networkGamePlayer")]
+    [SerializeField]
     private NetworkManagerLobby networkManager = null;
 
-    [Header("UI")] [SerializeField] private GameObject landingPagePanel = null;
+    [Header("UI")][SerializeField] private GameObject landingPagePanel = null;
     [SerializeField] private GameObject settingsPanel = null;
     [SerializeField] private GameObject enterIpBackground = null;
     [SerializeField] private GameObject enterIpPanel = null;
     [SerializeField] private Button settingButton = null;
+    [SerializeField] private Button exitSettingButton = null;
     [SerializeField] private Slider soundSlider = null;
     [SerializeField] private Slider musicSlider = null;
     [SerializeField] private AudioSource musicSource = null;
@@ -39,9 +41,9 @@ public class MainMenu : MonoBehaviour
 
         ShowHostLobbyUI();
     }
-    
 
-private void OnEnable()
+
+    private void OnEnable()
     {
         EnsureNetworkManager();
         audioManager = AudioManager.EnsureExists();
@@ -56,6 +58,8 @@ private void OnEnable()
         if (soundSlider != null) soundSlider.onValueChanged.RemoveAllListeners();
         if (musicSlider != null) musicSlider.onValueChanged.RemoveAllListeners();
         if (settingButton != null) settingButton.onClick.RemoveListener(ToggleSettings);
+        if (exitSettingButton != null) exitSettingButton.onClick.RemoveListener(CloseSettings);
+
         UnsubscribeNetworkCallbacks();
     }
 
@@ -65,11 +69,23 @@ private void OnEnable()
         settingsPanel.SetActive(!settingsPanel.activeSelf);
     }
 
+    public void CloseSettings()
+    {
+        if (settingsPanel != null)
+            settingsPanel.SetActive(false);
+    }
+
     private void SetupSettingsUI()
     {
         RestoreMainMenuUI();
 
         SetupSettingsButton();
+
+        if (exitSettingButton != null)
+        {
+            exitSettingButton.onClick.RemoveAllListeners();
+            exitSettingButton.onClick.AddListener(CloseSettings);
+        }
 
         if (audioManager == null) return;
 

@@ -19,12 +19,12 @@ public class ServerItemInstance
     public BaseItem itemData; // Full item data for server reference
     public Vector3 spawnPosition;
     public int spawnPointIndex;
-    
-    
+
+
     // State data that might change
     public int charges; // For items with charges (like StaffItem)
     public Element currentElement; // For items that can change element
-    
+
     public ServerItemInstance(int instanceId, int itemId, string ownerPlayerId, BaseItem itemData, Vector3 spawnPosition, int spawnPointIndex)
     {
         this.instanceId = instanceId;
@@ -33,7 +33,7 @@ public class ServerItemInstance
         this.itemData = itemData;
         this.spawnPosition = spawnPosition;
         this.spawnPointIndex = spawnPointIndex;
-        
+
         // Initialize state from item data
         if (itemData is StaffItem staffItem)
         {
@@ -50,17 +50,17 @@ public class ServerItemInstance
 public class SpawnSystem : NetworkBehaviour
 {
     public static SpawnSystem singleton;
-    
+
     [Header("Wave Configuration")]
     [SerializeField] private List<WaveSpawn> waves = new List<WaveSpawn>();
     [SerializeField] public GameObject draggableItemPrefab;
-    
+
     [SerializeField] private List<WaveSpawn> rewardWaves = new List<WaveSpawn>();
-    
+
     [Header("Spawn Settings")]
     [SerializeField] private float waveStartDelay = 1f;
     [SerializeField] private bool autoStartWaves = true;
-    
+
     private int currentWaveIndex = 0;
     private int rewardWaveIndex = 0;
     private bool isSpawning = false;
@@ -75,8 +75,8 @@ public class SpawnSystem : NetworkBehaviour
 
     private int readyPlayersCount;
     private bool wavesStarted;
-    
-    
+
+
     // Server-side item tracking
     private Dictionary<int, ServerItemInstance> allItemInstances = new Dictionary<int, ServerItemInstance>();
     private Dictionary<string, List<int>> playerItemInstances = new Dictionary<string, List<int>>(); // playerId -> list of instanceIds
@@ -86,7 +86,7 @@ public class SpawnSystem : NetworkBehaviour
     {
         if (isServer)
         {
-            ObserverManager.Register(ENEMY_DEFEATED, (Action<Enemy>) OnEnemyDefeacted);
+            ObserverManager.Register(ENEMY_DEFEATED, (Action<Enemy>)OnEnemyDefeacted);
         }
     }
 
@@ -94,7 +94,7 @@ public class SpawnSystem : NetworkBehaviour
     {
         if (isServer)
         {
-            ObserverManager.Unregister(ENEMY_DEFEATED, (Action<Enemy>) OnEnemyDefeacted);
+            ObserverManager.Unregister(ENEMY_DEFEATED, (Action<Enemy>)OnEnemyDefeacted);
         }
     }
 
@@ -109,7 +109,7 @@ public class SpawnSystem : NetworkBehaviour
             Debug.LogWarning("Multiple SpawnSystem instances found!");
         }
     }
-    
+
     public override void OnStartServer()
     {
         Debug.Log("Spawn system started on server");
@@ -126,10 +126,10 @@ public class SpawnSystem : NetworkBehaviour
     private void OnPlayerReady(NetworkConnectionToClient conn)
     {
         if (!isServer || wavesStarted) return;
-        
+
         readyPlayersCount++;
         Debug.Log($"Player ready: {readyPlayersCount}/{NetworkServer.connections.Count}");
-        
+
         // Wait for all connections to be ready
         if (readyPlayersCount >= NetworkServer.connections.Count && NetworkServer.connections.Count > 0)
         {
@@ -138,7 +138,7 @@ public class SpawnSystem : NetworkBehaviour
             wavesStarted = true;
         }
     }
-    
+
     [Server]
     private NetworkConnectionToClient GetPlayerConnection(Player player)
     {
@@ -146,19 +146,19 @@ public class SpawnSystem : NetworkBehaviour
         NetworkIdentity playerIdentity = player.GetComponent<NetworkIdentity>();
         return playerIdentity?.connectionToClient;
     }
-    
+
     [Server]
     public void RegisterItemInstance(ServerItemInstance instance)
     {
         allItemInstances[instance.instanceId] = instance;
-        
+
         if (!playerItemInstances.ContainsKey(instance.ownerPlayerId))
         {
             playerItemInstances[instance.ownerPlayerId] = new List<int>();
         }
         playerItemInstances[instance.ownerPlayerId].Add(instance.instanceId);
     }
-    
+
     [Server]
     public void UnregisterItemInstance(int instanceId)
     {
@@ -171,14 +171,14 @@ public class SpawnSystem : NetworkBehaviour
             }
         }
     }
-    
+
     [Server]
     public ServerItemInstance GetItemInstance(int instanceId)
     {
         allItemInstances.TryGetValue(instanceId, out ServerItemInstance instance);
         return instance;
     }
-    
+
     [Server]
     public List<int> GetPlayerItemInstances(string playerId)
     {
@@ -198,14 +198,24 @@ public class SpawnSystem : NetworkBehaviour
             yield return new WaitForSeconds(delay);
         }
 
-        while (PlayerManager.instance == null || PlayerManager.instance.players == null || PlayerManager.instance.players.Count == 0)
+        // Wait until all server-side players are spawned and registered so we spawn for everyone
+        while (true)
         {
-            yield return null;
+            if (PlayerManager.instance != null && PlayerManager.instance.players != null)
+            {
+                int spawnedPlayers = PlayerManager.instance.players.Count;
+                int activeConnections = NetworkServer.connections.Values.Count(conn => conn != null);
+                if (spawnedPlayers > 0 && spawnedPlayers >= activeConnections)
+                {
+                    break;
+                }
+            }
+            yield return null; // wait one frame
         }
 
         StartNextWave();
     }
-    
+
     [Server]
     public void OnEnemyDefeatedServer(Enemy enemy)
     {
@@ -241,12 +251,13 @@ public class SpawnSystem : NetworkBehaviour
 
     IEnumerator SpawnRewards(List<WaveSpawn> rewardWaves, Player player)
     {
+        yield return new WaitForSeconds(3f);
         foreach (var rewardWave in rewardWaves)
         {
             yield return StartCoroutine(SpawnWave(rewardWave, player));
         }
     }
-    
+
 
     [Server]
     public void StartNextWave()
@@ -310,7 +321,7 @@ public class SpawnSystem : NetworkBehaviour
     {
         isSpawning = true;
         OnWaveStarted?.Invoke(wave.waveNumber);
-        
+
         Debug.Log($"Starting wave {wave.waveNumber} with spawn type: {wave.spawnType}");
 
         List<Player> players = GetAllPlayers();
@@ -326,7 +337,7 @@ public class SpawnSystem : NetworkBehaviour
             isSpawning = false;
             yield break;
         }
-        
+
         yield return new WaitForSeconds(delayTime);
 
         switch (wave.spawnType)
@@ -351,10 +362,10 @@ public class SpawnSystem : NetworkBehaviour
         isSpawning = false;
         OnWaveCompleted?.Invoke(wave.waveNumber);
         currentWaveIndex++;
-        
+
     }
-    
-    
+
+
 
     [Server]
     private List<Player> GetAllPlayers()
@@ -403,7 +414,7 @@ public class SpawnSystem : NetworkBehaviour
     {
         Dictionary<Player, List<BaseItem>> playerItems = new Dictionary<Player, List<BaseItem>>();
         int totalItemsToSpawn = wave.waveCount;
-        
+
         List<Element> elements = null;
         try
         {
@@ -414,7 +425,7 @@ public class SpawnSystem : NetworkBehaviour
             Debug.LogError($"Error getting elements from EnemyManager: {e.Message}");
             yield break;
         }
-        
+
         if (elements == null || elements.Count == 0)
         {
             Debug.LogWarning("No elements found from EnemyManager!");
@@ -422,7 +433,7 @@ public class SpawnSystem : NetworkBehaviour
         }
 
         int index = (int)wave.itemType;
-        
+
         foreach (Player player in players)
         {
             List<BaseItem> itemsToSpawn = new List<BaseItem>();
@@ -431,49 +442,49 @@ public class SpawnSystem : NetworkBehaviour
                 switch (index)
                 {
                     case 0:
-                    {
-                        AttackItemData attackData = wave.GetAttackItem(elements[UnityEngine.Random.Range(0, elements.Count)]);
-                        if (attackData != null)
                         {
-                            itemsToSpawn.Add(attackData.CreateAttackItem());
-                        }
+                            AttackItemData attackData = wave.GetAttackItem(elements[UnityEngine.Random.Range(0, elements.Count)]);
+                            if (attackData != null)
+                            {
+                                itemsToSpawn.Add(attackData.CreateAttackItem());
+                            }
 
-                        break;
-                    }
+                            break;
+                        }
                     case 1:
-                    {
-                        SupportItemData supportData = wave.supportItemData[UnityEngine.Random.Range(0, wave.supportItemData.Count)];
-                        if (supportData != null)
                         {
-                            itemsToSpawn.Add(supportData.CreateSupportItem());
+                            SupportItemData supportData = wave.supportItemData[UnityEngine.Random.Range(0, wave.supportItemData.Count)];
+                            if (supportData != null)
+                            {
+                                itemsToSpawn.Add(supportData.CreateSupportItem());
+                            }
+                            break;
                         }
-                        break;
-                    }
                     case 2:
-                    {
-                        StaffItemData staffItemData = wave.GetStaffItem(elements[UnityEngine.Random.Range(0, elements.Count)]);
-                        if (staffItemData != null)
                         {
-                            itemsToSpawn.Add(staffItemData.CreateStaffItem());
+                            StaffItemData staffItemData = wave.GetStaffItem(elements[UnityEngine.Random.Range(0, elements.Count)]);
+                            if (staffItemData != null)
+                            {
+                                itemsToSpawn.Add(staffItemData.CreateStaffItem());
+                            }
+                            break;
                         }
-                        break;
-                    }
                     case 3:
-                    {
-                        HammerData hammerData = wave.GetHammerItem(elements[UnityEngine.Random.Range(0, elements.Count)]);
-                        if (hammerData != null)
                         {
-                            itemsToSpawn.Add(hammerData.CreateHammerItem());
+                            HammerData hammerData = wave.GetHammerItem(elements[UnityEngine.Random.Range(0, elements.Count)]);
+                            if (hammerData != null)
+                            {
+                                itemsToSpawn.Add(hammerData.CreateHammerItem());
+                            }
+                            break;
                         }
-                        break;
-                    }
                 }
             }
-            
+
             playerItems[player] = itemsToSpawn;
         }
-        
-        
+
+
         for (int itemIndex = 0; itemIndex < totalItemsToSpawn; itemIndex++)
         {
             foreach (Player player in players)
@@ -490,9 +501,9 @@ public class SpawnSystem : NetworkBehaviour
     [Server]
     private IEnumerator SpawnAttackAndShield(WaveSpawn wave, List<Player> players)
     {
-         Dictionary<Player, List<BaseItem>> playerItems = new Dictionary<Player, List<BaseItem>>();
+        Dictionary<Player, List<BaseItem>> playerItems = new Dictionary<Player, List<BaseItem>>();
         int totalItemsToSpawn = wave.waveCount;
-        
+
         List<Element> elements = null;
         try
         {
@@ -503,7 +514,7 @@ public class SpawnSystem : NetworkBehaviour
             Debug.LogError($"Error getting elements from EnemyManager: {e.Message}");
             yield break;
         }
-        
+
         if (elements == null || elements.Count == 0)
         {
             Debug.LogWarning("No elements found from EnemyManager!");
@@ -521,32 +532,32 @@ public class SpawnSystem : NetworkBehaviour
                 switch (itemType)
                 {
                     case Item.Attack:
-                    {
-                        AttackItemData attackData = wave.GetAttackItem(elements[UnityEngine.Random.Range(0, elements.Count)]);
-                        if (attackData != null)
                         {
-                            itemsToSpawn.Add(attackData.CreateAttackItem());
-                        }
+                            AttackItemData attackData = wave.GetAttackItem(elements[UnityEngine.Random.Range(0, elements.Count)]);
+                            if (attackData != null)
+                            {
+                                itemsToSpawn.Add(attackData.CreateAttackItem());
+                            }
 
-                        break;
-                    }
-                    case Item.Support:
-                    {
-                        //Chỉ spawn ra heal thôi
-                        SupportItemData supportData = wave.supportItemData[0];
-                        if (supportData != null)
-                        {
-                            itemsToSpawn.Add(supportData.CreateSupportItem());
+                            break;
                         }
-                        break;
-                    }
+                    case Item.Support:
+                        {
+                            //Chỉ spawn ra heal thôi
+                            SupportItemData supportData = wave.supportItemData[0];
+                            if (supportData != null)
+                            {
+                                itemsToSpawn.Add(supportData.CreateSupportItem());
+                            }
+                            break;
+                        }
                 }
             }
-            
+
             playerItems[player] = itemsToSpawn;
         }
-        
-        
+
+
         for (int itemIndex = 0; itemIndex < totalItemsToSpawn; itemIndex++)
         {
             foreach (Player player in players)
@@ -559,13 +570,13 @@ public class SpawnSystem : NetworkBehaviour
             yield return new WaitForSeconds(wave.spawnDelay);
         }
     }
-    
+
     [Server]
     private IEnumerator SpawnRandomAll(WaveSpawn wave, List<Player> players)
     {
         Dictionary<Player, List<BaseItem>> playerItems = new Dictionary<Player, List<BaseItem>>();
         int totalItemsToSpawn = wave.waveCount;
-        
+
         List<Element> elements = null;
         try
         {
@@ -576,14 +587,14 @@ public class SpawnSystem : NetworkBehaviour
             Debug.LogError($"Error getting elements from EnemyManager: {e.Message}");
             yield break;
         }
-        
+
         if (elements == null || elements.Count == 0)
         {
             Debug.LogWarning("No elements found from EnemyManager!");
             yield break;
         }
-        
-        
+
+
         foreach (Player player in players)
         {
             List<BaseItem> itemsToSpawn = new List<BaseItem>();
@@ -593,49 +604,49 @@ public class SpawnSystem : NetworkBehaviour
                 switch (itemType)
                 {
                     case Item.Attack:
-                    {
-                        AttackItemData attackData = wave.GetAttackItem(elements[UnityEngine.Random.Range(0, elements.Count)]);
-                        if (attackData != null)
                         {
-                            itemsToSpawn.Add(attackData.CreateAttackItem());
-                        }
+                            AttackItemData attackData = wave.GetAttackItem(elements[UnityEngine.Random.Range(0, elements.Count)]);
+                            if (attackData != null)
+                            {
+                                itemsToSpawn.Add(attackData.CreateAttackItem());
+                            }
 
-                        break;
-                    }
+                            break;
+                        }
                     case Item.Support:
-                    {
-                        SupportItemData supportData = wave.supportItemData[UnityEngine.Random.Range(0, wave.supportItemData.Count)];
-                        if (supportData != null)
                         {
-                            itemsToSpawn.Add(supportData.CreateSupportItem());
+                            SupportItemData supportData = wave.supportItemData[UnityEngine.Random.Range(0, wave.supportItemData.Count)];
+                            if (supportData != null)
+                            {
+                                itemsToSpawn.Add(supportData.CreateSupportItem());
+                            }
+                            break;
                         }
-                        break;
-                    }
                     case Item.Staff:
-                    {
-                        StaffItemData staffItemData = wave.GetStaffItem(elements[UnityEngine.Random.Range(0, elements.Count)]);
-                        if (staffItemData != null)
                         {
-                            itemsToSpawn.Add(staffItemData.CreateStaffItem());
+                            StaffItemData staffItemData = wave.GetStaffItem(elements[UnityEngine.Random.Range(0, elements.Count)]);
+                            if (staffItemData != null)
+                            {
+                                itemsToSpawn.Add(staffItemData.CreateStaffItem());
+                            }
+                            break;
                         }
-                        break;
-                    }
                     case Item.Hammer:
-                    {
-                        HammerData hammerData = wave.GetHammerItem(elements[UnityEngine.Random.Range(0, elements.Count)]);
-                        if (hammerData != null)
                         {
-                            itemsToSpawn.Add(hammerData.CreateHammerItem());
+                            HammerData hammerData = wave.GetHammerItem(elements[UnityEngine.Random.Range(0, elements.Count)]);
+                            if (hammerData != null)
+                            {
+                                itemsToSpawn.Add(hammerData.CreateHammerItem());
+                            }
+                            break;
                         }
-                        break;
-                    }
                 }
             }
-            
+
             playerItems[player] = itemsToSpawn;
         }
-        
-        
+
+
         for (int itemIndex = 0; itemIndex < totalItemsToSpawn; itemIndex++)
         {
             foreach (Player player in players)
@@ -648,7 +659,7 @@ public class SpawnSystem : NetworkBehaviour
             yield return new WaitForSeconds(wave.spawnDelay);
         }
     }
-    
+
     private Item GetWeightedRandomItemType(WaveSpawn wave)
     {
         float attack = Mathf.Max(0f, wave.attackProbability);
@@ -677,7 +688,7 @@ public class SpawnSystem : NetworkBehaviour
     {
         Debug.Log(wave.name + " spawned!");
         int totalItemsToSpawn = wave.waveCount;
-        
+
         List<Element> elements = null;
         try
         {
@@ -688,13 +699,13 @@ public class SpawnSystem : NetworkBehaviour
             Debug.LogError($"Error getting elements from EnemyManager: {e.Message}");
             yield break;
         }
-        
+
         if (elements == null || elements.Count == 0)
         {
             Debug.LogWarning("No elements found from EnemyManager!");
             yield break;
         }
-        
+
         List<BaseItem> itemsToSpawn = new List<BaseItem>();
         for (int itemIndex = 0; itemIndex < totalItemsToSpawn; itemIndex++)
         {
@@ -702,46 +713,46 @@ public class SpawnSystem : NetworkBehaviour
             switch (index)
             {
                 case 0:
-                {
-                    AttackItemData attackData = wave.GetAttackItem(elements[UnityEngine.Random.Range(0, elements.Count)]);
-                    if (attackData != null)
                     {
-                        itemsToSpawn.Add(attackData.CreateAttackItem());
-                    }
+                        AttackItemData attackData = wave.GetAttackItem(elements[UnityEngine.Random.Range(0, elements.Count)]);
+                        if (attackData != null)
+                        {
+                            itemsToSpawn.Add(attackData.CreateAttackItem());
+                        }
 
-                    break;
-                }
+                        break;
+                    }
                 case 1:
-                {
-                    SupportItemData supportData = wave.supportItemData[UnityEngine.Random.Range(0, wave.supportItemData.Count)];
-                    if (supportData != null)
                     {
-                        itemsToSpawn.Add(supportData.CreateSupportItem());
+                        SupportItemData supportData = wave.supportItemData[UnityEngine.Random.Range(0, wave.supportItemData.Count)];
+                        if (supportData != null)
+                        {
+                            itemsToSpawn.Add(supportData.CreateSupportItem());
+                        }
+                        break;
                     }
-                    break;
-                }
                 case 2:
-                {
-                    StaffItemData staffItemData = wave.GetStaffItem(elements[UnityEngine.Random.Range(0, elements.Count)]);
-                    if (staffItemData != null)
                     {
-                        itemsToSpawn.Add(staffItemData.CreateStaffItem());
+                        StaffItemData staffItemData = wave.GetStaffItem(elements[UnityEngine.Random.Range(0, elements.Count)]);
+                        if (staffItemData != null)
+                        {
+                            itemsToSpawn.Add(staffItemData.CreateStaffItem());
+                        }
+                        break;
                     }
-                    break;
-                }
                 case 3:
-                {
-                    HammerData hammerData = wave.GetHammerItem(elements[UnityEngine.Random.Range(0, elements.Count)]);
-                    if (hammerData != null)
                     {
-                        itemsToSpawn.Add(hammerData.CreateHammerItem());
+                        HammerData hammerData = wave.GetHammerItem(elements[UnityEngine.Random.Range(0, elements.Count)]);
+                        if (hammerData != null)
+                        {
+                            itemsToSpawn.Add(hammerData.CreateHammerItem());
+                        }
+                        break;
                     }
-                    break;
-                }
             }
         }
-        
-        
+
+
         for (int itemIndex = 0; itemIndex < totalItemsToSpawn; itemIndex++)
         {
             SpawnRewardForPlayer(player, itemsToSpawn[itemIndex]);
@@ -752,9 +763,9 @@ public class SpawnSystem : NetworkBehaviour
     [Server]
     private IEnumerator SpawnAttackSupportStaff(WaveSpawn wave, List<Player> players)
     {
-       Dictionary<Player, List<BaseItem>> playerItems = new Dictionary<Player, List<BaseItem>>();
+        Dictionary<Player, List<BaseItem>> playerItems = new Dictionary<Player, List<BaseItem>>();
         int totalItemsToSpawn = wave.waveCount;
-        
+
         List<Element> elements = null;
         try
         {
@@ -765,14 +776,14 @@ public class SpawnSystem : NetworkBehaviour
             Debug.LogError($"Error getting elements from EnemyManager: {e.Message}");
             yield break;
         }
-        
+
         if (elements == null || elements.Count == 0)
         {
             Debug.LogWarning("No elements found from EnemyManager!");
             yield break;
         }
-        
-        
+
+
         foreach (Player player in players)
         {
             List<BaseItem> itemsToSpawn = new List<BaseItem>();
@@ -782,41 +793,41 @@ public class SpawnSystem : NetworkBehaviour
                 switch (itemType)
                 {
                     case Item.Attack:
-                    {
-                        AttackItemData attackData = wave.GetAttackItem(elements[UnityEngine.Random.Range(0, elements.Count)]);
-                        if (attackData != null)
                         {
-                            itemsToSpawn.Add(attackData.CreateAttackItem());
-                        }
+                            AttackItemData attackData = wave.GetAttackItem(elements[UnityEngine.Random.Range(0, elements.Count)]);
+                            if (attackData != null)
+                            {
+                                itemsToSpawn.Add(attackData.CreateAttackItem());
+                            }
 
-                        break;
-                    }
+                            break;
+                        }
                     case Item.Support:
-                    {
-                        //Chỉ spawn ra heal thôi
-                        SupportItemData supportData = wave.supportItemData[1];
-                        if (supportData != null)
                         {
-                            itemsToSpawn.Add(supportData.CreateSupportItem());
+                            //Chỉ spawn ra heal thôi
+                            SupportItemData supportData = wave.supportItemData[1];
+                            if (supportData != null)
+                            {
+                                itemsToSpawn.Add(supportData.CreateSupportItem());
+                            }
+                            break;
                         }
-                        break;
-                    }
                     case Item.Staff:
-                    {
-                        StaffItemData staffItemData = wave.GetStaffItem(elements[UnityEngine.Random.Range(0, elements.Count)]);
-                        if (staffItemData != null)
                         {
-                            itemsToSpawn.Add(staffItemData.CreateStaffItem());
+                            StaffItemData staffItemData = wave.GetStaffItem(elements[UnityEngine.Random.Range(0, elements.Count)]);
+                            if (staffItemData != null)
+                            {
+                                itemsToSpawn.Add(staffItemData.CreateStaffItem());
+                            }
+                            break;
                         }
-                        break;
-                    }
                 }
             }
-            
+
             playerItems[player] = itemsToSpawn;
         }
-        
-        
+
+
         for (int itemIndex = 0; itemIndex < totalItemsToSpawn; itemIndex++)
         {
             foreach (Player player in players)
@@ -830,7 +841,7 @@ public class SpawnSystem : NetworkBehaviour
         }
     }
 
-   
+
 
     private void SpawnRewardForPlayer(Player player, BaseItem item)
     {
@@ -840,11 +851,9 @@ public class SpawnSystem : NetworkBehaviour
             return;
         }
 
-        Vector3 spawnPosition = player.enemy.transform.position;
-        
-        int spawnPointIndex = player.playerMap.spawnItemPoints.IndexOf(spawnPosition);
-        if (spawnPointIndex < 0) spawnPointIndex = 0;
-        
+        Transform spawnPosition = player.enemy.transform;
+
+        int spawnPointIndex = 0;
         // Create server-side item instance
         int instanceId = nextInstanceId++;
         ServerItemInstance itemInstance = new ServerItemInstance(
@@ -852,13 +861,13 @@ public class SpawnSystem : NetworkBehaviour
             item.id,
             player.id,
             item,
-            spawnPosition ,
+            spawnPosition.position + new Vector3(0, -3, 0),
             spawnPointIndex
         );
-        
+
         // Register the instance
         RegisterItemInstance(itemInstance);
-        
+
         // Get player's connection and send TargetRpc to spawn locally
         NetworkConnectionToClient conn = GetPlayerConnection(player);
         if (conn != null)
@@ -875,21 +884,21 @@ public class SpawnSystem : NetworkBehaviour
             {
                 element = attackItem.element;
             }
-            
+
             int degree = UnityEngine.Random.Range(-60, -120);
-            
+
             Vector2 shootDirection = new Vector2(Mathf.Cos(degree * Mathf.Deg2Rad), Mathf.Sin(degree * Mathf.Deg2Rad));
-            
+
             // Send RPC to client to spawn local visual
-            TargetSpawnItemLocal(conn, instanceId, item.id, spawnPosition , spawnPointIndex, shootDirection, charges, element);
+            TargetSpawnItemLocal(conn, instanceId, item.id, spawnPosition.position + new Vector3(0, -3, 0), spawnPointIndex, shootDirection, charges, element);
         }
         else
         {
             Debug.LogError($"Could not get connection for player {player.id}");
         }
     }
-    
-    
+
+
 
     [Server]
     private void SpawnItemForPlayer(Player player, BaseItem item, Vector3 offset)
@@ -903,7 +912,7 @@ public class SpawnSystem : NetworkBehaviour
         Vector3 spawnPosition = GetSpawnPoint(player.playerMap);
         int spawnPointIndex = player.playerMap.spawnItemPoints.IndexOf(spawnPosition);
         if (spawnPointIndex < 0) spawnPointIndex = 0;
-        
+
         // Create server-side item instance
         int instanceId = nextInstanceId++;
         ServerItemInstance itemInstance = new ServerItemInstance(
@@ -914,10 +923,10 @@ public class SpawnSystem : NetworkBehaviour
             spawnPosition + offset,
             spawnPointIndex
         );
-        
+
         // Register the instance
         RegisterItemInstance(itemInstance);
-        
+
         // Get player's connection and send TargetRpc to spawn locally
         NetworkConnectionToClient conn = GetPlayerConnection(player);
         if (conn != null)
@@ -934,16 +943,17 @@ public class SpawnSystem : NetworkBehaviour
             {
                 element = attackItem.element;
             }
-            
+
             // Send RPC to client to spawn local visual
-                TargetSpawnItemLocal(conn, instanceId, item.id, spawnPosition + offset, spawnPointIndex, new Vector2(0,1), charges, element);
+            TargetSpawnItemLocal(conn, instanceId, item.id, spawnPosition, spawnPointIndex, new Vector2(0,1), charges, element);
+            // Debug.Log($"Spawned item {item.name} for player {player.id} at {spawnPos} ={spawnPosition.position} + {offset} with shoot direction {shootDirection}");
         }
         else
         {
             Debug.LogError($"Could not get connection for player {player.id}");
         }
     }
-    
+
     [TargetRpc]
 private void TargetSpawnItemLocal(NetworkConnectionToClient conn, int instanceId, int itemId, Vector3 position, int spawnPointIndex, Vector2 shootDirection, int charges, Element element)
 {
@@ -960,9 +970,10 @@ private void TargetSpawnItemLocal(NetworkConnectionToClient conn, int instanceId
         Debug.LogError("LocalItemPool.singleton is null! Make sure LocalItemPool is in the scene.");
         return;
     }
-    
+
+    Vector3 safePosition = FindSafeSpawnPosition(position, shootDirection);
     LocalItemPool.singleton.SetPrefab(draggableItemPrefab);
-    GameObject dragItem = LocalItemPool.singleton.Get(position, Quaternion.identity);
+    GameObject dragItem = LocalItemPool.singleton.Get(safePosition, Quaternion.identity);
     DraggableItem draggableItem = dragItem.GetComponent<DraggableItem>();
     
     if (draggableItem != null)
@@ -979,7 +990,7 @@ private void TargetSpawnItemLocal(NetworkConnectionToClient conn, int instanceId
         // Set up the local item
         draggableItem.SetItemLocal(instanceId, itemData, charges, element);
         draggableItem.gameObject.name = $"{itemData.name} - Instance {instanceId}";
-        draggableItem.transform.position = position;
+        draggableItem.transform.position = safePosition;
         
         // Reset Rigidbody2D state before applying force
         Rigidbody2D rb = dragItem.GetComponent<Rigidbody2D>();
@@ -993,6 +1004,7 @@ private void TargetSpawnItemLocal(NetworkConnectionToClient conn, int instanceId
         // Apply shoot force - use a coroutine to ensure Rigidbody2D is ready
         StartCoroutine(ApplyShootForceDelayed(draggableItem, shootDirection, shootForce));
         
+        Debug.Log($"Client spawned local item instance {instanceId} at {position} with shoot direction: " + shootDirection +" and shootforce: "+ shootForce);
     }
     else
     {
@@ -1000,16 +1012,16 @@ private void TargetSpawnItemLocal(NetworkConnectionToClient conn, int instanceId
     }
 }
 
-private IEnumerator ApplyShootForceDelayed(DraggableItem draggableItem, Vector2 shootDirection, float force)
-{
-    // Wait one frame to ensure Rigidbody2D is fully initialized
-    yield return null;
-    
-    if (draggableItem != null)
+    private IEnumerator ApplyShootForceDelayed(DraggableItem draggableItem, Vector2 shootDirection, float force)
     {
-        draggableItem.Shoot(shootDirection, force);
+        // Wait one frame to ensure Rigidbody2D is fully initialized
+        yield return null;
+        
+        if (draggableItem != null)
+        {
+            draggableItem.Shoot(shootDirection, force);
+        }
     }
-}
     
 
     private Vector3 GetSpawnPoint(PlayerMap playerMap)
@@ -1019,23 +1031,49 @@ private IEnumerator ApplyShootForceDelayed(DraggableItem draggableItem, Vector2 
         Vector3 spawnPoint = playerMap.spawnItemPoints[randomIndex];
         return spawnPoint;
     }
-
-    [Server]
-    public void SetWaves(List<WaveSpawn> newWaves)
+    
+    private Vector3 FindSafeSpawnPosition(Vector3 originalPosition, Vector2 shootDirection)
     {
-        waves = newWaves;
-        currentWaveIndex = 0;
-    }
-
-    [Server]
-    public int GetCurrentWaveIndex()
-    {
-        return currentWaveIndex;
-    }
-
-    [Server]
-    public int GetTotalWaves()
-    {
-        return waves.Count;
+        // Check if there's an item at the original position
+        float checkRadius = 0.5f; // Adjust based on your item size
+        Collider2D overlap = Physics2D.OverlapCircle(originalPosition, checkRadius);
+    
+        // If no overlap, use original position
+        if (overlap == null || overlap.GetComponent<DraggableItem>() == null)
+        {
+            return originalPosition;
+        }
+    
+        // Try offsetting in the shoot direction first
+        float offsetDistance = 0.6f; // Distance to offset
+        Vector3 offsetPosition = originalPosition + (Vector3)(shootDirection.normalized * offsetDistance);
+    
+        // Check if offset position is safe
+        Collider2D offsetOverlap = Physics2D.OverlapCircle(offsetPosition, checkRadius);
+        if (offsetOverlap == null || offsetOverlap.GetComponent<DraggableItem>() == null)
+        {
+            return offsetPosition;
+        }
+    
+        // If shoot direction offset didn't work, try perpendicular directions
+        Vector2 perpendicular1 = new Vector2(-shootDirection.y, shootDirection.x).normalized;
+        Vector2 perpendicular2 = new Vector2(shootDirection.y, -shootDirection.x).normalized;
+    
+        Vector3 perp1Position = originalPosition + (Vector3)(perpendicular1 * offsetDistance);
+        Collider2D perp1Overlap = Physics2D.OverlapCircle(perp1Position, checkRadius);
+        if (perp1Overlap == null || perp1Overlap.GetComponent<DraggableItem>() == null)
+        {
+            return perp1Position;
+        }
+    
+        Vector3 perp2Position = originalPosition + (Vector3)(perpendicular2 * offsetDistance);
+        Collider2D perp2Overlap = Physics2D.OverlapCircle(perp2Position, checkRadius);
+        if (perp2Overlap == null || perp2Overlap.GetComponent<DraggableItem>() == null)
+        {
+            return perp2Position;
+        }
+    
+        // If all positions are occupied, offset further in shoot direction
+        return originalPosition + (Vector3)(shootDirection.normalized * (offsetDistance * 1.5f));
     }
 }

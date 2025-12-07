@@ -46,7 +46,7 @@ public class RoundManager : NetworkBehaviour
 
         SceneManager.sceneLoaded += OnSceneLoadedServer;
 
-        // TryStartRoundsForActiveScene();
+        TryStartRoundsForActiveScene();
     }
 
     public override void OnStopServer()
@@ -61,7 +61,7 @@ public class RoundManager : NetworkBehaviour
     {
         roundsInitialized = false;
         sceneReloadInProgress = false;
-        // TryStartRoundsForActiveScene();
+        TryStartRoundsForActiveScene();
     }
 
     [Server]

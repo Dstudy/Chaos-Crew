@@ -32,12 +32,25 @@ public class EnemyPattern : MonoBehaviour
     // [SerializeField] private TextMeshProUGUI countdownText;
 
     private bool isStuned;
+    private bool isDied = false;
+    
+    private void OnEnable()
+    {
+        isDied = false;
+        ObserverManager.Register(ENEMY_DEFEATED, (Action<Enemy>)EnemyDefeated);
+    }
 
-    // private void Start()
-    // {
-    //     // if(enemy.isLocalEnemy)
-    //         StartCoroutine(PatternRoutine());
-    // }
+    private void OnDisable()
+    {
+        ObserverManager.Unregister(ENEMY_DEFEATED, (Action<Enemy>)EnemyDefeated);
+    }
+
+    private void EnemyDefeated(Enemy _)
+    {
+        isDied = true;
+        isStuned = true;
+    }
+    
 
     public void StartEnemyPattern()
     {
@@ -48,7 +61,7 @@ public class EnemyPattern : MonoBehaviour
     {
         int moveIndex = 0;
 
-        while (true) // Infinite loop for enemy behavior
+        while (true && !isDied) // Infinite loop for enemy behavior
         {
             // 1. Wait before starting next move
             yield return new WaitForSeconds(timeBetweenMoves);

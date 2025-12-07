@@ -169,8 +169,11 @@ public class EnemyUI : MonoBehaviour
 
     IEnumerator PayMauEnemy()
     {
+        EnemyFace.sprite = diedFace;
         enemyEffect.PayMau();
+        enemyEffect.PayMauFaceEnemy();
         yield return new WaitForSeconds(3f);
+        Instantiate(SpawnSystem.singleton.meow, transform.position, transform.rotation);
         enemy.DisableEnemy();
     }
 

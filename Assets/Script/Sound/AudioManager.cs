@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using static CONST;
 
 public class AudioManager : MonoBehaviour
@@ -10,6 +11,9 @@ public class AudioManager : MonoBehaviour
     [SerializeField] private AudioSource musicSource;
     [SerializeField] private AudioSource effectSource;
     // [SerializeField] private AudioSource audioSource;
+    
+    [SerializeField] private Slider musicSlider;
+    [SerializeField] private Slider effectSlider;
     
     [Header("Sound List")]
     [SerializeField] private List<AudioClip> collideSounds;
@@ -44,9 +48,7 @@ public class AudioManager : MonoBehaviour
 
     private const string SoundVolumeKey = "SoundVolume";
     private const string MusicVolumeKey = "MusicVolume";
-
-    public event Action<float> OnSoundVolumeChanged;
-    public event Action<float> OnMusicVolumeChanged;
+    
 
     public static AudioManager EnsureExists()
     {
@@ -106,29 +108,31 @@ public class AudioManager : MonoBehaviour
 
     public void SetSoundVolume(float value)
     {
-        float newValue = Mathf.Clamp01(value);
+        float newValue = Mathf.Clamp01(effectSlider.value);
         if (Mathf.Approximately(newValue, SoundVolume)) return;
 
         SoundVolume = newValue;
         PlayerPrefs.SetFloat(SoundVolumeKey, SoundVolume);
         ApplyVolumes();
-        OnSoundVolumeChanged?.Invoke(SoundVolume);
     }
 
     public void SetMusicVolume(float value)
     {
-        float newValue = Mathf.Clamp01(value);
+        float newValue = Mathf.Clamp01(musicSlider.value);
         if (Mathf.Approximately(newValue, MusicVolume)) return;
 
         MusicVolume = newValue;
         PlayerPrefs.SetFloat(MusicVolumeKey, MusicVolume);
         ApplyMusicVolume();
-        OnMusicVolumeChanged?.Invoke(MusicVolume);
     }
 
     private void ApplyVolumes()
     {
         AudioListener.volume = SoundVolume;
+        if (effectSource != null)
+        {
+            effectSource.volume = SoundVolume;
+        }
         ApplyMusicVolume();
     }
 
@@ -148,7 +152,7 @@ public class AudioManager : MonoBehaviour
         if (audioSource == null) return;
         
         AudioClip clip = collideSounds[UnityEngine.Random.Range(0, collideSounds.Count)];
-        audioSource.PlayOneShot(clip, SoundVolume);
+        audioSource.PlayOneShot(clip, effectSource != null ? effectSource.volume : SoundVolume);
     }
     
     public void PlaySwordSound(AudioSource source = null)
@@ -159,7 +163,7 @@ public class AudioManager : MonoBehaviour
         if (audioSource == null) return;
         
         AudioClip clip = swordSounds[UnityEngine.Random.Range(0, swordSounds.Count)];
-        audioSource.PlayOneShot(clip, SoundVolume);
+        audioSource.PlayOneShot(clip, effectSource != null ? effectSource.volume : SoundVolume);
     }
     
     public void PlayStaffSound(AudioSource source = null)
@@ -170,7 +174,7 @@ public class AudioManager : MonoBehaviour
         if (audioSource == null) return;
         
         AudioClip clip = staffSounds[UnityEngine.Random.Range(0, staffSounds.Count)];
-        audioSource.PlayOneShot(clip, SoundVolume);
+        audioSource.PlayOneShot(clip, effectSource != null ? effectSource.volume : SoundVolume);
     }
     
     public void PlayHammerSound(AudioSource source = null)
@@ -180,7 +184,7 @@ public class AudioManager : MonoBehaviour
         AudioSource audioSource = source != null ? source : effectSource;
         if (audioSource == null) return;
         
-        audioSource.PlayOneShot(hammerSound, SoundVolume);
+        audioSource.PlayOneShot(hammerSound, effectSource != null ? effectSource.volume : SoundVolume);
     }
     
     public void PlayUseHealSound(AudioSource source = null)
@@ -190,7 +194,7 @@ public class AudioManager : MonoBehaviour
         AudioSource audioSource = source != null ? source : effectSource;
         if (audioSource == null) return;
         
-        audioSource.PlayOneShot(useHealSound, SoundVolume);
+        audioSource.PlayOneShot(useHealSound, effectSource != null ? effectSource.volume : SoundVolume);
     }
     
     public void PlayHealSound(AudioSource source = null)
@@ -200,7 +204,7 @@ public class AudioManager : MonoBehaviour
         AudioSource audioSource = source != null ? source : effectSource;
         if (audioSource == null) return;
         
-        audioSource.PlayOneShot(healSound, SoundVolume);
+        audioSource.PlayOneShot(healSound, effectSource != null ? effectSource.volume : SoundVolume);
     }
     
     public void PlayEnemyHitSound(AudioSource source = null)
@@ -210,7 +214,7 @@ public class AudioManager : MonoBehaviour
         AudioSource audioSource = source != null ? source : effectSource;
         if (audioSource == null) return;
         
-        audioSource.PlayOneShot(enemyHitSound, SoundVolume);
+        audioSource.PlayOneShot(enemyHitSound, effectSource != null ? effectSource.volume : SoundVolume);
     }
     
     public void PlayShieldUpSound(AudioSource source = null)
@@ -220,7 +224,7 @@ public class AudioManager : MonoBehaviour
         AudioSource audioSource = source != null ? source : effectSource;
         if (audioSource == null) return;
         
-        audioSource.PlayOneShot(shieldUpSound, SoundVolume);
+        audioSource.PlayOneShot(shieldUpSound, effectSource != null ? effectSource.volume : SoundVolume);
     }
     
     public void PlayShieldBlockSound(AudioSource source = null)
@@ -230,7 +234,7 @@ public class AudioManager : MonoBehaviour
         AudioSource audioSource = source != null ? source : effectSource;
         if (audioSource == null) return;
         
-        audioSource.PlayOneShot(shieldBlockSound, SoundVolume);
+        audioSource.PlayOneShot(shieldBlockSound, effectSource != null ? effectSource.volume : SoundVolume);
     }
     
     public void PlayPlayerDieSound(Player _)
@@ -240,6 +244,6 @@ public class AudioManager : MonoBehaviour
         AudioSource audioSource = effectSource;
         if (audioSource == null) return;
         
-        audioSource.PlayOneShot(playerDefeated, SoundVolume);
+        audioSource.PlayOneShot(playerDefeated, effectSource != null ? effectSource.volume : SoundVolume);
     }
 }
