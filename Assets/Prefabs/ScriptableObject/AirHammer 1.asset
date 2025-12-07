@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 3
   itemName: ChaosHammer
-  damage: 6
+  damage: 5
   element: 5
   prefab: {fileID: 7829017506573580826, guid: 67233d79cd3036140914b7a8b41e50ef, type: 3}

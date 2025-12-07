@@ -38,7 +38,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 1152a31eb0768c349b65b65258a962c7, type: 2}
   spawnDelay: 3
   waveCount: 30
-  itemsPerPlayer: 10
+  itemsPerPlayer: 100
   spawnOffset: {x: 0, y: 0, z: 0}
   itemType: 3
   attackProbability: 0.25

@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 1
   itemName: Air Sword
-  damage: 7
+  damage: 6
   element: 4
   prefab: {fileID: 7829017506573580826, guid: 13f686a2b392cfe44b8376737207cecf, type: 3}

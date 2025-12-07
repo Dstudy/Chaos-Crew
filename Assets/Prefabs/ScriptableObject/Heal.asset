@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 10
   itemName: Heal Potion
-  value: 8
+  value: 6
   effect: 0
   prefab: {fileID: 6370796091773045445, guid: a3623d4c669b0fa48acfcff913d78f17, type: 3}
