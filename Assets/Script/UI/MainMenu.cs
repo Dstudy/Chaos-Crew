@@ -1,4 +1,5 @@
 using Mirror;
+using Mirror.Discovery;
 using Script.UI;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -20,7 +21,8 @@ public class MainMenu : MonoBehaviour
     [SerializeField] private Slider musicSlider = null;
     [SerializeField] private AudioSource musicSource = null;
 
-
+    [SerializeField] private NetworkDiscovery networkDiscovery = null;
+    
     private AudioManager audioManager;
 
     public void HostLobby()
@@ -31,8 +33,12 @@ public class MainMenu : MonoBehaviour
             Debug.LogWarning("MainMenu: NetworkManagerLobby missing; cannot host.");
             return;
         }
-
+    
+        // NetworkManager.singleton.StartHost();
         manager.StartHost();
+        networkManager.networkDiscovery.AdvertiseServer();
+        // NetworkManager.singleton.StartServer();
+        
 
         if (landingPagePanel != null)
         {
@@ -124,7 +130,6 @@ public class MainMenu : MonoBehaviour
     {
         if (landingPagePanel != null) landingPagePanel.SetActive(true);
         if (enterIpBackground != null) enterIpBackground.SetActive(false);
-        // if (enterIpPanel != null) enterIpPanel.SetActive(false);
         if (settingsPanel != null) settingsPanel.SetActive(false);
     }
 

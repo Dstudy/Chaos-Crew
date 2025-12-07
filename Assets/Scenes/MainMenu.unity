@@ -869,6 +869,18 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 1
         m_CallState: 2
+      - m_Target: {fileID: 873643691}
+        m_TargetAssemblyTypeName: Script.UI.JoinLobbyMenu, Assembly-CSharp
+        m_MethodName: JoinLobby
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 1
+        m_CallState: 2
 --- !u!114 &539644597
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1245,6 +1257,7 @@ GameObject:
   - component: {fileID: 769829221}
   - component: {fileID: 769829224}
   - component: {fileID: 769829225}
+  - component: {fileID: 769829227}
   m_Layer: 0
   m_Name: NetworkManager
   m_TagString: Untagged
@@ -1350,6 +1363,28 @@ MonoBehaviour:
   playerSpawnSystem: {fileID: 5984010414798129522, guid: 1e80b05c30959b24db75b43b91a6409e, type: 3}
   roundManagerPrefab: {fileID: 0}
   gameScene: Scene_Map_Main
+  networkDiscovery: {fileID: 769829227}
+--- !u!114 &769829227
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 769829218}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c761308e733c51245b2e8bb4201f46dc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  enableActiveDiscovery: 1
+  BroadcastAddress: 
+  serverBroadcastListenPort: 47777
+  ActiveDiscoveryInterval: 3
+  transport: {fileID: 769829224}
+  OnServerFound:
+    m_PersistentCalls:
+      m_Calls: []
+  secretHandshake: 7283791974415490338
 --- !u!1 &771762351
 GameObject:
   m_ObjectHideFlags: 0
@@ -3532,6 +3567,7 @@ MonoBehaviour:
   soundSlider: {fileID: 1239860433}
   musicSlider: {fileID: 1290240403}
   musicSource: {fileID: 1080671776}
+  networkDiscovery: {fileID: 769829227}
 --- !u!1 &2005229881
 GameObject:
   m_ObjectHideFlags: 0
